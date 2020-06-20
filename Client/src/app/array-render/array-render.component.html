@@ -1,0 +1,11 @@
+<div class="container">
+  <div class="header">Length: {{ value.length }}</div>
+  <table>
+    <ng-container *ngFor="let item of value; let i = index">
+      <tr class="content">
+        <td>{{i}}</td>
+        <td><app-any-render [target]="item"></app-any-render></td>
+      </tr>
+    </ng-container>
+  </table>
+</div>

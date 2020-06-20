@@ -1,0 +1,27 @@
+.container {
+    border: 1px solid lightcoral;
+}
+
+.header {
+    background-color: coral;
+    padding: 3px;
+}
+
+.content > td {
+    border: 1px solid lightcoral;
+    margin: 0px;
+    padding: 5px;
+}
+
+.content > td:nth-child(1)  {
+    width: fit-content
+}
+
+.content > td:nth-child(2n)  {
+    width: 100%
+}
+
+.content:nth-child(2) {
+    background-color: lightsalmon;
+    border: 1px solid lightcoral;
+}

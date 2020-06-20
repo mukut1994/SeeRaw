@@ -1,0 +1,19 @@
+<ng-container [ngSwitch]="target.type">
+  <span *ngSwitchCase="'string'" class="string">"{{ target.target }}"</span>
+
+  <span *ngSwitchCase="'number'" class="number">{{ target.target }}</span>
+
+  <span *ngSwitchCase="'link'">
+    <a href="#" class="link" (click)="linkClick($any(target).id)">{{
+      $any(target).text
+    }}</a>
+  </span>
+
+  <span *ngSwitchCase="'array'">
+    <app-array-render [value]="target.target"></app-array-render>
+  </span>
+
+  <span *ngSwitchDefault>
+    <app-object-render [target]="target.target"></app-object-render>
+  </span>
+</ng-container>

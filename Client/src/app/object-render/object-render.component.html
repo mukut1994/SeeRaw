@@ -1,0 +1,19 @@
+<table>
+  <thead>
+    <tr>
+      <td colspan="2">
+        Object
+      </td>
+    </tr>
+  </thead>
+  <ng-container *ngFor="let prop of keys">
+    <tr>
+      <td>
+        {{ prop }}
+      </td>
+      <td>
+        <app-any-render [target]="target[prop]"></app-any-render>
+      </td>
+    </tr>
+  </ng-container>
+</table>
