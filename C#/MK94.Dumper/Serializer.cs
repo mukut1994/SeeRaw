@@ -22,7 +22,7 @@ namespace MK94.Dumper
 			{
 				builder.Append(@"{ ""targets"": [ ");
 
-				foreach ((object element, int i) in r.targets.Select((rt, i) => (rt, i)))
+				foreach ((object element, int i) in r.Targets.Select((rt, i) => (rt, i)))
 				{
 					if (i != 0)
 						builder.Append(", ");
@@ -55,7 +55,7 @@ namespace MK94.Dumper
 			}
 			else if (o is Link l)
 			{
-				builder.Append($@"{{ ""type"": ""link"", ""text"": ""{l.Text}"", ""id"": ""{l.id}"" }}");
+				builder.Append($@"{{ ""type"": ""link"", ""text"": ""{l.Text}"", ""id"": ""{l.Id}"" }}");
 			}
 			else
 			{

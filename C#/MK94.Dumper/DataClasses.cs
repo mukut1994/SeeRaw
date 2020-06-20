@@ -5,7 +5,7 @@ namespace MK94.Dumper
 {
     public class RenderRoot
 	{
-		public List<RenderTarget> targets { get; } = new List<RenderTarget>();
+		public List<RenderTarget> Targets { get; } = new List<RenderTarget>();
 	}
 
 	public class RenderTarget
@@ -33,9 +33,9 @@ namespace MK94.Dumper
 
 	public class Link
 	{
-		internal Guid id { get; }
+		internal Guid Id { get; }
 
-		internal Action action { get; }
+		internal Action Action { get; }
 
 		public string Text { get; }
 
@@ -44,11 +44,11 @@ namespace MK94.Dumper
 
 		public Link(Renderer parent, string text, Action action)
 		{
-			this.id = Guid.NewGuid();
-			this.action = action;
+			Id = Guid.NewGuid();
+			Action = action;
 			Text = text;
 
-			parent.RegisterAction(this.id, action);
+			parent.RegisterAction(Id, action);
 		}
 	}
 }

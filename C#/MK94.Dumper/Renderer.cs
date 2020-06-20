@@ -71,7 +71,7 @@ namespace MK94.Dumper
 		{
 			target = new RenderTarget(this, o);
 
-			state.targets.Add(target);
+			state.Targets.Add(target);
 
 			return o;
 		}
