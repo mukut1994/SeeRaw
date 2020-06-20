@@ -1,10 +1,13 @@
 # Dumper
 
 # TODO list
- - Progressbar
  - Max updates sent per second
  - Package client into server
  - Extensions for custom types/renderers
+ - More Special Types
+   - Progresbar 
+   - TreeView 
+   - Input
  - Language support
    - Java
    - Python
