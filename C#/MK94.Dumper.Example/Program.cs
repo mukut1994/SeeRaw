@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace MK94.Dumper.Example
+namespace MK94.SirUI.Example
 {
     class Program
     {

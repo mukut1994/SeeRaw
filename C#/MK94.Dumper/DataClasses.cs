@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace MK94.Dumper
+namespace MK94.SirUI
 {
     public class RenderRoot
 	{

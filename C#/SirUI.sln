@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30204.135
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MK94.Dumper", "MK94.Dumper\MK94.Dumper.csproj", "{0C3721A3-2C82-4FA8-963A-0792E589238A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MK94.SirUI", "MK94.Dumper\MK94.SirUI.csproj", "{0C3721A3-2C82-4FA8-963A-0792E589238A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MK94.Dumper.Example", "MK94.Dumper.Example\MK94.Dumper.Example.csproj", "{3AA919D6-8877-4BBA-845A-0A866C0DC8F1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MK94.SirUI.Example", "MK94.Dumper.Example\MK94.SirUI.Example.csproj", "{3AA919D6-8877-4BBA-845A-0A866C0DC8F1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

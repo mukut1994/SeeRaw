@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace MK94.Dumper
+namespace MK94.SirUI
 {
     public static class Serializer
 	{

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MK94.Dumper
+namespace MK94.SirUI
 {
     public static class Extensions
 	{

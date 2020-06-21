@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MK94.Dumper\MK94.Dumper.csproj" />
+    <ProjectReference Include="..\MK94.Dumper\MK94.SirUI.csproj" />
   </ItemGroup>
 
 </Project>

@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Text;
 using WatsonWebsocket;
 
-namespace MK94.Dumper
+namespace MK94.SirUI
 {
     public class Renderer
 	{
