@@ -8,6 +8,9 @@ on:
 
 jobs:
   build:
+    defaults:
+      run:
+        working-directory: C#
 
     runs-on: ubuntu-latest
 
@@ -18,11 +21,8 @@ jobs:
       with:
         dotnet-version: 3.1.101
     - name: Install dependencies
-      working-directory: C#
       run: dotnet restore
     - name: Build
-      working-directory: C#
       run: dotnet build --configuration Release --no-restore
     - name: Test
-      working-directory: C#
       run: dotnet test --no-restore --verbosity normal
