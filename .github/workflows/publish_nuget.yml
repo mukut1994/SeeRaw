@@ -42,5 +42,5 @@ jobs:
     - name: Publish
       run: | 
         version="`cat nuget.version`" 
-        cd bin\Release
+        cd bin/Release
         dotnet nuget push MK94.SirUI.$version.nupkg -k ${{ secrets.NUGET }} -s https://api.nuget.org/v3/index.json
