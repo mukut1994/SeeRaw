@@ -16,7 +16,7 @@ jobs:
   publish:
     defaults:
       run:
-        working-directory: C#
+        working-directory: C#/MK94.Dumper
     runs-on: ubuntu-latest
 
     steps:
