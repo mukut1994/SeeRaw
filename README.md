@@ -5,7 +5,7 @@
  - Package client into server
  - Extensions for custom types/renderers
  - More Special Types
-   - Progresbar 
+   - Progressbar 
    - TreeView 
    - Input
  - Language support
