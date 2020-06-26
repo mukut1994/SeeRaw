@@ -3,8 +3,14 @@ name: .NET Core
 on:
   push:
     branches: [ master ]
+    paths: 
+      - "C#"
+      - "!C#/MK94.Dumper/nuget.version"
   pull_request:
     branches: [ master ]
+    paths: 
+      - "C#"
+      - "!C#/MK94.Dumper/nuget.version"
 
 jobs:
   build:

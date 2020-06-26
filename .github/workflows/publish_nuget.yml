@@ -1,0 +1,39 @@
+name: Publish Nuget
+
+on:
+  push:
+    branches: [ master ]
+    paths: C#/MK94.Dumper/nuget.version
+
+jobs:
+  publish:
+    defaults:
+      run:
+        working-directory: C#/MK94.Dumper
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+          
+    - name: Install dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    
+    - name: Pack
+      run: | 
+        version="`cat nuget.version`"
+        dotnet pack --configuration Release --no-restore /p:Version=$version
+
+    # Runs a set of commands using the runners shell
+    - name: Publish
+      run: | 
+        version="`cat nuget.version`" 
+        cd bin/Release
+        dotnet nuget push MK94.SirUI.$version.nupkg -k ${{ secrets.NUGET }} -s https://api.nuget.org/v3/index.json
