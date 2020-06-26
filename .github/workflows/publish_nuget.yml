@@ -40,4 +40,6 @@ jobs:
 
     # Runs a set of commands using the runners shell
     - name: Publish
-      run: echo bin/Release/MK94.SirUI.$version.nupkg
+      run: | 
+        version="`cat nuget.version`" 
+        dotnet nuget publish MK94.SirUI.$version.nupkg -k ${{ secrets.NUGET }} -s https://api.nuget.org/v3/index.json
