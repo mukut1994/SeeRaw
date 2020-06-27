@@ -35,6 +35,9 @@ jobs:
 
     - name: Setup Yarn
       run: npm install -g yarn
+      
+    - name: Yarn install
+      run: yarn
 
     - name: Install dependencies
       run: dotnet restore
