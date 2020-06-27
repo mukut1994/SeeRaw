@@ -34,6 +34,7 @@ jobs:
           node-version: '12'
 
     - name: Setup Yarn
+      working-directory: Client
       run: npm install -g yarn
       
     - name: Yarn install
