@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -8,4 +8,20 @@
     <PackageReference Include="WatsonWebsocket" Version="2.1.7.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Client\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClientFiles Include="../../Client/dist/**" />
+    <ClientSrcFiles Include="../../Client/src/**" />
+  </ItemGroup>
+  
+  <Target Inputs="@(ClientSrcFiles)" Outputs="$(ProjectDir)Client\index.html" Name="PrecompileScript" BeforeTargets="BeforeBuild">
+    <Exec WorkingDirectory="../../Client" Command="yarn build --prod" />
+    <Copy SourceFiles="@(ClientFiles)" DestinationFolder="$(ProjectDir)/Client" />
+  </Target>
+  
 </Project>

@@ -4,14 +4,14 @@ on:
   push:
     branches: [ master ]
     paths: 
-      - "C#"
+      - "C#/**"
       - "!C#/MK94.Dumper/nuget.version"
   pull_request:
     branches: [ master ]
     paths: 
-      - "C#"
+      - "C#/**"
       - "!C#/MK94.Dumper/nuget.version"
-
+      
 jobs:
   build:
     defaults:
@@ -22,13 +22,29 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.101
+
+    - name: Setup node
+      uses: actions/setup-node@v2-beta
+      with:
+          node-version: '12'
+
+    - name: Setup Yarn
+      run: npm install -g yarn
+      
+    - name: Yarn install
+      working-directory: Client
+      run: yarn
+
     - name: Install dependencies
       run: dotnet restore
+
     - name: Build
       run: dotnet build --configuration Release --no-restore
+
     - name: Test
       run: dotnet test --no-restore --verbosity normal

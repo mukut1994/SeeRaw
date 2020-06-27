@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
+using System.Net;
+using System.Reflection;
 using System.Text;
 using WatsonWebsocket;
 
@@ -23,6 +26,7 @@ namespace MK94.SirUI
 		private WatsonWsServer ConnectRenderer()
 		{
 			WatsonWsServer server = new WatsonWsServer("localhost", 3054, false);
+			server.HttpHandler = HttpHandler;
 			server.ClientConnected += ClientConnected;
 			server.ClientDisconnected += ClientDisconnected;
 			server.MessageReceived += MessageReceived;
@@ -31,10 +35,34 @@ namespace MK94.SirUI
 			return server;
 		}
 
+		void HttpHandler(HttpListenerContext httpListenerContext)
+        {
+			var file = CleanFileName(httpListenerContext.Request.RawUrl);
+
+			httpListenerContext.Response.ContentType = "text/html";
+
+			var stream = Assembly.GetExecutingAssembly()
+				.GetManifestResourceStream(file);
+
+			stream.CopyTo(httpListenerContext.Response.OutputStream);
+			stream.Flush();
+
+			httpListenerContext.Response.Close();
+			stream.Dispose();
+		}
+
+		private static string CleanFileName(string file)
+		{
+			if (file == "/")
+				file = "index.html";
+
+			file = "MK94.SirUI.Client." + file.Trim('/');
+
+			return file;
+		}
+
 		void ClientConnected(object sender, ClientConnectedEventArgs args)
 		{
-			Console.WriteLine("Client connected: " + args.IpPort);
-
 			clients.TryAdd(args.IpPort, true);
 			var serialized = new StringBuilder();
 			Serializer.Serialize(state, serialized);
@@ -43,7 +71,6 @@ namespace MK94.SirUI
 
 		void ClientDisconnected(object sender, ClientDisconnectedEventArgs args)
 		{
-			Console.WriteLine("Client disconnected: " + args.IpPort);
 			clients.TryRemove(args.IpPort, out _);
 		}
 
@@ -58,8 +85,10 @@ namespace MK94.SirUI
 
 				action();
 			}
+#if DEBUG
 			else
 				Console.WriteLine("Unknown message from " + args.IpPort + ": " + Encoding.UTF8.GetString(args.Data));
+#endif
 		}
 
 		public T Render<T>(T o)
