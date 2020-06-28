@@ -8,6 +8,8 @@ namespace MK94.SirUI.Example
     {
         static void Main(string[] args)
         {
+            SirUI.OpenDefaultBrowser();
+
             new List<object> { new Test { I = 2, A = "OK" }, 2, 3 }.Render(out var x);
             "ok".Render();
             1.Render();

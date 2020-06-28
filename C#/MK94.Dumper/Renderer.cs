@@ -1,31 +1,38 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using WatsonWebsocket;
 
 namespace MK94.SirUI
 {
-    public class Renderer
+	public class Renderer
 	{
+		private readonly short port;
+
 		private RenderRoot state = new RenderRoot();
+
 		private Lazy<WatsonWsServer> server;
+
 		private ConcurrentDictionary<string, bool> clients = new ConcurrentDictionary<string, bool>();
 		private ConcurrentDictionary<string, Action> actions = new ConcurrentDictionary<string, Action>();
 
-		public Renderer(bool connect = false)
+		public Renderer(short port = 3054, bool openBrowser = false)
 		{
+			this.port = port;
 			server = new Lazy<WatsonWsServer>(ConnectRenderer);
 
-			if (connect)
-				_ = server.Value;
+			if (openBrowser)
+				OpenBrowser();
 		}
 
 		private WatsonWsServer ConnectRenderer()
 		{
-			WatsonWsServer server = new WatsonWsServer("localhost", 3054, false);
+			WatsonWsServer server = new WatsonWsServer("localhost", port, false);
 			server.HttpHandler = HttpHandler;
 			server.ClientConnected += ClientConnected;
 			server.ClientDisconnected += ClientDisconnected;
@@ -35,6 +42,38 @@ namespace MK94.SirUI
 			return server;
 		}
 
+		public void OpenBrowser()
+		{
+			_ = server.Value;
+			var url = $"http://localhost:{port}";
+
+			try
+			{
+				Process.Start(url);
+			}
+			catch
+			{
+				// hack because of this: https://github.com/dotnet/corefx/issues/10361
+				if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+				{
+					url = url.Replace("&", "^&");
+					Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
+				}
+				else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+				{
+					Process.Start("xdg-open", url);
+				}
+				else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+				{
+					Process.Start("open", url);
+				}
+				else
+				{
+					throw;
+				}
+			}
+		}
+	
 		void HttpHandler(HttpListenerContext httpListenerContext)
         {
 			var file = CleanFileName(httpListenerContext.Request.RawUrl);

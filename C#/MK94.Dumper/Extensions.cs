@@ -4,7 +4,7 @@ namespace MK94.SirUI
 {
     public static class Extensions
 	{
-		internal static Lazy<Renderer> instance = new Lazy<Renderer>(() => new Renderer(true));
+		internal static Lazy<Renderer> instance = new Lazy<Renderer>(() => new Renderer());
 
 		public static T Render<T>(this T obj)
 		{
@@ -18,4 +18,12 @@ namespace MK94.SirUI
 			return obj;
 		}
 	}
+
+	public static class SirUI
+    {
+		public static void OpenDefaultBrowser()
+        {
+			Extensions.instance.Value.OpenBrowser();
+        }
+    }
 }
