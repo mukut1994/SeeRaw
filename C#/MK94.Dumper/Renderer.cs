@@ -6,7 +6,6 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using WatsonWebsocket;
 
 namespace MK94.SirUI
 {
@@ -16,30 +15,17 @@ namespace MK94.SirUI
 
 		private RenderRoot state = new RenderRoot();
 
-		private Lazy<WatsonWsServer> server;
+		private Lazy<Server> server;
 
-		private ConcurrentDictionary<string, bool> clients = new ConcurrentDictionary<string, bool>();
 		private ConcurrentDictionary<string, Action> actions = new ConcurrentDictionary<string, Action>();
 
 		public Renderer(short port = 3054, bool openBrowser = false)
 		{
 			this.port = port;
-			server = new Lazy<WatsonWsServer>(ConnectRenderer);
+			server = new Lazy<Server>(() => new Server(IPAddress.Loopback, port, ClientConnected, MessageReceived));
 
 			if (openBrowser)
 				OpenBrowser();
-		}
-
-		private WatsonWsServer ConnectRenderer()
-		{
-			WatsonWsServer server = new WatsonWsServer("localhost", port, false);
-			server.HttpHandler = HttpHandler;
-			server.ClientConnected += ClientConnected;
-			server.ClientDisconnected += ClientDisconnected;
-			server.MessageReceived += MessageReceived;
-			server.Start();
-
-			return server;
 		}
 
 		public void OpenBrowser()
@@ -74,48 +60,17 @@ namespace MK94.SirUI
 			}
 		}
 	
-		void HttpHandler(HttpListenerContext httpListenerContext)
-        {
-			var file = CleanFileName(httpListenerContext.Request.RawUrl);
-
-			httpListenerContext.Response.ContentType = "text/html";
-
-			var stream = Assembly.GetExecutingAssembly()
-				.GetManifestResourceStream(file);
-
-			stream.CopyTo(httpListenerContext.Response.OutputStream);
-			stream.Flush();
-
-			httpListenerContext.Response.Close();
-			stream.Dispose();
-		}
-
-		private static string CleanFileName(string file)
+		void ClientConnected()
 		{
-			if (file == "/")
-				file = "index.html";
-
-			file = "MK94.SirUI.Client." + file.Trim('/');
-
-			return file;
-		}
-
-		void ClientConnected(object sender, ClientConnectedEventArgs args)
-		{
-			clients.TryAdd(args.IpPort, true);
 			var serialized = new StringBuilder();
 			Serializer.Serialize(state, serialized);
-			server.Value.SendAsync(args.IpPort, serialized.ToString());
+
+			server.Value.Broadcast(serialized.ToString());
 		}
 
-		void ClientDisconnected(object sender, ClientDisconnectedEventArgs args)
+		void MessageReceived(string message)
 		{
-			clients.TryRemove(args.IpPort, out _);
-		}
-
-		void MessageReceived(object sender, MessageReceivedEventArgs args)
-		{
-			var arg = Encoding.UTF8.GetString(args.Data).Split(';');
+			var arg = message.Split(';');
 
 			if (arg[0].Equals("link"))
 			{
@@ -126,7 +81,7 @@ namespace MK94.SirUI
 			}
 #if DEBUG
 			else
-				Console.WriteLine("Unknown message from " + args.IpPort + ": " + Encoding.UTF8.GetString(args.Data));
+				Console.WriteLine("Unknown message " + message);
 #endif
 		}
 
@@ -150,10 +105,7 @@ namespace MK94.SirUI
 			Serializer.Serialize(state, serialized);
 			var payload = serialized.ToString();
 
-			foreach (var connection in clients)
-			{
-				server.Value.SendAsync(connection.Key, payload);
-			}
+			server.Value.Broadcast(payload);
 		}
 
 		public void RegisterAction(Guid id, Action handler)
