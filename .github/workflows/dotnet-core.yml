@@ -35,15 +35,7 @@ jobs:
       with:
         path: ~/.npm
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Client/**/yarn.lock') }}
-        
-    - name: Cache Client
-      uses: actions/cache@v2
-      env:
-        cache-name: cache-client
-      with:
-        path: C#/MK94.Dumper/Client
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Client/**') }}
-        
+
     - name: Cache nuget packages
       uses: actions/cache@v2
       env:
