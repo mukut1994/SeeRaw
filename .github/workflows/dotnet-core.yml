@@ -34,12 +34,12 @@ jobs:
         cache-name: cache-node-modules
       with:
         path: ~/.npm
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Client/**/package-lock.json') }}
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Client/**/yarn.lock') }}
         
     - name: Cache Client
       uses: actions/cache@v2
       env:
-        cache-name: cache-node-modules
+        cache-name: cache-client
       with:
         path: C#/MK94.Dumper/Client
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Client/**') }}
@@ -50,7 +50,7 @@ jobs:
         cache-name: cache-nuget-packages
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('C#/**.csproj') }}
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('C#/**/*.csproj') }}
         
     - name: Setup Yarn
       run: npm install -g yarn
