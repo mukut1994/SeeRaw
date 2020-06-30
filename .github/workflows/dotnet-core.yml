@@ -1,11 +1,6 @@
 name: .NET Core
 
 on:
-  push:
-    branches: [ master ]
-    paths: 
-      - "C#/**"
-      - "!C#/MK94.Dumper/nuget.version"
   pull_request:
     branches: [ master ]
     paths: 
@@ -33,6 +28,22 @@ jobs:
       with:
           node-version: '12'
 
+    - name: Cache node modules
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-node-modules
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Client/**/package-lock.json') }}
+        
+    - name: Cache nuget packages
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-nuget-packages
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('C#/**.csproj') }}
+        
     - name: Setup Yarn
       run: npm install -g yarn
       
