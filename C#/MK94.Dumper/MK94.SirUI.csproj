@@ -12,6 +12,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Client/**">
+      <Pack>true</Pack>
+    </Content>
+  </ItemGroup>
+  
+  <ItemGroup>
     <ClientFiles Include="../../Client/dist/**" />
     <ClientSrcFiles Include="../../Client/src/**" />
   </ItemGroup>
