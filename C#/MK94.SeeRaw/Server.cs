@@ -11,7 +11,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MK94.SirUI
+namespace MK94.SeeRaw
 {
     internal class Server
     {
@@ -116,7 +116,7 @@ namespace MK94.SirUI
             if (file == "/")
                 file = "index.html";
 
-            file = "MK94.SirUI.Client." + file.Trim('/');
+            file = "MK94.SeeRaw.Client." + file.Trim('/');
 
             return file;
         }

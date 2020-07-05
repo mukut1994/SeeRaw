@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MK94.SirUI
+namespace MK94.SeeRaw
 {
     public static class Extensions
     {
@@ -19,7 +19,7 @@ namespace MK94.SirUI
         }
     }
 
-    public static class SirUI
+    public static class SeeRaw
     {
         public static void OpenDefaultBrowser()
         {
