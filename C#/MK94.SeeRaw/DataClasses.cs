@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace MK94.SirUI
+namespace MK94.SeeRaw
 {
     public class RenderRoot
 	{

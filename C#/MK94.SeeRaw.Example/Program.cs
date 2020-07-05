@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace MK94.SirUI.Example
+namespace MK94.SeeRaw.Example
 {
     class Program
     {
         static void Main(string[] args)
         {
-            SirUI.OpenDefaultBrowser();
+            SeeRaw.OpenDefaultBrowser();
 
             new List<object> { new Test { I = 2, A = "OK" }, 2, 3 }.Render(out var x);
             "ok".Render();

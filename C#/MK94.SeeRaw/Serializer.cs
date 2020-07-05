@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace MK94.SirUI
+namespace MK94.SeeRaw
 {
     public static class Serializer
 	{

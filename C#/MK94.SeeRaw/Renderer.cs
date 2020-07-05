@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace MK94.SirUI
+namespace MK94.SeeRaw
 {
 	public class Renderer
 	{
