@@ -43,9 +43,8 @@ jobs:
         version="`cat nuget.version`"
         dotnet pack --configuration Release --no-restore /p:Version=$version
 
-    # Runs a set of commands using the runners shell
     - name: Publish
       run: | 
         version="`cat nuget.version`" 
         cd bin/Release
-        dotnet nuget push MK94.SirUI.$version.nupkg -k ${{ secrets.NUGET }} -s https://api.nuget.org/v3/index.json
+        dotnet nuget push MK94.SeeRaw.$version.nupkg -k ${{ secrets.NUGET }} -s https://api.nuget.org/v3/index.json
