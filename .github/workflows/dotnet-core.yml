@@ -5,7 +5,7 @@ on:
     branches: [ master ]
     paths: 
       - "C#/**"
-      - "!C#/MK94.Dumper/nuget.version"
+      - "!C#/MK94.SeeRaw/nuget.version"
       
 jobs:
   build:
