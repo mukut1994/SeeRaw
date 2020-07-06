@@ -3,13 +3,13 @@ name: Publish Nuget
 on:
   push:
     branches: [ master ]
-    paths: C#/MK94.Dumper/nuget.version
+    paths: C#/MK94.SeeRaw/nuget.version
 
 jobs:
   publish:
     defaults:
       run:
-        working-directory: C#/MK94.Dumper
+        working-directory: C#/MK94.SeeRaw
     runs-on: ubuntu-latest
 
     steps:
