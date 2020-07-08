@@ -1,6 +1,8 @@
 name: Publish Nuget
 
 on:
+  pull_request:
+    branches: [ master ]
   push:
     branches: [ master ]
     paths: C#/MK94.SeeRaw/nuget.version
@@ -38,13 +40,19 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     
+    - name: Collect Artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: test
+        path: C#
+    
     - name: Pack
       run: | 
         version="`cat nuget.version`"
         dotnet pack --configuration Release --no-restore /p:Version=$version
 
-    - name: Publish
-      run: | 
-        version="`cat nuget.version`" 
-        cd bin/Release
-        dotnet nuget push MK94.SeeRaw.$version.nupkg -k ${{ secrets.NUGET }} -s https://api.nuget.org/v3/index.json
+    #- name: Publish
+    #  run: | 
+    #    version="`cat nuget.version`" 
+    #    cd bin/Release
+    #    dotnet nuget push MK94.SeeRaw.$version.nupkg -k ${{ secrets.NUGET }} -s https://api.nuget.org/v3/index.json
