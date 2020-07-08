@@ -20,12 +20,16 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ClientFiles Include="$(ProjectDir)/../../Client/dist/**" />
     <ClientSrcFiles Include="$(ProjectDir)/../../Client/src/**" />
   </ItemGroup>
   
   <Target Inputs="@(ClientSrcFiles)" Outputs="$(ProjectDir)Client\index.html" Name="PrecompileScript" BeforeTargets="BeforeBuild">
     <Exec WorkingDirectory="$(ProjectDir)/../../Client" Command="yarn build --prod" />
+    
+    <ItemGroup>
+      <ClientFiles Include="$(ProjectDir)/../../Client/dist/**" />
+    </ItemGroup>
+    
     <Copy SourceFiles="@(ClientFiles)" DestinationFolder="$(ProjectDir)/Client" />
   </Target>
 
