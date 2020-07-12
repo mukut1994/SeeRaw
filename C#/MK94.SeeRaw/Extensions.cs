@@ -25,5 +25,10 @@ namespace MK94.SeeRaw
         {
             Extensions.instance.Value.OpenBrowser();
         }
+
+        public static void SetDefaultRenderer(Renderer renderer)
+        {
+            Extensions.instance = new Lazy<Renderer>(renderer);
+        }
     }
 }
