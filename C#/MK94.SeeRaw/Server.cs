@@ -50,13 +50,11 @@ namespace MK94.SeeRaw
             }
         }
 
-        public void Broadcast(string message)
+        public void Broadcast(ArraySegment<byte> message)
         {
-            var asArray = Encoding.ASCII.GetBytes(message);
-
             foreach(var (_, socket) in connections)
             {
-                socket.SendAsync(asArray, WebSocketMessageType.Text, true, default);
+                socket.SendAsync(message, WebSocketMessageType.Text, true, default);
             }
         }
 

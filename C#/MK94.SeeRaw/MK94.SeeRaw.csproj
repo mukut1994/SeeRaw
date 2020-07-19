@@ -23,6 +23,10 @@
     <ClientSrcFiles Include="$(ProjectDir)/../../Client/src/**" />
   </ItemGroup>
   
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="4.7.2" />
+  </ItemGroup>
+  
   <Target Inputs="@(ClientSrcFiles)" Outputs="$(ProjectDir)Client\index.html" Name="PrecompileScript" BeforeTargets="BeforeBuild">
     <Exec WorkingDirectory="$(ProjectDir)/../../Client" Command="yarn build --prod" />
     

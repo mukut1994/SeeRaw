@@ -1,77 +1,146 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 
 namespace MK94.SeeRaw
 {
-    public static class Serializer
+	static class Serializer
 	{
-		public static void Serialize(object o, StringBuilder builder)
+		public static void Serialize(object obj, Type type, bool serializeNulls, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
 		{
-			if (o == null)
-				builder.Append(@"{ ""type"": null }");
-
-			else if (o is string)
-				builder.Append($@"{{ ""type"": ""string"", ""target"": ""{o}"" }}");
-
-			else if (o is int) // TODO all the other types
-				builder.Append($@"{{ ""type"": ""number"", ""target"": {o} }}");
-
-			else if (o is RenderRoot r)
+			if (obj == null && !serializeNulls)
 			{
-				builder.Append(@"{ ""targets"": [ ");
+				writer.WriteString("type", "null");
+				writer.WriteNull("target");
+			}
 
-				foreach ((object element, int i) in r.Targets.Select((rt, i) => (rt, i)))
+			else if (type == typeof(bool))
+			{
+				writer.WriteString("type", "bool");
+				writer.WriteBoolean("target", (bool)obj);
+			}
+
+			else if (IsNumericalType(type))
+			{
+				writer.WriteString("type", "number");
+
+				var writeNumber = typeof(Utf8JsonWriter).GetMethod(nameof(Utf8JsonWriter.WriteNumber), new[] { typeof(string), type });
+				writeNumber.Invoke(writer, new[] { "target", obj });
+			}
+
+			else if (type == typeof(string))
+			{
+				writer.WriteString("type", "string");
+				writer.WriteString("target", (string)obj);
+			}
+
+			else if (typeof(IEnumerable).IsAssignableFrom(type))
+			{
+				writer.WriteString("type", "array");
+				writer.WriteStartArray("target");
+
+				foreach (var elm in (IEnumerable)obj)
 				{
-					if (i != 0)
-						builder.Append(", ");
-
-					Serialize(element, builder);
+					writer.WriteStartObject();
+					Serialize(elm, elm.GetType(), serializeNulls, writer, callbacks);
+					writer.WriteEndObject();
 				}
 
-				builder.Append(" ] }");
+				writer.WriteEndArray();
 			}
-			else if (o is RenderTarget t)
-			{
-				Serialize(t.Value, builder);
-			}
-			else if (o is IEnumerable a)
-			{
-				builder.Append(@"{ ""type"": ""array"", ""target"": [ ");
 
-				var i = 0;
-				foreach (var element in a)
+			else if (obj is RenderRoot root)
+			{
+				writer.WriteStartArray("targets");
+
+				foreach (var target in root.Targets)
 				{
-					if (i != 0)
-						builder.Append(", ");
-
-					Serialize(element, builder);
-
-					i++;
+					writer.WriteStartObject();
+					Serialize(target, typeof(RenderTarget), false, writer, callbacks);
+					writer.WriteEndObject();
 				}
 
-				builder.Append("] }");
+				writer.WriteEndArray();
 			}
-			else if (o is Link l)
+
+			else if (obj is RenderTarget target)
 			{
-				builder.Append($@"{{ ""type"": ""link"", ""text"": ""{l.Text}"", ""id"": ""{l.Id}"" }}");
+				Serialize(target.Value, target.Value.GetType(), serializeNulls, writer, callbacks);
 			}
+
+			else if (obj is Link l)
+				AppendLink(l, writer, callbacks);
+
+			else if (obj is Delegate d)
+				AppendDelegate(d, writer, callbacks);
+
 			else
 			{
-				builder.Append(@"{ ""type"": ""object"", ""target"": { ");
+				writer.WriteString("type", "object");
+				writer.WriteStartObject("target");
 
-				foreach ((PropertyInfo prop, int i) in o.GetType().GetProperties().Select((x, i) => (x, i)))
+				foreach ((PropertyInfo prop, int i) in obj.GetType().GetProperties().Select((x, i) => (x, i)))
 				{
-					if (i != 0)
-						builder.Append(", ");
+					writer.WriteStartObject(prop.Name);
 
-					builder.Append($@"""{prop.Name}"": ");
-					Serialize(prop.GetValue(o), builder);
+					Serialize(prop.GetValue(obj), prop.PropertyType, serializeNulls, writer, callbacks);
+					writer.WriteEndObject();
 				}
 
-				builder.Append("} }");
+				writer.WriteEndObject();
 			}
 		}
+
+		private static void AppendLink(Link link, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
+        {
+			writer.WriteString("text", link.Text);
+
+			// TODO link
+			AppendDelegate(link.Action, writer, callbacks);
+        }
+
+		private static void AppendDelegate(Delegate @delegate, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
+		{
+			var id = Guid.NewGuid().ToString();
+
+			callbacks.Add(id, @delegate);
+
+			writer.WriteString("type", "form");
+			writer.WriteString("id", id);
+
+			writer.WriteStartArray("inputs");
+			foreach (var parameter in @delegate.GetMethodInfo().GetParameters())
+			{
+				if (!parameter.ParameterType.IsPrimitive && parameter.ParameterType != typeof(string))
+					throw new InvalidOperationException($"Delegate can only have primitive arguments");
+
+				writer.WriteStartObject();
+
+				writer.WriteString("name", parameter.Name);
+				Serialize(null, parameter.ParameterType, true, writer, callbacks);
+
+				writer.WriteEndObject();
+			}
+			writer.WriteEndArray();
+		}
+
+		private static bool IsNumericalType(Type t)
+		{
+			return t == typeof(sbyte) ||
+					t == typeof(byte) ||
+					t == typeof(short) ||
+					t == typeof(ushort) ||
+					t == typeof(int) ||
+					t == typeof(uint) ||
+					t == typeof(long) ||
+					t == typeof(ulong) ||
+					t == typeof(float) ||
+					t == typeof(decimal);
+		}
 	}
+
 }

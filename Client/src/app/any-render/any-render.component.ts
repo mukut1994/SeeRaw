@@ -7,6 +7,8 @@ import { BackendService } from './../backend.service';
   styleUrls: ["./any-render.component.css"],
 })
 export class AnyRenderComponent implements OnInit {
+
+  @Input() editable: boolean;
   @Input() target: any;
 
   constructor(private backend: BackendService) {}

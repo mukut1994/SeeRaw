@@ -8,9 +8,9 @@ namespace MK94.SeeRaw.Example
     {
         static void Main(string[] args)
         {
+            /*
             // Open the browser using the default host; Optional: the browser can be opened manually
-            SeeRaw.OpenDefaultBrowser();
-
+            //SeeRaw.OpenDefaultBrowser();
             var list = new List<object> { new Test { I = 2, A = "OK" }, 2, 3 };
 
             // Render out some things
@@ -23,6 +23,13 @@ namespace MK94.SeeRaw.Example
             // Render a link to update the list
             var link = new Link("set list to '1'", () => renderTarget.Value = 1);
             link.Render();
+            */
+
+            new Test { I = 2, A = "OK" }.Render();
+
+            Action<int, string> d = (int i, string s) => Console.WriteLine($"{i}, {s}");
+
+            new Link("Test", d).Render();
 
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
