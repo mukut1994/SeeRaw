@@ -7,7 +7,7 @@ import { BackendService } from './backend.service';
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
-  title = 'dumper';
+  title = 'SeeRaw';
 
   constructor() {}
 }

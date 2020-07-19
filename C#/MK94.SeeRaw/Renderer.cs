@@ -15,14 +15,14 @@ namespace MK94.SeeRaw
 
 		private RenderRoot state = new RenderRoot();
 
-		private Lazy<Server> server;
+		private Server server;
 
 		private ConcurrentDictionary<string, Action> actions = new ConcurrentDictionary<string, Action>();
 
 		public Renderer(short port = 3054, bool openBrowser = false)
 		{
 			this.port = port;
-			server = new Lazy<Server>(() => new Server(IPAddress.Loopback, port, ClientConnected, MessageReceived));
+			server = new Server(IPAddress.Loopback, port, ClientConnected, MessageReceived);
 
 			if (openBrowser)
 				OpenBrowser();
@@ -30,7 +30,6 @@ namespace MK94.SeeRaw
 
 		public void OpenBrowser()
 		{
-			_ = server.Value;
 			var url = $"http://localhost:{port}";
 
 			try
@@ -59,13 +58,13 @@ namespace MK94.SeeRaw
 				}
 			}
 		}
-	
+
 		void ClientConnected()
 		{
 			var serialized = new StringBuilder();
 			Serializer.Serialize(state, serialized);
 
-			server.Value.Broadcast(serialized.ToString());
+			server.Broadcast(serialized.ToString());
 		}
 
 		void MessageReceived(string message)
@@ -105,7 +104,7 @@ namespace MK94.SeeRaw
 			Serializer.Serialize(state, serialized);
 			var payload = serialized.ToString();
 
-			server.Value.Broadcast(payload);
+			server.Broadcast(payload);
 		}
 
 		public void RegisterAction(Guid id, Action handler)
