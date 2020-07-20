@@ -167,6 +167,9 @@ namespace MK94.SeeRaw
                     }
                     while (true);
 
+                    if (socket.State != WebSocketState.Open)
+                        return;
+
                     onMessage.Invoke(message.ToString());
                 }
             }

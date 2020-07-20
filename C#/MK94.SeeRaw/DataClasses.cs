@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MK94.SeeRaw
 {
-    public class RenderRoot
+    class RenderRoot
 	{
 		public List<RenderTarget> Targets { get; } = new List<RenderTarget>();
 	}
@@ -31,13 +31,13 @@ namespace MK94.SeeRaw
 		}
 	}
 
-	public class Link
+	class Actionable
 	{
 		internal Delegate Action { get; }
 
 		public string Text { get; }
 
-		public Link(string text, Delegate action)
+		public Actionable(string text, Delegate action)
 		{
 			Action = action;
 			Text = text;

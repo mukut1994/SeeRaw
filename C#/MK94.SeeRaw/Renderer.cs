@@ -78,18 +78,42 @@ namespace MK94.SeeRaw
 
 		void MessageReceived(string message)
 		{
-			//var deserialized = JsonSerializer.Deserialize<JsonElement>(message);
-			
-			/*var arg = message.Split(';');
-			if (arg[0].Equals("link"))
+			var deserialized = JsonSerializer.Deserialize<JsonElement>(message);
+
+			var id = deserialized.GetProperty("id").GetString();
+			var type = deserialized.GetProperty("type").GetString();
+
+			if (callbacks.TryGetValue(id, out var @delegate))
 			{
-				if (callbacks.TryGetValue(arg[1].Trim(), out var action) && action is Action a)
+				if (type == "link" && @delegate is Action a)
 					a();
-			}*/
+
+				else if (type == "form")
+				{
+					var jsonArgs = deserialized.GetProperty("args");
+					var parameters = @delegate.Method.GetParameters();
+					var deserializedArgs = new List<object>();
+
+					for (int i = 0; i < parameters.Length; i++)
+					{
+						// Hacky way to deserialize until https://github.com/dotnet/runtime/issues/31274 is implemented
+						var jsonArg = JsonSerializer.Deserialize(jsonArgs[i].GetRawText(), parameters[i].ParameterType);
+
+						deserializedArgs.Add(jsonArg);
+					}
+
+					@delegate.DynamicInvoke(deserializedArgs.ToArray());
+				}
+				else UnknownMessage();
+			}
+			else UnknownMessage();
+
+			void UnknownMessage()
+			{
 #if DEBUG
-			//else
 				Console.WriteLine("Unknown message " + message);
 #endif
+			}
 		}
 
 		public T Render<T>(T o)

@@ -19,14 +19,14 @@ namespace MK94.SeeRaw
         }
     }
 
-    public static class SeeRaw
+    public static class SeeRawDefault
     {
-        public static void OpenDefaultBrowser()
+        public static void OpenBrowser()
         {
             Extensions.instance.Value.OpenBrowser();
         }
 
-        public static void SetDefaultRenderer(Renderer renderer)
+        public static void SetRenderer(Renderer renderer)
         {
             Extensions.instance = new Lazy<Renderer>(renderer);
         }

@@ -72,7 +72,7 @@ namespace MK94.SeeRaw
 				Serialize(target.Value, target.Value.GetType(), serializeNulls, writer, callbacks);
 			}
 
-			else if (obj is Link l)
+			else if (obj is Actionable l)
 				AppendLink(l, writer, callbacks);
 
 			else if (obj is Delegate d)
@@ -95,22 +95,28 @@ namespace MK94.SeeRaw
 			}
 		}
 
-		private static void AppendLink(Link link, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
+		private static void AppendLink(Actionable link, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
         {
 			writer.WriteString("text", link.Text);
 
-			// TODO link
+			var id = Guid.NewGuid().ToString();
+
+			callbacks.Add(id, link.Action);
+			writer.WriteString("id", id);
+
+			if (link.Action is Action)
+			{
+				writer.WriteString("type", "link");
+
+				return;
+            }
+
 			AppendDelegate(link.Action, writer, callbacks);
         }
 
 		private static void AppendDelegate(Delegate @delegate, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
 		{
-			var id = Guid.NewGuid().ToString();
-
-			callbacks.Add(id, @delegate);
-
 			writer.WriteString("type", "form");
-			writer.WriteString("id", id);
 
 			writer.WriteStartArray("inputs");
 			foreach (var parameter in @delegate.GetMethodInfo().GetParameters())

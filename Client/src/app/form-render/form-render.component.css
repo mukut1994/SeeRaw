@@ -18,3 +18,22 @@ table > td {
 table {
   border: 1px solid lightblue;
 }
+
+.link {
+  color: black;
+  border-radius: 5px;
+  border: 2px darkblue solid;
+  margin: 5px 5px 5px 5px;
+  padding: 10px;
+  width: fit-content;
+  text-decoration: none;
+  display: flex;
+}
+
+.link:hover {
+  background-color: lightgray;
+}
+
+.link:active {
+  background-color: green;
+}

@@ -8,38 +8,35 @@ namespace MK94.SeeRaw.Example
     {
         static void Main(string[] args)
         {
-            /*
             // Open the browser using the default host; Optional: the browser can be opened manually
-            //SeeRaw.OpenDefaultBrowser();
-            var list = new List<object> { new Test { I = 2, A = "OK" }, 2, 3 };
+            SeeRawDefault.OpenBrowser();
 
-            // Render out some things
-            "ok".Render();
-            1.Render();
+            // Show a basic hello world
+            "Hello World".Render();
 
-            // We can optionally render things and receive a reference to update it later
-            list.Render(out var renderTarget);
+            // Show a simple menu
+            // a. create a placeholder and keep a reference to the renderTarget so we can update it later
+            "Loading Menu...".Render(out var menuTarget);
+            "Click on a menu item above".Render(out var contentTarget);
 
-            // Render a link to update the list
-            var link = new Link("set list to '1'", () => renderTarget.Value = 1);
-            link.Render();
-            */
+            // b. Create actions/menu items to update the contentTarget depending on whats invoked
+            var hiAction = SeeRawTypes.Action("Say Hi", () => SayHi(contentTarget));
+            var calcAction = SeeRawTypes.Action("Calculator", () => Calc(contentTarget));
 
-            new Test { I = 2, A = "OK" }.Render();
-
-            Action<int, string> d = (int i, string s) => Console.WriteLine($"{i}, {s}");
-
-            new Link("Test", d).Render();
+            // c. Update the menuTarget to display the actions
+            menuTarget.Value = new List<object> { hiAction, calcAction };
 
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
         }
-    }
+        static void SayHi(RenderTarget contentTarget)
+        {
+            contentTarget.Value = SeeRawTypes.Action("Please enter your details", (string name) => contentTarget.Value = $"Hi {name}");
+        }
 
-    class Test
-    {
-        public int I { get; set; }
-
-        public string A { get; set; }
+        static void Calc(RenderTarget contentTarget)
+        {
+            contentTarget.Value = SeeRawTypes.Action("Add", (int a, int b) => contentTarget.Value = $"Result: {a + b}");
+        }
     }
 }
