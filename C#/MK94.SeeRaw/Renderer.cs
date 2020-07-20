@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MK94.SeeRaw
 {
@@ -17,12 +20,12 @@ namespace MK94.SeeRaw
 
 		private Server server;
 
-		private ConcurrentDictionary<string, Action> actions = new ConcurrentDictionary<string, Action>();
+		private Dictionary<string, Delegate> callbacks = new Dictionary<string, Delegate>();
 
 		public Renderer(short port = 3054, bool openBrowser = false)
 		{
 			this.port = port;
-			server = new Server(IPAddress.Loopback, port, ClientConnected, MessageReceived);
+			server = new Server(IPAddress.Loopback, port, Refresh, MessageReceived);
 
 			if (openBrowser)
 				OpenBrowser();
@@ -59,29 +62,58 @@ namespace MK94.SeeRaw
 			}
 		}
 
-		void ClientConnected()
-		{
-			var serialized = new StringBuilder();
-			Serializer.Serialize(state, serialized);
+		ArraySegment<byte> SerializeState()
+        {
+			var memStream = new MemoryStream();
+			var writer = new Utf8JsonWriter(memStream);
+			writer.WriteStartObject();
 
-			server.Broadcast(serialized.ToString());
+			Serializer.Serialize(state, typeof(RenderRoot), false, writer, callbacks);
+
+			writer.WriteEndObject();
+			writer.Flush();
+
+			return new ArraySegment<byte>(memStream.GetBuffer(), 0, (int)memStream.Position);
 		}
 
 		void MessageReceived(string message)
 		{
-			var arg = message.Split(';');
+			var deserialized = JsonSerializer.Deserialize<JsonElement>(message);
 
-			if (arg[0].Equals("link"))
+			var id = deserialized.GetProperty("id").GetString();
+			var type = deserialized.GetProperty("type").GetString();
+
+			if (callbacks.TryGetValue(id, out var @delegate))
 			{
-				if (!actions.TryGetValue(arg[1].Trim(), out var action))
-					return;
+				if (type == "link" && @delegate is Action a)
+					a();
 
-				action();
+				else if (type == "form")
+				{
+					var jsonArgs = deserialized.GetProperty("args");
+					var parameters = @delegate.Method.GetParameters();
+					var deserializedArgs = new List<object>();
+
+					for (int i = 0; i < parameters.Length; i++)
+					{
+						// Hacky way to deserialize until https://github.com/dotnet/runtime/issues/31274 is implemented
+						var jsonArg = JsonSerializer.Deserialize(jsonArgs[i].GetRawText(), parameters[i].ParameterType);
+
+						deserializedArgs.Add(jsonArg);
+					}
+
+					@delegate.DynamicInvoke(deserializedArgs.ToArray());
+				}
+				else UnknownMessage();
 			}
+			else UnknownMessage();
+
+			void UnknownMessage()
+			{
 #if DEBUG
-			else
 				Console.WriteLine("Unknown message " + message);
 #endif
+			}
 		}
 
 		public T Render<T>(T o)
@@ -100,16 +132,7 @@ namespace MK94.SeeRaw
 
 		public void Refresh()
 		{
-			var serialized = new StringBuilder();
-			Serializer.Serialize(state, serialized);
-			var payload = serialized.ToString();
-
-			server.Broadcast(payload);
-		}
-
-		public void RegisterAction(Guid id, Action handler)
-		{
-			actions[id.ToString()] = handler;
+			server.Broadcast(SerializeState());
 		}
 	}
 }

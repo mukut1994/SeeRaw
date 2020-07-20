@@ -7,6 +7,7 @@ import { Component, OnInit, Input } from '@angular/core';
 })
 export class ObjectRenderComponent implements OnInit {
 
+  @Input() editable: boolean;
   @Input() target: any;
 
   keys: any;

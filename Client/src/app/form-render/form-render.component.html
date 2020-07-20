@@ -1,0 +1,20 @@
+
+<table>
+  <thead>
+    <tr>
+      <td colspan="2">
+        <a class="link" href=# (click)="send()">{{value.text || "Execute"}}</a>
+      </td>
+    </tr>
+  </thead>
+  <ng-container *ngFor="let item of value.inputs">
+    <tr>
+      <td>
+        {{ item.name }}
+      </td>
+      <td>
+        <app-any-render [target]="item" [editable]="true"></app-any-render>
+      </td>
+    </tr>
+  </ng-container>
+</table>

@@ -6,6 +6,7 @@ import { Component, OnInit, Input } from "@angular/core";
   styleUrls: ["./array-render.component.css"],
 })
 export class ArrayRenderComponent implements OnInit {
+  @Input() editable: boolean;
   @Input() value: any[];
 
   constructor() {}
