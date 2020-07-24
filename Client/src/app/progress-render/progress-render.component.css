@@ -1,0 +1,44 @@
+.grid-container {
+  max-width: fit-content;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 1px 1px;
+  grid-template-areas: "min currentSpeed max" "progressbar progressbar progressbar" "pause speed cancel";
+}
+
+.progressbar {
+  grid-area: progressbar;
+}
+
+.progressbar > progress {
+  width: 100%;
+}
+
+.min {
+  grid-area: min;
+}
+
+.max {
+  grid-area: max;
+  text-align: right;
+}
+
+.pause {
+  grid-area: pause;
+}
+
+.speed {
+  grid-area: speed;
+  text-align: center;
+}
+
+.cancel {
+  grid-area: cancel;
+  text-align: right;
+}
+
+.currentSpeed {
+  grid-area: currentSpeed;
+  text-align: center;
+}
