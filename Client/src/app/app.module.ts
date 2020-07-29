@@ -9,6 +9,7 @@ import { ArrayRenderComponent } from './array-render/array-render.component';
 import { AnyRenderComponent } from './any-render/any-render.component';
 import { ObjectRenderComponent } from './object-render/object-render.component';
 import { FormRenderComponent } from './form-render/form-render.component';
+import { ProgressRenderComponent } from './progress-render/progress-render.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { FormRenderComponent } from './form-render/form-render.component';
     ArrayRenderComponent,
     AnyRenderComponent,
     ObjectRenderComponent,
-    FormRenderComponent
+    FormRenderComponent,
+    ProgressRenderComponent
   ],
   imports: [
     BrowserModule,

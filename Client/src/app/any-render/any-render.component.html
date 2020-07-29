@@ -32,6 +32,10 @@
     <app-form-render [value]="target"></app-form-render>
   </span>
 
+  <span *ngSwitchCase="'progress'">
+    <app-progress-render [target]="target"></app-progress-render>
+  </span>
+
   <span *ngSwitchDefault>
     <app-object-render
       [target]="target.target"
