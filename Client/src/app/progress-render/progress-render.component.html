@@ -1,0 +1,21 @@
+<div class="grid-container">
+  <div class="min">{{ target.min }}</div>
+  <div class="currentSpeed">
+    {{ target.value }}
+    <span *ngIf="target.value && target.speed">@</span>
+    {{ target.speed }}
+  </div>
+  <div class="max">{{ target.max }}</div>
+
+  <div class="progressbar"><progress value="{{target.percent}}" max="100"></progress></div>
+
+  <div class="pause" *ngIf="target.pause">
+    <button (click)="pause()">{{ !target.paused ? "Pause" : "Resume" }}</button>
+  </div>
+  <div class="speed" *ngIf="target.setSpeed">
+    <button (click)="setSpeed()">Set speed</button>
+  </div>
+  <div class="cancel" *ngIf="target.cancel">
+    <button (click)="cancel()">Cancel</button>
+  </div>
+</div>

@@ -78,6 +78,9 @@ namespace MK94.SeeRaw
 			else if (obj is Delegate d)
 				AppendDelegate(d, writer, callbacks);
 
+			else if (obj is Progress p)
+				AppendProgress(p, writer, callbacks);
+
 			else
 			{
 				writer.WriteString("type", "object");
@@ -132,6 +135,53 @@ namespace MK94.SeeRaw
 				writer.WriteEndObject();
 			}
 			writer.WriteEndArray();
+		}
+
+		private static void AppendProgress(Progress progress, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
+        {
+			writer.WriteString("type", "progress");
+
+			writer.WriteNumber("percent", progress.Percent);
+			writer.WriteString("value", progress.Value);
+			writer.WriteString("max", progress.Max);
+			writer.WriteString("min", progress.Min);
+
+			if (progress.Speed != null)
+				writer.WriteString("speed", progress.Speed);
+			else 
+				writer.WriteNull("speed");
+
+			if (progress.pauseToggle != null)
+			{
+				var id = Guid.NewGuid().ToString();
+
+				callbacks.Add(id, progress.pauseToggle);
+				writer.WriteString("pause", id);
+				writer.WriteBoolean("paused", progress.paused);
+			}
+			else
+				writer.WriteNull("pause");
+
+			if (progress.setSpeed != null)
+			{
+				var id = Guid.NewGuid().ToString();
+
+				callbacks.Add(id, progress.setSpeed);
+				writer.WriteString("setSpeed", id);
+			}
+			else
+				writer.WriteNull("setSpeed"); 
+			
+			if (progress.cancellationTokenSource != null)
+			{
+				var id = Guid.NewGuid().ToString();
+
+				callbacks.Add(id, (Action) progress.cancellationTokenSource.Cancel);
+				writer.WriteString("cancel", id);
+			}
+			else
+				writer.WriteNull("speed");
+
 		}
 
 		private static bool IsNumericalType(Type t)

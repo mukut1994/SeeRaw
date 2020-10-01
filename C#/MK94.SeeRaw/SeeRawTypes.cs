@@ -9,6 +9,9 @@ namespace MK94.SeeRaw
         #region Action
         // Yes this looks wrong, but Action has 17 different generic variations and there doesn't seem to be a better way of supporting all of them
 
+
+        public static object Action(string text, Delegate action) => new Actionable(text, action);
+
         public static object Action(string text, Action action) => new Actionable(text, action); 
         public static object Action<T1>
             (string text, Action<T1> action) => new Actionable(text, action);
