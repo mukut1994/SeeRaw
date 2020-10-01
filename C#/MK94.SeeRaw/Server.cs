@@ -98,7 +98,7 @@ namespace MK94.SeeRaw
 
             var resource = RequestPathToResourcePath(path);
 
-            var stream = Assembly.GetExecutingAssembly()
+            var stream = Assembly.GetAssembly(typeof(Server))
                 .GetManifestResourceStream(resource);
 
             await writer.WriteLineAsync("HTTP/1.1 200 OK");
