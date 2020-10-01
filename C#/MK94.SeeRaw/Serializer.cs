@@ -86,7 +86,7 @@ namespace MK94.SeeRaw
 				writer.WriteString("type", "object");
 				writer.WriteStartObject("target");
 
-				foreach ((PropertyInfo prop, int i) in obj.GetType().GetProperties().Select((x, i) => (x, i)))
+				foreach (var prop in obj.GetType().GetProperties())
 				{
 					writer.WriteStartObject(prop.Name);
 

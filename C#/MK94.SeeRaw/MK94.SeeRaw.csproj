@@ -8,21 +8,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Client\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Include="Client/**">
       <Pack>true</Pack>
     </Content>
   </ItemGroup>
-  
+
   <ItemGroup>
     <ClientSrcFiles Include="$(ProjectDir)/../../Client/src/**" />
   </ItemGroup>
-  
+
+  <ItemGroup>
+    <Content Remove="Client\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Client\**" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="4.7.2" />
   </ItemGroup>
