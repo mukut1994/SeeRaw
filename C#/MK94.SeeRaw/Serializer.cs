@@ -30,18 +30,12 @@ namespace MK94.SeeRaw
 		public void Serialize(object obj, Type type, bool serializeNulls, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
 		{
 			if (serializers.TryGetValue(type, out var globalSerializer))
-			{
 				globalSerializer.Serialize(obj, this, writer, callbacks, serializeNulls);
-				return;
-			}
 
-			if (obj is ISerializeable serializeable)
-			{
+			else if (obj is ISerializeable serializeable)
 				serializeable.Serialize(this, writer, callbacks, serializeNulls);
-				return;
-			}
 
-			if (obj == null && !serializeNulls)
+			else if (obj == null && !serializeNulls)
 			{
 				writer.WriteString("type", "null");
 				writer.WriteNull("target");
@@ -67,12 +61,13 @@ namespace MK94.SeeRaw
 				writer.WriteString("target", (string)obj);
 			}
 
-			else if (typeof(IEnumerable).IsAssignableFrom(type))
-            {
-                SerializeArrayLike(obj, serializeNulls, writer, callbacks);
-            }
+			else if (type.IsEnum)
+				SerializeEnum(obj, type, writer);
 
-            else if (obj is RenderRoot root)
+			else if (typeof(IEnumerable).IsAssignableFrom(type))
+				SerializeArrayLike(obj, serializeNulls, writer, callbacks);
+
+			else if (obj is RenderRoot root)
 			{
 				writer.WriteStartArray("targets");
 
@@ -121,6 +116,15 @@ namespace MK94.SeeRaw
             }
 
             writer.WriteEndArray();
+        }
+
+		private void SerializeEnum(object obj, Type type, Utf8JsonWriter writer)
+        {
+			var enumNames = type.GetEnumNames().Aggregate((a, b) => $"{a}, {b}");
+			
+			writer.WriteString("type", $"enum");
+			writer.WriteString("enum-values", $"{enumNames}");
+			writer.WriteString("target", obj?.ToString());
         }
 
         private bool IsNumericalType(Type t)

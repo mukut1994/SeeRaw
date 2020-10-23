@@ -77,7 +77,7 @@ namespace MK94.SeeRaw
 			writer.WriteStartArray("inputs");
 			foreach (var parameter in Action.GetMethodInfo().GetParameters())
 			{
-				if (!parameter.ParameterType.IsPrimitive && parameter.ParameterType != typeof(string))
+				if (!parameter.ParameterType.IsPrimitive && parameter.ParameterType != typeof(string) && !parameter.ParameterType.IsNested)
 					throw new InvalidOperationException($"Delegate can only have primitive arguments");
 
 				writer.WriteStartObject();

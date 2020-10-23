@@ -36,9 +36,14 @@ namespace MK94.SeeRaw.Example
             Console.ReadKey();
         }
 
+        enum Title
+        {
+            Mr, Mrs
+        }
+
         static void SayHi(RenderTarget contentTarget)
         {
-            contentTarget.Value = SeeRawTypes.Action("Please enter your details", (string name) => contentTarget.Value = $"Hi {name}");
+            contentTarget.Value = SeeRawTypes.Action("Please enter your details", (string name, Title title) => contentTarget.Value = $"Hi {title} {name}");
         }
 
         static void Calc(RenderTarget contentTarget)

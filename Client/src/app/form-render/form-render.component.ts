@@ -32,7 +32,7 @@ export class FormRenderComponent implements OnInit {
 
   removeSystemPropsAndCopy(instance: any) {
 
-    if (instance.type === 'string' || instance.type === 'number' || instance.type === 'bool') {
+    if (instance.type === 'string' || instance.type === 'number' || instance.type === 'bool' || instance.type === 'enum') {
       return instance.target;
     }
 

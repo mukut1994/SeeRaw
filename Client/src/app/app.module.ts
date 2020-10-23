@@ -10,6 +10,7 @@ import { AnyRenderComponent } from './any-render/any-render.component';
 import { ObjectRenderComponent } from './object-render/object-render.component';
 import { FormRenderComponent } from './form-render/form-render.component';
 import { ProgressRenderComponent } from './progress-render/progress-render.component';
+import { EnumRenderComponent } from './enum-render/enum-render.component';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,8 @@ import { ProgressRenderComponent } from './progress-render/progress-render.compo
     AnyRenderComponent,
     ObjectRenderComponent,
     FormRenderComponent,
-    ProgressRenderComponent
+    ProgressRenderComponent,
+    EnumRenderComponent
   ],
   imports: [
     BrowserModule,

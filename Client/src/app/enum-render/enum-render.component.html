@@ -1,0 +1,9 @@
+<ng-container class="enum" *ngIf="!editable; else editable">
+  {{target}}
+</ng-container>
+
+<ng-template #editable>
+  <select [(ngModel)]="target.target">
+    <option *ngFor="let enumValue of getValues()">{{enumValue}}</option>
+  </select>
+</ng-template>

@@ -36,6 +36,11 @@
     <app-progress-render [target]="target"></app-progress-render>
   </span>
 
+  <span *ngSwitchCase="'enum'">
+    <app-enum-render [target]="target" [editable]="editable"></app-enum-render>
+  </span>
+
+
   <span *ngSwitchDefault>
     <app-object-render
       [target]="target.target"

@@ -17,6 +17,7 @@ namespace MK94.SeeRaw
 		private readonly short port;
 
 		private Server server;
+		private JsonSerializerOptions jsonOptions;
 		private RenderRoot state = new RenderRoot();
 		private Dictionary<string, Delegate> callbacks = new Dictionary<string, Delegate>();
 		private Serializer serializer = new Serializer();
@@ -24,6 +25,10 @@ namespace MK94.SeeRaw
 		public Renderer(short port = 3054, bool openBrowser = false)
 		{
 			this.port = port;
+
+			jsonOptions = new JsonSerializerOptions();
+			jsonOptions.Converters.Add(new JsonStringEnumConverter());
+
 			server = new Server(IPAddress.Loopback, port, Refresh, MessageReceived);
 
 			if (openBrowser)
@@ -82,7 +87,7 @@ namespace MK94.SeeRaw
 					for (int i = 0; i < parameters.Length; i++)
 					{
 						// Hacky way to deserialize until https://github.com/dotnet/runtime/issues/31274 is implemented
-						var jsonArg = JsonSerializer.Deserialize(jsonArgs[i].GetRawText(), parameters[i].ParameterType);
+						var jsonArg = JsonSerializer.Deserialize(jsonArgs[i].GetRawText(), parameters[i].ParameterType, jsonOptions);
 
 						deserializedArgs.Add(jsonArg);
 					}
