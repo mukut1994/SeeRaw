@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -8,10 +9,38 @@ using System.Text.Json;
 
 namespace MK94.SeeRaw
 {
-	static class Serializer
+	public class Serializer
 	{
-		public static void Serialize(object obj, Type type, bool serializeNulls, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
+		internal Dictionary<Type, ISerialize> serializers = new Dictionary<Type, ISerialize>();
+
+		internal ArraySegment<byte> SerializeState(RenderRoot state, Dictionary<string, Delegate> callbacks)
 		{
+			var memStream = new MemoryStream();
+			var writer = new Utf8JsonWriter(memStream);
+			writer.WriteStartObject();
+
+			Serialize(state, typeof(RenderRoot), false, writer, callbacks);
+
+			writer.WriteEndObject();
+			writer.Flush();
+
+			return new ArraySegment<byte>(memStream.GetBuffer(), 0, (int)memStream.Position);
+		}
+
+		public void Serialize(object obj, Type type, bool serializeNulls, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
+		{
+			if (serializers.TryGetValue(type, out var globalSerializer))
+			{
+				globalSerializer.Serialize(obj, this, writer, callbacks, serializeNulls);
+				return;
+			}
+
+			if (obj is ISerializeable serializeable)
+			{
+				serializeable.Serialize(this, writer, callbacks, serializeNulls);
+				return;
+			}
+
 			if (obj == null && !serializeNulls)
 			{
 				writer.WriteString("type", "null");
@@ -39,21 +68,11 @@ namespace MK94.SeeRaw
 			}
 
 			else if (typeof(IEnumerable).IsAssignableFrom(type))
-			{
-				writer.WriteString("type", "array");
-				writer.WriteStartArray("target");
+            {
+                SerializeArrayLike(obj, serializeNulls, writer, callbacks);
+            }
 
-				foreach (var elm in (IEnumerable)obj)
-				{
-					writer.WriteStartObject();
-					Serialize(elm, elm.GetType(), serializeNulls, writer, callbacks);
-					writer.WriteEndObject();
-				}
-
-				writer.WriteEndArray();
-			}
-
-			else if (obj is RenderRoot root)
+            else if (obj is RenderRoot root)
 			{
 				writer.WriteStartArray("targets");
 
@@ -72,15 +91,6 @@ namespace MK94.SeeRaw
 				Serialize(target.Value, target.Value.GetType(), serializeNulls, writer, callbacks);
 			}
 
-			else if (obj is Actionable l)
-				AppendLink(l, writer, callbacks);
-
-			else if (obj is Delegate d)
-				AppendDelegate(d, writer, callbacks);
-
-			else if (obj is Progress p)
-				AppendProgress(p, writer, callbacks);
-
 			else
 			{
 				writer.WriteString("type", "object");
@@ -98,93 +108,22 @@ namespace MK94.SeeRaw
 			}
 		}
 
-		private static void AppendLink(Actionable link, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
+        private void SerializeArrayLike(object obj, bool serializeNulls, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
         {
-			writer.WriteString("text", link.Text);
+            writer.WriteString("type", "array");
+            writer.WriteStartArray("target");
 
-			var id = Guid.NewGuid().ToString();
-
-			callbacks.Add(id, link.Action);
-			writer.WriteString("id", id);
-
-			if (link.Action is Action)
-			{
-				writer.WriteString("type", "link");
-
-				return;
+            foreach (var elm in (IEnumerable)obj)
+            {
+                writer.WriteStartObject();
+                Serialize(elm, elm.GetType(), serializeNulls, writer, callbacks);
+                writer.WriteEndObject();
             }
 
-			AppendDelegate(link.Action, writer, callbacks);
+            writer.WriteEndArray();
         }
 
-		private static void AppendDelegate(Delegate @delegate, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
-		{
-			writer.WriteString("type", "form");
-
-			writer.WriteStartArray("inputs");
-			foreach (var parameter in @delegate.GetMethodInfo().GetParameters())
-			{
-				if (!parameter.ParameterType.IsPrimitive && parameter.ParameterType != typeof(string))
-					throw new InvalidOperationException($"Delegate can only have primitive arguments");
-
-				writer.WriteStartObject();
-
-				writer.WriteString("name", parameter.Name);
-				Serialize(null, parameter.ParameterType, true, writer, callbacks);
-
-				writer.WriteEndObject();
-			}
-			writer.WriteEndArray();
-		}
-
-		private static void AppendProgress(Progress progress, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
-        {
-			writer.WriteString("type", "progress");
-
-			writer.WriteNumber("percent", progress.Percent);
-			writer.WriteString("value", progress.Value);
-			writer.WriteString("max", progress.Max);
-			writer.WriteString("min", progress.Min);
-
-			if (progress.Speed != null)
-				writer.WriteString("speed", progress.Speed);
-			else 
-				writer.WriteNull("speed");
-
-			if (progress.pauseToggle != null)
-			{
-				var id = Guid.NewGuid().ToString();
-
-				callbacks.Add(id, progress.pauseToggle);
-				writer.WriteString("pause", id);
-				writer.WriteBoolean("paused", progress.paused);
-			}
-			else
-				writer.WriteNull("pause");
-
-			if (progress.setSpeed != null)
-			{
-				var id = Guid.NewGuid().ToString();
-
-				callbacks.Add(id, progress.setSpeed);
-				writer.WriteString("setSpeed", id);
-			}
-			else
-				writer.WriteNull("setSpeed"); 
-			
-			if (progress.cancellationTokenSource != null)
-			{
-				var id = Guid.NewGuid().ToString();
-
-				callbacks.Add(id, (Action) progress.cancellationTokenSource.Cancel);
-				writer.WriteString("cancel", id);
-			}
-			else
-				writer.WriteNull("speed");
-
-		}
-
-		private static bool IsNumericalType(Type t)
+        private bool IsNumericalType(Type t)
 		{
 			return t == typeof(sbyte) ||
 					t == typeof(byte) ||
@@ -199,4 +138,32 @@ namespace MK94.SeeRaw
 		}
 	}
 
+	public interface ISerializeable
+    {
+		/// <summary>
+		/// Serializes the object into json for the client. Has to include a "type" property so the client knows which renderer to pick.
+		/// </summary>
+		/// <param name="serializer">The default serializer. Call <see cref="Serializer.Serialize(object, Type, bool, Utf8JsonWriter, Dictionary{string, Delegate})"/> to append the default json properties</param>
+		/// <param name="writer">The json writer used to create the message</param>
+		/// <param name="callbacks">Messages that the client can send back to us. <br /> The key is used to identify which callback the client wants to execute and should be a random guid in most cases.</param>
+		/// <param name="serializeNulls">Useful for UI elements that need to know the data type even if its empty. <br />
+		/// E.g. allows Actionable to render a form with parameter inputs. <br />
+		/// For custom UI Renderers you can safely ignore this one</param>
+		public void Serialize(Serializer serializer, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks, bool serializeNulls);
+    }
+
+	public interface ISerialize
+    {
+		/// <summary>
+		/// Serializes the object into json for the client. Has to include a "type" property so the client knows which renderer to pick.
+		/// </summary>
+		/// <param name="instance">The object being serialized</param>
+		/// <param name="serializer">The default serializer. Call <see cref="Serializer.Serialize(object, Type, bool, Utf8JsonWriter, Dictionary{string, Delegate})"/> to append the default json properties</param>
+		/// <param name="writer">The json writer used to create the message</param>
+		/// <param name="callbacks">Messages that the client can send back to us. <br /> The key is used to identify which callback the client wants to execute and should be a random guid in most cases.</param>
+		/// <param name="serializeNulls">Useful for UI elements that need to know the data type even if its empty. <br />
+		/// E.g. allows Actionable to render a form with parameter inputs. <br />
+		/// For custom UI Renderers you can safely ignore this one</param>
+		public void Serialize(object instance, Serializer serializer, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks, bool serializeNulls);
+	}
 }

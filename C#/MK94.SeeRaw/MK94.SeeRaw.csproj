@@ -8,21 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Client/**">
+    <EmbeddedResource Include="Client/**">
       <Pack>true</Pack>
-    </Content>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
     <ClientSrcFiles Include="$(ProjectDir)/../../Client/src/**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Remove="Client\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Client\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,9 +25,9 @@
     <Exec WorkingDirectory="$(ProjectDir)/../../Client" Command="yarn build --prod" />
     
     <ItemGroup>
-      <ClientFiles Include="$(ProjectDir)/../../Client/dist/**" />
+      <ClientFiles Include="@(ClientSrcFiles)" />
     </ItemGroup>
-    
+
     <Copy SourceFiles="@(ClientFiles)" DestinationFolder="$(ProjectDir)/Client" />
   </Target>
 

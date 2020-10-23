@@ -16,11 +16,10 @@ namespace MK94.SeeRaw
 	{
 		private readonly short port;
 
-		private RenderRoot state = new RenderRoot();
-
 		private Server server;
-
+		private RenderRoot state = new RenderRoot();
 		private Dictionary<string, Delegate> callbacks = new Dictionary<string, Delegate>();
+		private Serializer serializer = new Serializer();
 
 		public Renderer(short port = 3054, bool openBrowser = false)
 		{
@@ -60,20 +59,6 @@ namespace MK94.SeeRaw
 					throw;
 				}
 			}
-		}
-
-		ArraySegment<byte> SerializeState()
-        {
-			var memStream = new MemoryStream();
-			var writer = new Utf8JsonWriter(memStream);
-			writer.WriteStartObject();
-
-			Serializer.Serialize(state, typeof(RenderRoot), false, writer, callbacks);
-
-			writer.WriteEndObject();
-			writer.Flush();
-
-			return new ArraySegment<byte>(memStream.GetBuffer(), 0, (int)memStream.Position);
 		}
 
 		void MessageReceived(string message)
@@ -132,7 +117,16 @@ namespace MK94.SeeRaw
 
 		public void Refresh()
 		{
-			server.Broadcast(SerializeState());
+			callbacks.Clear();
+			server.Broadcast(serializer.SerializeState(state, callbacks));
+		}
+
+		public Renderer WithSerializer<T>(ISerialize serializer) => WithSerializer(typeof(T), serializer);
+
+		public Renderer WithSerializer(Type type, ISerialize serializer) 
+		{
+			this.serializer.serializers[type] = serializer;
+			return this;
 		}
 	}
 }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Text.Json;
 using System.Threading;
 
 namespace MK94.SeeRaw
@@ -37,7 +39,7 @@ namespace MK94.SeeRaw
         }
 	}
 
-	class Actionable
+	class Actionable : ISerializeable
 	{
 		internal Delegate Action { get; }
 
@@ -48,9 +50,48 @@ namespace MK94.SeeRaw
 			Action = action;
 			Text = text;
 		}
+
+        public void Serialize(Serializer serializer, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks, bool serializeNulls)
+        {
+			writer.WriteString("text", Text);
+
+			var id = Guid.NewGuid().ToString();
+
+			callbacks.Add(id, Action);
+			writer.WriteString("id", id);
+
+			if (Action is Action)
+			{
+				writer.WriteString("type", "link");
+
+				return;
+			}
+
+			AppendDelegate(serializer, writer);
+        }
+
+		private void AppendDelegate(Serializer serializer, Utf8JsonWriter writer)
+		{
+			writer.WriteString("type", "form");
+
+			writer.WriteStartArray("inputs");
+			foreach (var parameter in Action.GetMethodInfo().GetParameters())
+			{
+				if (!parameter.ParameterType.IsPrimitive && parameter.ParameterType != typeof(string))
+					throw new InvalidOperationException($"Delegate can only have primitive arguments");
+
+				writer.WriteStartObject();
+
+				writer.WriteString("name", parameter.Name);
+				serializer.Serialize(null, parameter.ParameterType, true, writer, null);
+
+				writer.WriteEndObject();
+			}
+			writer.WriteEndArray();
+		}
 	}
 
-	public class Progress
+	public class Progress : ISerializeable
     {
 		/// <summary>
 		/// Value from 0 to 100; Changes the progress bar
@@ -93,5 +134,51 @@ namespace MK94.SeeRaw
 				};
 
         }
+
+		public void Serialize(Serializer serializer, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks, bool serializeNulls)
+		{
+			writer.WriteString("type", "progress");
+
+			writer.WriteNumber("percent", Percent);
+			writer.WriteString("value", Value);
+			writer.WriteString("max", Max);
+			writer.WriteString("min", Min);
+
+			if (Speed != null)
+				writer.WriteString("speed", Speed);
+			else
+				writer.WriteNull("speed");
+
+			if (pauseToggle != null)
+			{
+				var id = Guid.NewGuid().ToString();
+
+				callbacks.Add(id, pauseToggle);
+				writer.WriteString("pause", id);
+				writer.WriteBoolean("paused", paused);
+			}
+			else
+				writer.WriteNull("pause");
+
+			if (setSpeed != null)
+			{
+				var id = Guid.NewGuid().ToString();
+
+				callbacks.Add(id, setSpeed);
+				writer.WriteString("setSpeed", id);
+			}
+			else
+				writer.WriteNull("setSpeed");
+
+			if (cancellationTokenSource != null)
+			{
+				var id = Guid.NewGuid().ToString();
+
+				callbacks.Add(id, (Action)cancellationTokenSource.Cancel);
+				writer.WriteString("cancel", id);
+			}
+			else
+				writer.WriteNull("speed");
+		}
     }
 }
