@@ -6,7 +6,7 @@ namespace MK94.SeeRaw
 {
     public static class SeeRawDefault
     {
-        internal static AsyncLocal<Func<object, RenderTarget>> globalRenderer = new AsyncLocal<Func<object, RenderTarget>>();
+        internal static AsyncLocal<Context> localSeeRawContext = new AsyncLocal<Context>();
 
         internal static Server server;
 
@@ -18,13 +18,13 @@ namespace MK94.SeeRaw
             return server;
         }
 
-        public static Server WithGlobalRenderer(this Server server, bool defaultForExtension = true)
+        public static Server WithGlobalRenderer(this Server server, Action initialise = null, bool defaultGlobalRenderer = true)
         {
-            var renderer = new Renderer(server);
+            var renderer = new Renderer(server, defaultGlobalRenderer);
             server.WithRenderer(() => renderer);
 
-            if (defaultForExtension)
-                globalRenderer.Value = (x) => { renderer.Render(x, out var t); return t; } ;
+            if (initialise != null)
+                initialise();
 
             return server;
         }
@@ -36,5 +36,11 @@ namespace MK94.SeeRaw
 
             return server;
         }
+    }
+
+    public class Context
+    {
+        public Server server;
+        public RenderRoot RenderRoot;
     }
 }

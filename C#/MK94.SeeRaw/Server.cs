@@ -30,10 +30,6 @@ namespace MK94.SeeRaw
         {
             this.ip = ip;
             this.port = port;
-
-            rendererFactory = () => new Renderer(this);
-
-            Task.Run(RunAsync);
         }
 
         public Server WithRenderer(Func<RendererBase> rendererFactory)
@@ -41,6 +37,12 @@ namespace MK94.SeeRaw
             Contract.Requires(rendererFactory == null, "Renderer already set");
 
             this.rendererFactory = rendererFactory;
+            return this;
+        }
+
+        public Server RunInBackground()
+        {
+            Task.Run(RunAsync);
             return this;
         }
 
