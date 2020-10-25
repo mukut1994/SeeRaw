@@ -11,7 +11,10 @@ namespace MK94.SeeRaw
 
         public static T Render<T>(this T obj, out RenderTarget target)
         {
-            SeeRawDefault.instance.Value.Render(obj, out target);
+            if(SeeRawDefault.globalRenderer == null)
+                throw new InvalidProgramException($"Default renderer is not set for extension method. Call {nameof(SeeRawDefault)}.{nameof(SeeRawDefault.WithServer)}().{nameof(SeeRawDefault.WithGlobalRenderer)}() first");
+
+            target = SeeRawDefault.globalRenderer.Value(obj);
 
             return obj;
         }

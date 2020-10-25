@@ -11,11 +11,21 @@ namespace MK94.SeeRaw.Example
         static Progress progress = new Progress { Speed = "10kb/s", Max = "10MB" };
         static Lazy<Task> progressTask = new Lazy<Task>(() => UpdateFakeProgress(progress));
 
-        static void Main(string[] args)
+        static void Main()
         {
-            // Open the browser using the default host; Optional: the browser can be opened manually
-            //SeeRawDefault.OpenBrowser();
+            SeeRawDefault
+                .WithServer()
+                .WithGlobalRenderer();
+                //.WithPerClientRenderer(RenderClientMenu);
 
+            RenderClientMenu();
+
+            Console.WriteLine("Press any key to exit...");
+            Console.ReadKey();
+        }
+
+        static void RenderClientMenu()
+        {
             // Show a basic hello world
             "Hello World".Render();
 
@@ -31,9 +41,6 @@ namespace MK94.SeeRaw.Example
 
             // c. Update the menuTarget to display the actions
             menuTarget.Value = new List<object> { hiAction, calcAction, progressAction };
-            
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
         }
 
         enum Title

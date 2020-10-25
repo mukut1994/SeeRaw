@@ -1,19 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 
 namespace MK94.SeeRaw
 {
-    class RenderRoot
+    public class RenderRoot
 	{
-		public List<RenderTarget> Targets { get; } = new List<RenderTarget>();
+		private readonly Action<RenderRoot> onChange;
+
+		internal RenderRoot(Action<RenderRoot> onChange)
+        {
+			this.onChange = onChange;
+        }
+
+		internal List<RenderTarget> Targets { get; } = new List<RenderTarget>();
+
+		public RenderTarget Render(object obj)
+        {
+			var ret = new RenderTarget(() => onChange(this), obj);
+			Targets.Add(ret);
+			return ret;
+        }
 	}
 
 	public class RenderTarget
 	{
-		private readonly Renderer parent;
+		private readonly Action onChange;
 		private object value;
 
 		public object Value
@@ -22,21 +37,18 @@ namespace MK94.SeeRaw
 			set
 			{
 				this.value = value;
-				parent.Refresh();
+				onChange();
 			}
 		}
 
-		public RenderTarget(Renderer parent, object obj)
+		public RenderTarget(Action onChange, object obj)
 		{
-			this.parent = parent;
+			this.onChange = onChange;
 
 			value = obj;
 		}
 
-		public void Refresh()
-        {
-			parent.Refresh();
-        }
+		public void Refresh() => onChange();
 	}
 
 	class Actionable : ISerializeable
@@ -89,7 +101,7 @@ namespace MK94.SeeRaw
 			}
 			writer.WriteEndArray();
 		}
-	}
+    }
 
 	public class Progress : ISerializeable
     {

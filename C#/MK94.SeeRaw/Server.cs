@@ -1,36 +1,47 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MK94.SeeRaw
 {
-    internal class Server
+    public class Server
     {
         private readonly IPAddress ip;
         private readonly short port;
-
-        public readonly Action onClientConnected;
-        public readonly Action<string> onMessage;
-
         private readonly ConcurrentDictionary<IPEndPoint, WebSocket> connections = new ConcurrentDictionary<IPEndPoint, WebSocket>();
+        private readonly CancellationTokenSource openBrowserCancel = new CancellationTokenSource();
 
-        public Server(IPAddress ip, short port, Action onClientConnected, Action<string> onMessage)
+        private Func<RendererBase> rendererFactory;
+
+        public Server(IPAddress ip, short port)
         {
             this.ip = ip;
             this.port = port;
-            this.onClientConnected = onClientConnected;
-            this.onMessage = onMessage;
+
+            rendererFactory = () => new Renderer(this);
 
             Task.Run(RunAsync);
+        }
+
+        public Server WithRenderer(Func<RendererBase> rendererFactory)
+        {
+            Contract.Requires(rendererFactory == null, "Renderer already set");
+
+            this.rendererFactory = rendererFactory;
+            return this;
         }
 
         public async Task RunAsync()
@@ -139,12 +150,13 @@ namespace MK94.SeeRaw
 
             connections.TryAdd(remoteEndpoint, websocket);
 
-            onClientConnected.Invoke();
+            var renderer = rendererFactory();
+            var state = renderer.OnClientConnected(this, websocket);
 
-            await HandleWebsocket(websocket);
+            await HandleWebsocket(state, remoteEndpoint, websocket, renderer);
         }
 
-        private async Task HandleWebsocket(WebSocket socket)
+        private async Task HandleWebsocket(object state, IPEndPoint remoteEndpoint, WebSocket socket, RendererBase renderer)
         {
             try
             {
@@ -170,13 +182,58 @@ namespace MK94.SeeRaw
                     if (socket.State != WebSocketState.Open)
                         return;
 
-                    onMessage.Invoke(message.ToString());
+                    renderer.OnMessageReceived(state, this, socket, message.ToString());
                 }
             }
             catch (WebSocketException)
             {
-
+                connections.TryRemove(remoteEndpoint, out _);
             }
         }
+
+        /// <summary>
+        /// Opens the browser if no client as connected during the waitTime
+        /// Useful if the project is being restarted multiple times during debugging
+        /// </summary>
+        public Server OpenBrowserAfterWait(TimeSpan waitTime)
+        {
+            openBrowserCancel.Token.WaitHandle.WaitOne(waitTime);
+            OpenBrowser();
+            return this;
+        }
+
+        public Server OpenBrowser()
+        {
+            var url = $"http://localhost:{port}";
+
+            try
+            {
+                Process.Start(url);
+            }
+            catch
+            {
+                // hack because of this: https://github.com/dotnet/corefx/issues/10361
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    url = url.Replace("&", "^&");
+                    Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    Process.Start("xdg-open", url);
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    Process.Start("open", url);
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return this;
+        }
+
     }
 }
