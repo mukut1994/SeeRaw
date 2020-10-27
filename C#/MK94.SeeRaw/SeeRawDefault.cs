@@ -1,5 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Net;
+using System.Net.WebSockets;
 using System.Threading;
 
 namespace MK94.SeeRaw
@@ -23,8 +25,7 @@ namespace MK94.SeeRaw
             var renderer = new Renderer(server, defaultGlobalRenderer);
             server.WithRenderer(() => renderer);
 
-            if (initialise != null)
-                initialise();
+            initialise?.Invoke();
 
             return server;
         }
@@ -40,7 +41,30 @@ namespace MK94.SeeRaw
 
     public class Context
     {
-        public Server server;
+        public Server Server;
         public RenderRoot RenderRoot;
+        public RendererBase Renderer;
+        public WebSocket WebSocket;
+    }
+
+    public static class SeeRawContext
+    {
+        internal static Server Server => ValueOrException(x => x.Server);
+        internal static RenderRoot RenderRoot => ValueOrException(x => x.RenderRoot);
+        internal static RendererBase Renderer => ValueOrException(x => x.Renderer);
+        internal static WebSocket WebSocket => ValueOrException(x => x.WebSocket);
+
+        public static void DownloadOnClient(string file, string fileName = null)
+        {
+            Renderer.DownloadFile(File.OpenRead(file), fileName ?? new FileInfo(file).Name);
+        }
+
+        private static T ValueOrException<T>(Func<Context, T> property)
+        {
+            if (SeeRawDefault.localSeeRawContext.Value == null)
+                throw new InvalidOperationException($"{nameof(SeeRawContext)} is not available. Make sure your method is a callback from the Renderer");
+
+            return property(SeeRawDefault.localSeeRawContext.Value);
+        }
     }
 }

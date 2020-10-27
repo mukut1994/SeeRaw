@@ -19,10 +19,31 @@ namespace MK94.SeeRaw
 {
     public class Server
     {
+        private class ServerFile
+        {
+            public Func<Stream> Stream;
+            public string FileName;
+            public string Type;
+            public int? TimesRemaining = null;
+
+            public bool DecreaseCounter()
+            {
+                if (TimesRemaining == null)
+                    return true;
+
+                lock (this)
+                {
+                    TimesRemaining--;
+                    return TimesRemaining >= 0;
+                }
+            }
+        }
+
         private readonly IPAddress ip;
         private readonly short port;
         private readonly ConcurrentDictionary<IPEndPoint, WebSocket> connections = new ConcurrentDictionary<IPEndPoint, WebSocket>();
         private readonly CancellationTokenSource openBrowserCancel = new CancellationTokenSource();
+        private readonly ConcurrentDictionary<string, ServerFile> files = new ConcurrentDictionary<string, ServerFile>();
 
         private Func<RendererBase> rendererFactory;
 
@@ -48,6 +69,8 @@ namespace MK94.SeeRaw
 
         public async Task RunAsync()
         {
+            Contract.Ensures(rendererFactory != null, "Set renderer before starting server");
+
             var server = new TcpListener(ip, port);
 
             server.Start(50);
@@ -69,6 +92,78 @@ namespace MK94.SeeRaw
             {
                 socket.SendAsync(message, WebSocketMessageType.Text, true, default);
             }
+        }
+
+        /// <summary>
+        /// Opens the browser if no client as connected during the waitTime
+        /// Useful if the project is being restarted multiple times during debugging
+        /// </summary>
+        public Server OpenBrowserAfterWait(TimeSpan waitTime)
+        {
+            openBrowserCancel.Token.WaitHandle.WaitOne(waitTime);
+            OpenBrowser();
+            return this;
+        }
+
+        public Server OpenBrowser()
+        {
+            var url = $"http://localhost:{port}";
+
+            try
+            {
+                Process.Start(url);
+            }
+            catch
+            {
+                // hack because of this: https://github.com/dotnet/corefx/issues/10361
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    url = url.Replace("&", "^&");
+                    Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    Process.Start("xdg-open", url);
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    Process.Start("open", url);
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return this;
+        }
+
+        public string ServeFile(Func<Stream> streamFactory, string fileName, string type = "text/plain", int? times = 1, TimeSpan? timeout = null, string path = null)
+        {
+            path = path ?? Guid.NewGuid().ToString();
+            path = path.StartsWith('/') ? path : "/" + path;
+
+            files.TryAdd(path, new ServerFile
+            {
+                Stream = streamFactory,
+                FileName = fileName,
+                Type = type,
+                TimesRemaining = times
+            });
+
+            if (timeout != null)
+            {
+                var tokenSource = new CancellationTokenSource();
+                tokenSource.Token.Register(() => StopServing(path));
+                tokenSource.CancelAfter(timeout.Value);
+            }
+
+            return path;
+        }
+
+        public void StopServing(string path)
+        {
+            files.TryRemove(path, out var _);
         }
 
         private async Task HandleClient(TcpClient client)
@@ -102,17 +197,61 @@ namespace MK94.SeeRaw
             if (IsWebsocketUpgradeRequest(headers))
                 await UpgradeToWebsocket(client.Client.RemoteEndPoint as IPEndPoint, headers, writer, stream);
             else
-                await ServeFileFromResource(request, writer);
+                await ServeFile(request, writer);
         }
 
-        private async Task ServeFileFromResource(string request, StreamWriter writer)
+        private Task ServeFile(string request, StreamWriter writer)
         {
             var path = request.Split(new[] { ' ' }, 3)[1];
 
+            if (files.TryGetValue(path, out var file))
+            {
+                if (file.DecreaseCounter())
+                    return ServeFileFromStream(file, writer);
+                else
+                {
+                    files.Remove(path, out var _);
+                    return ServeFileFromResource(path, writer);
+                }
+            }
+            else
+                return ServeFileFromResource(path, writer);
+
+        }
+
+        private async Task ServeFileFromStream(ServerFile file, StreamWriter writer)
+        {
+            using var stream = file.Stream();
+
+            await writer.WriteLineAsync("HTTP/1.1 200 OK");
+            await writer.WriteLineAsync($"Content-Type: {file.Type}");
+            if (file.FileName != null)
+            {
+                await writer.WriteLineAsync($"Content-Length: {stream.Length}");
+                await writer.WriteLineAsync($"Content-Disposition: attachment; filename={file.FileName}");
+            }
+
+            await writer.WriteLineAsync("");
+            await writer.FlushAsync();
+
+            await stream.CopyToAsync(writer.BaseStream);
+            await writer.FlushAsync();
+        }
+
+        private async Task ServeFileFromResource(string path, StreamWriter writer)
+        {
             var resource = RequestPathToResourcePath(path);
 
             var stream = Assembly.GetAssembly(typeof(Server))
                 .GetManifestResourceStream(resource);
+
+            if(stream == null)
+            {
+                await writer.WriteLineAsync("HTTP/1.1 404 Not Found");
+                await writer.WriteLineAsync("");
+                await writer.FlushAsync();
+                return;
+            }
 
             await writer.WriteLineAsync("HTTP/1.1 200 OK");
             await writer.WriteLineAsync("Content-Type: text/html");
@@ -134,7 +273,7 @@ namespace MK94.SeeRaw
 
         private bool IsWebsocketUpgradeRequest(Dictionary<string, string> headers) => headers.TryGetValue("Upgrade", out var value) && value.Equals("websocket");
 
-        public async Task UpgradeToWebsocket(IPEndPoint remoteEndpoint, Dictionary<string, string> headers, StreamWriter writer, Stream stream)
+        private async Task UpgradeToWebsocket(IPEndPoint remoteEndpoint, Dictionary<string, string> headers, StreamWriter writer, Stream stream)
         {
             using var sha = SHA1.Create();
 
@@ -192,50 +331,5 @@ namespace MK94.SeeRaw
                 connections.TryRemove(remoteEndpoint, out _);
             }
         }
-
-        /// <summary>
-        /// Opens the browser if no client as connected during the waitTime
-        /// Useful if the project is being restarted multiple times during debugging
-        /// </summary>
-        public Server OpenBrowserAfterWait(TimeSpan waitTime)
-        {
-            openBrowserCancel.Token.WaitHandle.WaitOne(waitTime);
-            OpenBrowser();
-            return this;
-        }
-
-        public Server OpenBrowser()
-        {
-            var url = $"http://localhost:{port}";
-
-            try
-            {
-                Process.Start(url);
-            }
-            catch
-            {
-                // hack because of this: https://github.com/dotnet/corefx/issues/10361
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    url = url.Replace("&", "^&");
-                    Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    Process.Start("xdg-open", url);
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                {
-                    Process.Start("open", url);
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return this;
-        }
-
     }
 }

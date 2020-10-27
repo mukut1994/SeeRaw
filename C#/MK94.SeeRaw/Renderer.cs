@@ -21,8 +21,8 @@ namespace MK94.SeeRaw
 
 		private Context previousContext;
 
-        protected RendererBase()
-        {
+		protected RendererBase()
+		{
 			jsonOptions = new JsonSerializerOptions();
 			jsonOptions.Converters.Add(new JsonStringEnumConverter());
 
@@ -31,7 +31,14 @@ namespace MK94.SeeRaw
 		public abstract object OnClientConnected(Server server, WebSocket websocket);
 		public abstract void OnMessageReceived(object state, Server server, WebSocket websocket, string message);
 
-		protected void ExecuteCallback(Server server, RenderRoot renderRoot, Dictionary<string, Delegate> callbacks, string message)
+		public virtual void DownloadFile(Stream stream, string fileName, string mimeType = "text/plain")
+		{
+			var path = SeeRawDefault.localSeeRawContext.Value.Server.ServeFile(() => stream, fileName, mimeType, timeout: TimeSpan.FromSeconds(30));
+
+			SeeRawDefault.localSeeRawContext.Value.WebSocket.SendAsync(Encoding.ASCII.GetBytes(@$"{{ ""download"": ""{path}"" }}"), WebSocketMessageType.Text, true, default);
+		}
+
+		protected void ExecuteCallback(Server server, RenderRoot renderRoot, WebSocket webSocket, Dictionary<string, Delegate> callbacks, string message)
 		{
 			var deserialized = JsonSerializer.Deserialize<JsonElement>(message);
 
@@ -57,7 +64,7 @@ namespace MK94.SeeRaw
 						deserializedArgs.Add(jsonArg);
 					}
 
-					SetContext(server, renderRoot);
+					SetContext(server, renderRoot, webSocket);
 					@delegate.DynamicInvoke(deserializedArgs.ToArray());
 					ResetContext();
 				}
@@ -73,14 +80,16 @@ namespace MK94.SeeRaw
 			}
 		}
 
-		protected void SetContext(Server server, RenderRoot renderRoot)
+		protected void SetContext(Server server, RenderRoot renderRoot, WebSocket webSocket)
         {
 			previousContext = SeeRawDefault.localSeeRawContext.Value;
 
 			SeeRawDefault.localSeeRawContext.Value = new Context
 			{
-				server = server,
-				RenderRoot = renderRoot
+				Renderer = this,
+				Server = server,
+				RenderRoot = renderRoot,
+				WebSocket = webSocket
 			};
         }
 
@@ -111,11 +120,11 @@ namespace MK94.SeeRaw
 			state = new RenderRoot(r => Refresh());
 
 			if (setGlobalContext)
-				SetContext(server, state);
+				SetContext(server, state, null);
 		}
 
 		public override object OnClientConnected(Server server, WebSocket websocket) { Refresh(); return null; }
-		public override void OnMessageReceived(object state, Server server, WebSocket websocket, string message) => ExecuteCallback(server, this.state, callbacks, message);
+		public override void OnMessageReceived(object state, Server server, WebSocket websocket, string message) => ExecuteCallback(server, this.state, websocket, callbacks, message);
 
 		public T Render<T>(T o)
 		{
@@ -173,7 +182,7 @@ namespace MK94.SeeRaw
 
 			var state = new ClientState(renderRoot, callbacks);
 
-			SetContext(server, state.State);
+			SetContext(server, state.State, websocket);
 			onClientConnected();
 			ResetContext();
 
@@ -184,7 +193,7 @@ namespace MK94.SeeRaw
         {
 			var clientState = state as ClientState;
 
-			ExecuteCallback(server, clientState.State, clientState.Callbacks, message);
+			ExecuteCallback(server, clientState.State, websocket, clientState.Callbacks, message);
         }
 	}
 }

@@ -20,15 +20,28 @@
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="4.7.2" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Client\" />
+  </ItemGroup>
   
-  <Target Inputs="@(ClientSrcFiles)" Outputs="$(ProjectDir)Client\index.html" Name="PrecompileScript" BeforeTargets="BeforeBuild">
+  <Target Inputs="@(ClientSrcFiles)" Outputs="$(ProjectDir)Client/index.html" Name="PrecompileScript" BeforeTargets="BeforeBuild">
     <Exec WorkingDirectory="$(ProjectDir)/../../Client" Command="yarn build --prod" />
     
     <ItemGroup>
-      <ClientFiles Include="@(ClientSrcFiles)" />
+      <ClientFiles Include="$(ProjectDir)/../../Client/dist/seeraw/**" />
     </ItemGroup>
 
+    <Delete Files="$(ProjectDir)/Client/**" />
     <Copy SourceFiles="@(ClientFiles)" DestinationFolder="$(ProjectDir)/Client" />
+
+    <ItemGroup>
+      <EmbeddedResource Remove="Client/**"></EmbeddedResource>
+      <EmbeddedResource Include="Client/**">
+        <Pack>true</Pack>
+      </EmbeddedResource>
+    </ItemGroup>
+
   </Target>
 
 </Project>

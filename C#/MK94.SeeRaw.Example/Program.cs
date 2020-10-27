@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,10 +18,20 @@ namespace MK94.SeeRaw.Example
                 .WithServer()
                 .WithPerClientRenderer(RenderClientMenu)
                 .RunInBackground();
-                //.WithPerClientRenderer(RenderClientMenu);
+                //.ServeFile(() => GenerateStreamFromString("TEST TEXT"), "test.txt", times: 1, path: "test");
 
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
+        }
+
+        public static System.IO.Stream GenerateStreamFromString(string s)
+        {
+            var stream = new System.IO.MemoryStream();
+            var writer = new System.IO.StreamWriter(stream);
+            writer.Write(s);
+            writer.Flush();
+            stream.Position = 0;
+            return stream;
         }
 
         static void RenderClientMenu()
