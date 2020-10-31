@@ -1,40 +1,76 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MK94.SeeRaw
 {
-    internal class Server
+    public class Server
     {
+        private class ServerFile
+        {
+            public Func<Stream> Stream;
+            public string FileName;
+            public string Type;
+            public int? TimesRemaining = null;
+
+            public bool DecreaseCounter()
+            {
+                if (TimesRemaining == null)
+                    return true;
+
+                lock (this)
+                {
+                    TimesRemaining--;
+                    return TimesRemaining >= 0;
+                }
+            }
+        }
+
         private readonly IPAddress ip;
         private readonly short port;
-
-        public readonly Action onClientConnected;
-        public readonly Action<string> onMessage;
-
         private readonly ConcurrentDictionary<IPEndPoint, WebSocket> connections = new ConcurrentDictionary<IPEndPoint, WebSocket>();
+        private readonly CancellationTokenSource openBrowserCancel = new CancellationTokenSource();
+        private readonly ConcurrentDictionary<string, ServerFile> files = new ConcurrentDictionary<string, ServerFile>();
 
-        public Server(IPAddress ip, short port, Action onClientConnected, Action<string> onMessage)
+        private Func<RendererBase> rendererFactory;
+
+        public Server(IPAddress ip, short port)
         {
             this.ip = ip;
             this.port = port;
-            this.onClientConnected = onClientConnected;
-            this.onMessage = onMessage;
+        }
 
+        public Server WithRenderer(Func<RendererBase> rendererFactory)
+        {
+            Contract.Requires(rendererFactory == null, "Renderer already set");
+
+            this.rendererFactory = rendererFactory;
+            return this;
+        }
+
+        public Server RunInBackground()
+        {
             Task.Run(RunAsync);
+            return this;
         }
 
         public async Task RunAsync()
         {
+            Contract.Ensures(rendererFactory != null, "Set renderer before starting server");
+
             var server = new TcpListener(ip, port);
 
             server.Start(50);
@@ -56,6 +92,78 @@ namespace MK94.SeeRaw
             {
                 socket.SendAsync(message, WebSocketMessageType.Text, true, default);
             }
+        }
+
+        /// <summary>
+        /// Opens the browser if no client as connected during the waitTime
+        /// Useful if the project is being restarted multiple times during debugging
+        /// </summary>
+        public Server OpenBrowserAfterWait(TimeSpan waitTime)
+        {
+            openBrowserCancel.Token.WaitHandle.WaitOne(waitTime);
+            OpenBrowser();
+            return this;
+        }
+
+        public Server OpenBrowser()
+        {
+            var url = $"http://localhost:{port}";
+
+            try
+            {
+                Process.Start(url);
+            }
+            catch
+            {
+                // hack because of this: https://github.com/dotnet/corefx/issues/10361
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    url = url.Replace("&", "^&");
+                    Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    Process.Start("xdg-open", url);
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    Process.Start("open", url);
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return this;
+        }
+
+        public string ServeFile(Func<Stream> streamFactory, string fileName, string type = "text/plain", int? times = 1, TimeSpan? timeout = null, string path = null)
+        {
+            path = path ?? Guid.NewGuid().ToString();
+            path = path.StartsWith('/') ? path : "/" + path;
+
+            files.TryAdd(path, new ServerFile
+            {
+                Stream = streamFactory,
+                FileName = fileName,
+                Type = type,
+                TimesRemaining = times
+            });
+
+            if (timeout != null)
+            {
+                var tokenSource = new CancellationTokenSource();
+                tokenSource.Token.Register(() => StopServing(path));
+                tokenSource.CancelAfter(timeout.Value);
+            }
+
+            return path;
+        }
+
+        public void StopServing(string path)
+        {
+            files.TryRemove(path, out var _);
         }
 
         private async Task HandleClient(TcpClient client)
@@ -89,17 +197,61 @@ namespace MK94.SeeRaw
             if (IsWebsocketUpgradeRequest(headers))
                 await UpgradeToWebsocket(client.Client.RemoteEndPoint as IPEndPoint, headers, writer, stream);
             else
-                await ServeFileFromResource(request, writer);
+                await ServeFile(request, writer);
         }
 
-        private async Task ServeFileFromResource(string request, StreamWriter writer)
+        private Task ServeFile(string request, StreamWriter writer)
         {
             var path = request.Split(new[] { ' ' }, 3)[1];
 
+            if (files.TryGetValue(path, out var file))
+            {
+                if (file.DecreaseCounter())
+                    return ServeFileFromStream(file, writer);
+                else
+                {
+                    files.Remove(path, out var _);
+                    return ServeFileFromResource(path, writer);
+                }
+            }
+            else
+                return ServeFileFromResource(path, writer);
+
+        }
+
+        private async Task ServeFileFromStream(ServerFile file, StreamWriter writer)
+        {
+            using var stream = file.Stream();
+
+            await writer.WriteLineAsync("HTTP/1.1 200 OK");
+            await writer.WriteLineAsync($"Content-Type: {file.Type}");
+            if (file.FileName != null)
+            {
+                await writer.WriteLineAsync($"Content-Length: {stream.Length}");
+                await writer.WriteLineAsync($"Content-Disposition: attachment; filename={file.FileName}");
+            }
+
+            await writer.WriteLineAsync("");
+            await writer.FlushAsync();
+
+            await stream.CopyToAsync(writer.BaseStream);
+            await writer.FlushAsync();
+        }
+
+        private async Task ServeFileFromResource(string path, StreamWriter writer)
+        {
             var resource = RequestPathToResourcePath(path);
 
-            var stream = Assembly.GetExecutingAssembly()
+            var stream = Assembly.GetAssembly(typeof(Server))
                 .GetManifestResourceStream(resource);
+
+            if(stream == null)
+            {
+                await writer.WriteLineAsync("HTTP/1.1 404 Not Found");
+                await writer.WriteLineAsync("");
+                await writer.FlushAsync();
+                return;
+            }
 
             await writer.WriteLineAsync("HTTP/1.1 200 OK");
             await writer.WriteLineAsync("Content-Type: text/html");
@@ -121,7 +273,7 @@ namespace MK94.SeeRaw
 
         private bool IsWebsocketUpgradeRequest(Dictionary<string, string> headers) => headers.TryGetValue("Upgrade", out var value) && value.Equals("websocket");
 
-        public async Task UpgradeToWebsocket(IPEndPoint remoteEndpoint, Dictionary<string, string> headers, StreamWriter writer, Stream stream)
+        private async Task UpgradeToWebsocket(IPEndPoint remoteEndpoint, Dictionary<string, string> headers, StreamWriter writer, Stream stream)
         {
             using var sha = SHA1.Create();
 
@@ -139,12 +291,13 @@ namespace MK94.SeeRaw
 
             connections.TryAdd(remoteEndpoint, websocket);
 
-            onClientConnected.Invoke();
+            var renderer = rendererFactory();
+            var state = renderer.OnClientConnected(this, websocket);
 
-            await HandleWebsocket(websocket);
+            await HandleWebsocket(state, remoteEndpoint, websocket, renderer);
         }
 
-        private async Task HandleWebsocket(WebSocket socket)
+        private async Task HandleWebsocket(object state, IPEndPoint remoteEndpoint, WebSocket socket, RendererBase renderer)
         {
             try
             {
@@ -170,12 +323,12 @@ namespace MK94.SeeRaw
                     if (socket.State != WebSocketState.Open)
                         return;
 
-                    onMessage.Invoke(message.ToString());
+                    renderer.OnMessageReceived(state, this, socket, message.ToString());
                 }
             }
             catch (WebSocketException)
             {
-
+                connections.TryRemove(remoteEndpoint, out _);
             }
         }
     }

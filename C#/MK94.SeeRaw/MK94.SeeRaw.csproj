@@ -8,33 +8,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Client\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
+    <PackageReference Include="System.Text.Json" Version="4.7.2" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="Client/**">
-      <Pack>true</Pack>
-    </Content>
-  </ItemGroup>
-  
   <ItemGroup>
     <ClientSrcFiles Include="$(ProjectDir)/../../Client/src/**" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="4.7.2" />
-  </ItemGroup>
-  
-  <Target Inputs="@(ClientSrcFiles)" Outputs="$(ProjectDir)Client\index.html" Name="PrecompileScript" BeforeTargets="BeforeBuild">
-    <Exec WorkingDirectory="$(ProjectDir)/../../Client" Command="yarn build --prod" />
-    
-    <ItemGroup>
-      <ClientFiles Include="$(ProjectDir)/../../Client/dist/**" />
-    </ItemGroup>
-    
-    <Copy SourceFiles="@(ClientFiles)" DestinationFolder="$(ProjectDir)/Client" />
-  </Target>
 
+  <Target Inputs="@(ClientSrcFiles)" Outputs="$(ProjectDir)/../../Client/dist/seeraw/index.html" Name="ClientBuild" BeforeTargets="BeforeBuild">
+    <Exec WorkingDirectory="$(ProjectDir)/../../Client" Command="yarn build --prod" />
+  </Target>
+  
+  <Target Name="ClientInclude" AfterTargets="ClientBuild">
+    <ItemGroup>
+      <EmbeddedResource Include="$(ProjectDir)/../../Client/dist/seeraw/**">
+        <Pack>true</Pack>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+  
 </Project>

@@ -4,79 +4,41 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Net.WebSockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace MK94.SeeRaw
 {
-	public class Renderer
+	public abstract class RendererBase
 	{
-		private readonly short port;
+		protected JsonSerializerOptions jsonOptions;
+		protected Serializer serializer = new Serializer();
 
-		private RenderRoot state = new RenderRoot();
+		private Context previousContext;
 
-		private Server server;
-
-		private Dictionary<string, Delegate> callbacks = new Dictionary<string, Delegate>();
-
-		public Renderer(short port = 3054, bool openBrowser = false)
+		protected RendererBase()
 		{
-			this.port = port;
-			server = new Server(IPAddress.Loopback, port, Refresh, MessageReceived);
+			jsonOptions = new JsonSerializerOptions();
+			jsonOptions.Converters.Add(new JsonStringEnumConverter());
 
-			if (openBrowser)
-				OpenBrowser();
 		}
 
-		public void OpenBrowser()
+		public abstract object OnClientConnected(Server server, WebSocket websocket);
+		public abstract void OnMessageReceived(object state, Server server, WebSocket websocket, string message);
+
+		public virtual void DownloadFile(Stream stream, string fileName, string mimeType = "text/plain")
 		{
-			var url = $"http://localhost:{port}";
+			var path = SeeRawDefault.localSeeRawContext.Value.Server.ServeFile(() => stream, fileName, mimeType, timeout: TimeSpan.FromSeconds(30));
 
-			try
-			{
-				Process.Start(url);
-			}
-			catch
-			{
-				// hack because of this: https://github.com/dotnet/corefx/issues/10361
-				if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-				{
-					url = url.Replace("&", "^&");
-					Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
-				}
-				else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-				{
-					Process.Start("xdg-open", url);
-				}
-				else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-				{
-					Process.Start("open", url);
-				}
-				else
-				{
-					throw;
-				}
-			}
+			SeeRawDefault.localSeeRawContext.Value.WebSocket.SendAsync(Encoding.ASCII.GetBytes(@$"{{ ""download"": ""{path}"" }}"), WebSocketMessageType.Text, true, default);
 		}
 
-		ArraySegment<byte> SerializeState()
-        {
-			var memStream = new MemoryStream();
-			var writer = new Utf8JsonWriter(memStream);
-			writer.WriteStartObject();
-
-			Serializer.Serialize(state, typeof(RenderRoot), false, writer, callbacks);
-
-			writer.WriteEndObject();
-			writer.Flush();
-
-			return new ArraySegment<byte>(memStream.GetBuffer(), 0, (int)memStream.Position);
-		}
-
-		void MessageReceived(string message)
+		protected void ExecuteCallback(Server server, RenderRoot renderRoot, WebSocket webSocket, Dictionary<string, Delegate> callbacks, string message)
 		{
 			var deserialized = JsonSerializer.Deserialize<JsonElement>(message);
 
@@ -97,12 +59,14 @@ namespace MK94.SeeRaw
 					for (int i = 0; i < parameters.Length; i++)
 					{
 						// Hacky way to deserialize until https://github.com/dotnet/runtime/issues/31274 is implemented
-						var jsonArg = JsonSerializer.Deserialize(jsonArgs[i].GetRawText(), parameters[i].ParameterType);
+						var jsonArg = JsonSerializer.Deserialize(jsonArgs[i].GetRawText(), parameters[i].ParameterType, jsonOptions);
 
 						deserializedArgs.Add(jsonArg);
 					}
 
+					SetContext(server, renderRoot, webSocket);
 					@delegate.DynamicInvoke(deserializedArgs.ToArray());
+					ResetContext();
 				}
 				else UnknownMessage();
 			}
@@ -116,6 +80,52 @@ namespace MK94.SeeRaw
 			}
 		}
 
+		protected void SetContext(Server server, RenderRoot renderRoot, WebSocket webSocket)
+        {
+			previousContext = SeeRawDefault.localSeeRawContext.Value;
+
+			SeeRawDefault.localSeeRawContext.Value = new Context
+			{
+				Renderer = this,
+				Server = server,
+				RenderRoot = renderRoot,
+				WebSocket = webSocket
+			};
+        }
+
+		protected void ResetContext()
+        {
+			SeeRawDefault.localSeeRawContext.Value = previousContext;
+			previousContext = null;
+		}
+
+		public RendererBase WithSerializer<T>(ISerialize serializer) => WithSerializer(typeof(T), serializer);
+
+		public RendererBase WithSerializer(Type type, ISerialize serializer)
+		{
+			this.serializer.serializers[type] = serializer;
+			return this;
+		}
+	}
+
+	public class Renderer : RendererBase
+	{
+		private Server server;
+		private RenderRoot state;
+		private Dictionary<string, Delegate> callbacks = new Dictionary<string, Delegate>();
+
+		public Renderer(Server server, bool setGlobalContext)
+		{
+			this.server = server;
+			state = new RenderRoot(r => Refresh());
+
+			if (setGlobalContext)
+				SetContext(server, state, null);
+		}
+
+		public override object OnClientConnected(Server server, WebSocket websocket) { Refresh(); return null; }
+		public override void OnMessageReceived(object state, Server server, WebSocket websocket, string message) => ExecuteCallback(server, this.state, websocket, callbacks, message);
+
 		public T Render<T>(T o)
 		{
 			return Render(o, out _);
@@ -123,7 +133,7 @@ namespace MK94.SeeRaw
 
 		public T Render<T>(T o, out RenderTarget target)
 		{
-			target = new RenderTarget(this, o);
+			target = new RenderTarget(Refresh, o);
 
 			state.Targets.Add(target);
 
@@ -132,7 +142,58 @@ namespace MK94.SeeRaw
 
 		public void Refresh()
 		{
-			server.Broadcast(SerializeState());
+			callbacks.Clear();
+			server.Broadcast(serializer.SerializeState(state, callbacks));
 		}
+    }
+
+	public class PerClientRenderer : RendererBase
+	{
+		private class ClientState
+		{
+			public ClientState(RenderRoot state, Dictionary<string, Delegate> callbacks)
+			{
+				State = state;
+				Callbacks = callbacks;
+			}
+
+			internal RenderRoot State { get; }
+
+			internal Dictionary<string, Delegate> Callbacks { get; }
+
+
+		}
+
+		private readonly Action onClientConnected;
+
+        public PerClientRenderer(Action onClientConnected)
+		{
+			this.onClientConnected = onClientConnected;
+		}
+
+        public override object OnClientConnected(Server server, WebSocket websocket)
+        {
+			var callbacks = new Dictionary<string, Delegate>();
+			var renderRoot = new RenderRoot(r =>
+			{
+				var message = serializer.SerializeState(r, callbacks);
+				Task.Run(() => websocket.SendAsync(message, WebSocketMessageType.Text, true, default));
+			});
+
+			var state = new ClientState(renderRoot, callbacks);
+
+			SetContext(server, state.State, websocket);
+			onClientConnected();
+			ResetContext();
+
+			return state;
+        }
+
+        public override void OnMessageReceived(object state, Server server, WebSocket websocket, string message)
+        {
+			var clientState = state as ClientState;
+
+			ExecuteCallback(server, clientState.State, websocket, clientState.Callbacks, message);
+        }
 	}
 }

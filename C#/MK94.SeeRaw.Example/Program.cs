@@ -1,16 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MK94.SeeRaw.Example
 {
     class Program
     {
-        static void Main(string[] args)
-        {
-            // Open the browser using the default host; Optional: the browser can be opened manually
-            SeeRawDefault.OpenBrowser();
+        static Progress progress = new Progress { Speed = "10kb/s", Max = "10MB" };
+        static Lazy<Task> progressTask = new Lazy<Task>(() => UpdateFakeProgress(progress));
 
+        static void Main()
+        {
+            SeeRawDefault
+                .WithServer()
+                .WithGlobalRenderer(RenderClientMenu)
+                .RunInBackground();
+
+            Console.WriteLine("Press any key to exit...");
+            Console.ReadKey();
+        }
+
+        static void RenderClientMenu()
+        {
             // Show a basic hello world
             "Hello World".Render();
 
@@ -20,23 +34,45 @@ namespace MK94.SeeRaw.Example
             "Click on a menu item above".Render(out var contentTarget);
 
             // b. Create actions/menu items to update the contentTarget depending on whats invoked
-            var hiAction = SeeRawTypes.Action("Say Hi", () => SayHi(contentTarget));
-            var calcAction = SeeRawTypes.Action("Calculator", () => Calc(contentTarget));
-
-            // c. Update the menuTarget to display the actions
-            menuTarget.Value = new List<object> { hiAction, calcAction };
-
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
+            menuTarget.Value = SeeRawTypes.Navigation()
+                .WithAction("Say Hi", () => SayHi(contentTarget))
+                .WithAction("Calculator", () => Calc(contentTarget))
+                .WithAction("Show file copy progress", () => ShowProgress(contentTarget));
         }
+
+        enum Title
+        {
+            Mr, Mrs
+        }
+
         static void SayHi(RenderTarget contentTarget)
         {
-            contentTarget.Value = SeeRawTypes.Action("Please enter your details", (string name) => contentTarget.Value = $"Hi {name}");
+            contentTarget.Value = SeeRawTypes.Action("Please enter your details", (string name, Title title) => contentTarget.Value = $"Hi {title} {name}");
         }
 
         static void Calc(RenderTarget contentTarget)
         {
             contentTarget.Value = SeeRawTypes.Action("Add", (int a, int b) => contentTarget.Value = $"Result: {a + b}");
+        }
+
+        static void ShowProgress(RenderTarget contentTarget)
+        {
+            // initialize the lazy; starts up a background thread to update the progress
+            _ = progressTask.Value;
+            contentTarget.Value = progress;
+        }
+
+        static Task UpdateFakeProgress(Progress progress)
+        {
+            return Task.Run(() =>
+            {
+                while (true)
+                {
+                    progress.Percent = (progress.Percent + 1) % 100;
+                    Thread.Sleep(100);
+                }
+            });
+
         }
     }
 }

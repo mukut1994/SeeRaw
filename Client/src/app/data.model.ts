@@ -23,3 +23,15 @@ export class FormInput {
   public name: string;
   public target: any;
 }
+
+export class Progress {
+  public percent: number;
+  public value: string;
+  public min: string;
+  public max: string;
+  public speed: string;
+  public pause: string;
+  public paused: boolean;
+  public setSpeed: string;
+  public cancel: string;
+}

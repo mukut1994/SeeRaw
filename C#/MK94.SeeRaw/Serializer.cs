@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -8,11 +9,33 @@ using System.Text.Json;
 
 namespace MK94.SeeRaw
 {
-	static class Serializer
+	public class Serializer
 	{
-		public static void Serialize(object obj, Type type, bool serializeNulls, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
+		internal Dictionary<Type, ISerialize> serializers = new Dictionary<Type, ISerialize>();
+
+		internal ArraySegment<byte> SerializeState(RenderRoot state, Dictionary<string, Delegate> callbacks)
 		{
-			if (obj == null && !serializeNulls)
+			var memStream = new MemoryStream();
+			var writer = new Utf8JsonWriter(memStream);
+			writer.WriteStartObject();
+
+			Serialize(state, typeof(RenderRoot), false, writer, callbacks);
+
+			writer.WriteEndObject();
+			writer.Flush();
+
+			return new ArraySegment<byte>(memStream.GetBuffer(), 0, (int)memStream.Position);
+		}
+
+		public void Serialize(object obj, Type type, bool serializeNulls, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
+		{
+			if (serializers.TryGetValue(type, out var globalSerializer))
+				globalSerializer.Serialize(obj, this, writer, callbacks, serializeNulls);
+
+			else if (obj is ISerializeable serializeable)
+				serializeable.Serialize(this, writer, callbacks, serializeNulls);
+
+			else if (obj == null && !serializeNulls)
 			{
 				writer.WriteString("type", "null");
 				writer.WriteNull("target");
@@ -38,20 +61,11 @@ namespace MK94.SeeRaw
 				writer.WriteString("target", (string)obj);
 			}
 
+			else if (type.IsEnum)
+				SerializeEnum(obj, type, writer);
+
 			else if (typeof(IEnumerable).IsAssignableFrom(type))
-			{
-				writer.WriteString("type", "array");
-				writer.WriteStartArray("target");
-
-				foreach (var elm in (IEnumerable)obj)
-				{
-					writer.WriteStartObject();
-					Serialize(elm, elm.GetType(), serializeNulls, writer, callbacks);
-					writer.WriteEndObject();
-				}
-
-				writer.WriteEndArray();
-			}
+				SerializeArrayLike(obj, serializeNulls, writer, callbacks);
 
 			else if (obj is RenderRoot root)
 			{
@@ -72,18 +86,14 @@ namespace MK94.SeeRaw
 				Serialize(target.Value, target.Value.GetType(), serializeNulls, writer, callbacks);
 			}
 
-			else if (obj is Actionable l)
-				AppendLink(l, writer, callbacks);
-
-			else if (obj is Delegate d)
-				AppendDelegate(d, writer, callbacks);
-
 			else
 			{
-				writer.WriteString("type", "object");
+				var typeName = obj.GetType().GetCustomAttribute<SeeRawType>()?.Name ?? "object";
+
+				writer.WriteString("type", typeName);
 				writer.WriteStartObject("target");
 
-				foreach ((PropertyInfo prop, int i) in obj.GetType().GetProperties().Select((x, i) => (x, i)))
+				foreach (var prop in obj.GetType().GetProperties())
 				{
 					writer.WriteStartObject(prop.Name);
 
@@ -95,46 +105,31 @@ namespace MK94.SeeRaw
 			}
 		}
 
-		private static void AppendLink(Actionable link, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
+        private void SerializeArrayLike(object obj, bool serializeNulls, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
         {
-			writer.WriteString("text", link.Text);
+            writer.WriteString("type", "array");
+            writer.WriteStartArray("target");
 
-			var id = Guid.NewGuid().ToString();
-
-			callbacks.Add(id, link.Action);
-			writer.WriteString("id", id);
-
-			if (link.Action is Action)
-			{
-				writer.WriteString("type", "link");
-
-				return;
+            foreach (var elm in (IEnumerable)obj)
+            {
+                writer.WriteStartObject();
+                Serialize(elm, elm.GetType(), serializeNulls, writer, callbacks);
+                writer.WriteEndObject();
             }
 
-			AppendDelegate(link.Action, writer, callbacks);
+            writer.WriteEndArray();
         }
 
-		private static void AppendDelegate(Delegate @delegate, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
-		{
-			writer.WriteString("type", "form");
+		private void SerializeEnum(object obj, Type type, Utf8JsonWriter writer)
+        {
+			var enumNames = type.GetEnumNames().Aggregate((a, b) => $"{a}, {b}");
+			
+			writer.WriteString("type", $"enum");
+			writer.WriteString("enum-values", $"{enumNames}");
+			writer.WriteString("target", obj?.ToString());
+        }
 
-			writer.WriteStartArray("inputs");
-			foreach (var parameter in @delegate.GetMethodInfo().GetParameters())
-			{
-				if (!parameter.ParameterType.IsPrimitive && parameter.ParameterType != typeof(string))
-					throw new InvalidOperationException($"Delegate can only have primitive arguments");
-
-				writer.WriteStartObject();
-
-				writer.WriteString("name", parameter.Name);
-				Serialize(null, parameter.ParameterType, true, writer, callbacks);
-
-				writer.WriteEndObject();
-			}
-			writer.WriteEndArray();
-		}
-
-		private static bool IsNumericalType(Type t)
+        private bool IsNumericalType(Type t)
 		{
 			return t == typeof(sbyte) ||
 					t == typeof(byte) ||
@@ -149,4 +144,32 @@ namespace MK94.SeeRaw
 		}
 	}
 
+	public interface ISerializeable
+    {
+		/// <summary>
+		/// Serializes the object into json for the client. Has to include a "type" property so the client knows which renderer to pick.
+		/// </summary>
+		/// <param name="serializer">The default serializer. Call <see cref="Serializer.Serialize(object, Type, bool, Utf8JsonWriter, Dictionary{string, Delegate})"/> to append the default json properties</param>
+		/// <param name="writer">The json writer used to create the message</param>
+		/// <param name="callbacks">Messages that the client can send back to us. <br /> The key is used to identify which callback the client wants to execute and should be a random guid in most cases.</param>
+		/// <param name="serializeNulls">Useful for UI elements that need to know the data type even if its empty. <br />
+		/// E.g. allows Actionable to render a form with parameter inputs. <br />
+		/// For custom UI Renderers you can safely ignore this one</param>
+		public void Serialize(Serializer serializer, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks, bool serializeNulls);
+    }
+
+	public interface ISerialize
+    {
+		/// <summary>
+		/// Serializes the object into json for the client. Has to include a "type" property so the client knows which renderer to pick.
+		/// </summary>
+		/// <param name="instance">The object being serialized</param>
+		/// <param name="serializer">The default serializer. Call <see cref="Serializer.Serialize(object, Type, bool, Utf8JsonWriter, Dictionary{string, Delegate})"/> to append the default json properties</param>
+		/// <param name="writer">The json writer used to create the message</param>
+		/// <param name="callbacks">Messages that the client can send back to us. <br /> The key is used to identify which callback the client wants to execute and should be a random guid in most cases.</param>
+		/// <param name="serializeNulls">Useful for UI elements that need to know the data type even if its empty. <br />
+		/// E.g. allows Actionable to render a form with parameter inputs. <br />
+		/// For custom UI Renderers you can safely ignore this one</param>
+		public void Serialize(object instance, Serializer serializer, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks, bool serializeNulls);
+	}
 }
