@@ -79,6 +79,8 @@ namespace MK94.SeeRaw
             {
                 var client = await server.AcceptTcpClientAsync();
 
+                openBrowserCancel.Cancel();
+
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 // Fire and forget on purpose
                 Task.Run(async() => await HandleClient(client));
@@ -100,8 +102,13 @@ namespace MK94.SeeRaw
         /// </summary>
         public Server OpenBrowserAfterWait(TimeSpan waitTime)
         {
-            openBrowserCancel.Token.WaitHandle.WaitOne(waitTime);
-            OpenBrowser();
+            Task.Run(() =>
+            {
+                openBrowserCancel.Token.WaitHandle.WaitOne(waitTime);
+                if(!openBrowserCancel.IsCancellationRequested)
+                    OpenBrowser();
+            });
+
             return this;
         }
 
@@ -266,7 +273,7 @@ namespace MK94.SeeRaw
             if (file == "/")
                 file = "index.html";
 
-            file = "MK94.SeeRaw.Client." + file.Trim('/');
+            file = "MK94.SeeRaw." + file.Trim('/');
 
             return file;
         }

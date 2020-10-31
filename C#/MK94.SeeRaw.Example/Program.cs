@@ -17,6 +17,7 @@ namespace MK94.SeeRaw.Example
             SeeRawDefault
                 .WithServer()
                 .WithGlobalRenderer(RenderClientMenu)
+                .OpenBrowserAfterWait(TimeSpan.FromSeconds(15))
                 .RunInBackground();
 
             Console.WriteLine("Press any key to exit...");
