@@ -40,11 +40,14 @@
     <app-enum-render [target]="target" [editable]="editable"></app-enum-render>
   </span>
 
+  <span *ngSwitchCase="'navigation'">
+    <app-navigation-render [target]="target"></app-navigation-render>
+  </span>
 
   <span *ngSwitchDefault>
     <app-object-render
       [target]="target.target"
-      [editable]="editable"
-    ></app-object-render>
+      [editable]="editable">
+    </app-object-render>
   </span>
 </ng-container>

@@ -11,6 +11,7 @@ import { ObjectRenderComponent } from './object-render/object-render.component';
 import { FormRenderComponent } from './form-render/form-render.component';
 import { ProgressRenderComponent } from './progress-render/progress-render.component';
 import { EnumRenderComponent } from './enum-render/enum-render.component';
+import { NavigationRenderComponent } from './navigation-render/navigation-render.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import { EnumRenderComponent } from './enum-render/enum-render.component';
     ObjectRenderComponent,
     FormRenderComponent,
     ProgressRenderComponent,
-    EnumRenderComponent
+    EnumRenderComponent,
+    NavigationRenderComponent
   ],
   imports: [
     BrowserModule,

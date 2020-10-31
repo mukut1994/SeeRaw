@@ -88,7 +88,9 @@ namespace MK94.SeeRaw
 
 			else
 			{
-				writer.WriteString("type", "object");
+				var typeName = obj.GetType().GetCustomAttribute<SeeRawType>()?.Name ?? "object";
+
+				writer.WriteString("type", typeName);
 				writer.WriteStartObject("target");
 
 				foreach (var prop in obj.GetType().GetProperties())

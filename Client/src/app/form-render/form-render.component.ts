@@ -21,7 +21,7 @@ export class FormRenderComponent implements OnInit {
       this.removeSystemPropsAndCopy(x)
     );
 
-    let message = {
+    const message = {
       id: this.value.id,
       type: 'form',
       args: collapsed

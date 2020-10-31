@@ -51,7 +51,7 @@ namespace MK94.SeeRaw
 		public void Refresh() => onChange();
 	}
 
-	class Actionable : ISerializeable
+	public class Actionable : ISerializeable
 	{
 		internal Delegate Action { get; }
 
@@ -129,7 +129,7 @@ namespace MK94.SeeRaw
 
 		internal Action<int?> setSpeed { get; }
 
-		internal CancellationTokenSource? cancellationTokenSource { get; }
+		internal CancellationTokenSource cancellationTokenSource { get; }
 
 		internal bool paused { get; set; }
 
@@ -192,5 +192,17 @@ namespace MK94.SeeRaw
 			else
 				writer.WriteNull("speed");
 		}
+    }
+
+	[SeeRawType("navigation")]
+    public class Navigation
+    {
+		public List<Actionable> Actions { get; } = new List<Actionable>();
+
+		public Navigation WithAction(string text, Action action)
+        {
+			Actions.Add(new Actionable(text, action));
+			return this;
+        }
     }
 }

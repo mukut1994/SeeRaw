@@ -16,22 +16,11 @@ namespace MK94.SeeRaw.Example
         {
             SeeRawDefault
                 .WithServer()
-                .WithPerClientRenderer(RenderClientMenu)
+                .WithGlobalRenderer(RenderClientMenu)
                 .RunInBackground();
-                //.ServeFile(() => GenerateStreamFromString("TEST TEXT"), "test.txt", times: 1, path: "test");
 
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
-        }
-
-        public static System.IO.Stream GenerateStreamFromString(string s)
-        {
-            var stream = new System.IO.MemoryStream();
-            var writer = new System.IO.StreamWriter(stream);
-            writer.Write(s);
-            writer.Flush();
-            stream.Position = 0;
-            return stream;
         }
 
         static void RenderClientMenu()
@@ -45,12 +34,10 @@ namespace MK94.SeeRaw.Example
             "Click on a menu item above".Render(out var contentTarget);
 
             // b. Create actions/menu items to update the contentTarget depending on whats invoked
-            var hiAction = SeeRawTypes.Action("Say Hi", () => SayHi(contentTarget));
-            var calcAction = SeeRawTypes.Action("Calculator", () => Calc(contentTarget));
-            var progressAction = SeeRawTypes.Action("Show file copy progress", () => ShowProgress(contentTarget));
-
-            // c. Update the menuTarget to display the actions
-            menuTarget.Value = new List<object> { hiAction, calcAction, progressAction };
+            menuTarget.Value = SeeRawTypes.Navigation()
+                .WithAction("Say Hi", () => SayHi(contentTarget))
+                .WithAction("Calculator", () => Calc(contentTarget))
+                .WithAction("Show file copy progress", () => ShowProgress(contentTarget));
         }
 
         enum Title
