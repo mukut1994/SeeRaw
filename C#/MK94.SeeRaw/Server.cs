@@ -145,9 +145,46 @@ namespace MK94.SeeRaw
             return this;
         }
 
-        public string ServeFile(Func<Stream> streamFactory, string fileName, string type = "text/plain", int? times = 1, TimeSpan? timeout = null, string path = null)
+        public Server ServeDirectory(string directory, out List<string> paths, bool fileNameIsPath = true, int? times = null, TimeSpan? timeout = null)
         {
-            path = path ?? Guid.NewGuid().ToString();
+            string toPath(string file)
+            {
+                return fileNameIsPath ? Path.GetFileName(file) : Guid.NewGuid().ToString();
+            }
+
+            ServeDirectory(directory, toPath, out paths, times, timeout);
+
+            return this;
+        }
+
+        public Server ServeDirectory(string directory, Func<string, string> fileToPath, out List<string> paths, int? times = null, TimeSpan? timeout = null)
+        {
+            var ret = new List<string>();
+
+            foreach (var file in Directory.EnumerateFiles(directory))
+            {
+                var path = fileToPath(file);
+
+                ServeFile(() => File.OpenRead(file), path, times: times, timeout: timeout);
+
+                ret.Add(path);
+            }
+
+            paths = ret;
+            return this;
+        }
+
+        public Server ServeFile(Func<Stream> streamFactory, out string path, string fileName = null, string type = "text/plain", int? times = 1, TimeSpan? timeout = null)
+        {
+            path = Guid.NewGuid().ToString();
+
+            ServeFile(streamFactory, path, fileName, type, times, timeout);
+
+            return this;
+        }
+
+        public Server ServeFile(Func<Stream> streamFactory, string path, string fileName = null, string type = "text/plain", int? times = 1, TimeSpan? timeout = null)
+        {
             path = path.StartsWith('/') ? path : "/" + path;
 
             files.TryAdd(path, new ServerFile
@@ -165,7 +202,7 @@ namespace MK94.SeeRaw
                 tokenSource.CancelAfter(timeout.Value);
             }
 
-            return path;
+            return this;
         }
 
         public void StopServing(string path)
