@@ -19,5 +19,15 @@ namespace MK94.SeeRaw
 
             return obj;
         }
+
+        public static T Render<T>(this T obj, string name)
+        {
+            if (SeeRawDefault.localSeeRawContext == null)
+                throw new InvalidProgramException($"Default renderer is not set for extension method. Call {nameof(SeeRawDefault)}.{nameof(SeeRawDefault.WithServer)}().{nameof(SeeRawDefault.WithGlobalRenderer)}() first");
+
+            SeeRawDefault.localSeeRawContext.Value.RenderRoot.Render(obj, name);
+
+            return obj;
+        }
     }
 }

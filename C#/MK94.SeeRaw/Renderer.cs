@@ -126,20 +126,6 @@ namespace MK94.SeeRaw
 		public override object OnClientConnected(Server server, WebSocket websocket) { Refresh(); return null; }
 		public override void OnMessageReceived(object state, Server server, WebSocket websocket, string message) => ExecuteCallback(server, this.state, websocket, callbacks, message);
 
-		public T Render<T>(T o)
-		{
-			return Render(o, out _);
-		}
-
-		public T Render<T>(T o, out RenderTarget target)
-		{
-			target = new RenderTarget(Refresh, o);
-
-			state.Targets.Add(target);
-
-			return o;
-		}
-
 		public void Refresh()
 		{
 			callbacks.Clear();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.WebSockets;
 using System.Threading;
@@ -57,6 +58,11 @@ namespace MK94.SeeRaw
         public static void DownloadOnClient(string file, string fileName = null)
         {
             Renderer.DownloadFile(File.OpenRead(file), fileName ?? new FileInfo(file).Name);
+        }
+
+        public static RenderTarget GetRenderTarget(string name)
+        {
+            return RenderRoot.Targets.FirstOrDefault(x => x.Name == name);
         }
 
         private static T ValueOrException<T>(Func<Context, T> property)

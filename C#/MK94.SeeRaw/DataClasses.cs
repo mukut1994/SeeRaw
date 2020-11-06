@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
@@ -18,9 +19,20 @@ namespace MK94.SeeRaw
 
 		internal List<RenderTarget> Targets { get; } = new List<RenderTarget>();
 
-		public RenderTarget Render(object obj)
+		public RenderTarget Render(object obj, string name = null)
         {
-			var ret = new RenderTarget(() => onChange(this), obj);
+			if(name != null)
+            {
+				var target = Targets.FirstOrDefault(x => x.Name == name);
+
+				if (target != null)
+				{
+					target.Value = obj;
+					return target;
+				}
+            }
+
+			var ret = new RenderTarget(() => onChange(this), obj, name ?? Guid.NewGuid().ToString());
 			Targets.Add(ret);
 			return ret;
         }
@@ -28,6 +40,7 @@ namespace MK94.SeeRaw
 
 	public class RenderTarget
 	{
+		public string Name { get; }
 		private readonly Action onChange;
 		private object value;
 
@@ -41,8 +54,9 @@ namespace MK94.SeeRaw
 			}
 		}
 
-		public RenderTarget(Action onChange, object obj)
+		public RenderTarget(Action onChange, object obj, string name)
 		{
+			this.Name = name;
 			this.onChange = onChange;
 
 			value = obj;
