@@ -25,7 +25,6 @@ namespace MK94.SeeRaw
 		{
 			jsonOptions = new JsonSerializerOptions();
 			jsonOptions.Converters.Add(new JsonStringEnumConverter());
-
 		}
 
 		public abstract object OnClientConnected(Server server, WebSocket websocket);
@@ -33,9 +32,9 @@ namespace MK94.SeeRaw
 
 		public virtual void DownloadFile(Stream stream, string fileName, string mimeType = "text/plain")
 		{
-			var path = SeeRawDefault.localSeeRawContext.Value.Server.ServeFile(() => stream, fileName, mimeType, timeout: TimeSpan.FromSeconds(30));
+			var path = SeeRawContext.localSeeRawContext.Value.Server.ServeFile(() => stream, fileName, mimeType, timeout: TimeSpan.FromSeconds(30));
 
-			SeeRawDefault.localSeeRawContext.Value.WebSocket.SendAsync(Encoding.ASCII.GetBytes(@$"{{ ""download"": ""{path}"" }}"), WebSocketMessageType.Text, true, default);
+			SeeRawContext.localSeeRawContext.Value.WebSocket.SendAsync(Encoding.ASCII.GetBytes(@$"{{ ""download"": ""{path}"" }}"), WebSocketMessageType.Text, true, default);
 		}
 
 		protected void ExecuteCallback(Server server, RenderRoot renderRoot, WebSocket webSocket, Dictionary<string, Delegate> callbacks, string message)
@@ -82,9 +81,9 @@ namespace MK94.SeeRaw
 
 		protected void SetContext(Server server, RenderRoot renderRoot, WebSocket webSocket)
         {
-			previousContext = SeeRawDefault.localSeeRawContext.Value;
+			previousContext = SeeRawContext.localSeeRawContext.Value;
 
-			SeeRawDefault.localSeeRawContext.Value = new Context
+			SeeRawContext.localSeeRawContext.Value = new Context
 			{
 				Renderer = this,
 				Server = server,
@@ -95,7 +94,7 @@ namespace MK94.SeeRaw
 
 		protected void ResetContext()
         {
-			SeeRawDefault.localSeeRawContext.Value = previousContext;
+			SeeRawContext.localSeeRawContext.Value = previousContext;
 			previousContext = null;
 		}
 
@@ -108,19 +107,30 @@ namespace MK94.SeeRaw
 		}
 	}
 
-	public class Renderer : RendererBase
+	public class SharedStateRenderer : RendererBase
 	{
 		private Server server;
 		private RenderRoot state;
 		private Dictionary<string, Delegate> callbacks = new Dictionary<string, Delegate>();
 
-		public Renderer(Server server, bool setGlobalContext)
+		public SharedStateRenderer(Server server, bool setGlobalContext, Action initialise)
 		{
 			this.server = server;
 			state = new RenderRoot(r => Refresh());
 
 			if (setGlobalContext)
 				SetContext(server, state, null);
+
+			if(initialise != null)
+			{
+				if (!setGlobalContext)
+					SetContext(server, state, null);
+
+				initialise.Invoke();
+
+				if (!setGlobalContext)
+					ResetContext();
+            }
 		}
 
 		public override object OnClientConnected(Server server, WebSocket websocket) { Refresh(); return null; }

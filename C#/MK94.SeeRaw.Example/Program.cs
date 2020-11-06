@@ -14,7 +14,7 @@ namespace MK94.SeeRaw.Example
 
         static void Main()
         {
-            SeeRawDefault
+            SeeRawSetup
                 .WithServer()
                 .WithGlobalRenderer(RenderClientMenu)
                 .OpenBrowserAfterWait(TimeSpan.FromSeconds(15))

@@ -12,20 +12,20 @@ namespace MK94.SeeRaw
 
         public static T Render<T>(this T obj, out RenderTarget target)
         {
-            if(SeeRawDefault.localSeeRawContext == null)
-                throw new InvalidProgramException($"Default renderer is not set for extension method. Call {nameof(SeeRawDefault)}.{nameof(SeeRawDefault.WithServer)}().{nameof(SeeRawDefault.WithGlobalRenderer)}() first");
+            if(SeeRawContext.localSeeRawContext == null)
+                throw new InvalidProgramException($"Default renderer is not set for extension method. Call {nameof(SeeRawSetup)}.{nameof(SeeRawSetup.WithServer)}().{nameof(SeeRawSetup.WithGlobalRenderer)}() first");
 
-            target = SeeRawDefault.localSeeRawContext.Value.RenderRoot.Render(obj);
+            target = SeeRawContext.localSeeRawContext.Value.RenderRoot.Render(obj);
 
             return obj;
         }
 
         public static T Render<T>(this T obj, string name)
         {
-            if (SeeRawDefault.localSeeRawContext == null)
-                throw new InvalidProgramException($"Default renderer is not set for extension method. Call {nameof(SeeRawDefault)}.{nameof(SeeRawDefault.WithServer)}().{nameof(SeeRawDefault.WithGlobalRenderer)}() first");
+            if (SeeRawContext.localSeeRawContext == null)
+                throw new InvalidProgramException($"Default renderer is not set for extension method. Call {nameof(SeeRawSetup)}.{nameof(SeeRawSetup.WithServer)}().{nameof(SeeRawSetup.WithGlobalRenderer)}() first");
 
-            SeeRawDefault.localSeeRawContext.Value.RenderRoot.Render(obj, name);
+            SeeRawContext.localSeeRawContext.Value.RenderRoot.Render(obj, name);
 
             return obj;
         }

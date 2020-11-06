@@ -67,13 +67,15 @@ namespace MK94.SeeRaw
 
 	public class Actionable : ISerializeable
 	{
-		internal Delegate Action { get; }
+		private Delegate action { get; }
+		private List<object> defaultArgs { get; }
 
 		public string Text { get; }
 
-		public Actionable(string text, Delegate action)
+		public Actionable(string text, Delegate action, params object[] defaultArgs)
 		{
-			Action = action;
+			this.action = action;
+			this.defaultArgs = defaultArgs.ToList();
 			Text = text;
 		}
 
@@ -83,10 +85,10 @@ namespace MK94.SeeRaw
 
 			var id = Guid.NewGuid().ToString();
 
-			callbacks.Add(id, Action);
+			callbacks.Add(id, action);
 			writer.WriteString("id", id);
 
-			if (Action is Action)
+			if (action is Action)
 			{
 				writer.WriteString("type", "link");
 
@@ -101,7 +103,7 @@ namespace MK94.SeeRaw
 			writer.WriteString("type", "form");
 
 			writer.WriteStartArray("inputs");
-			foreach (var parameter in Action.GetMethodInfo().GetParameters())
+			foreach (var (parameter, i) in action.GetMethodInfo().GetParameters().Select((p, i) => (p, i)))
 			{
 				if (!parameter.ParameterType.IsPrimitive && parameter.ParameterType != typeof(string) && !parameter.ParameterType.IsNested)
 					throw new InvalidOperationException($"Delegate can only have primitive arguments");
@@ -109,7 +111,7 @@ namespace MK94.SeeRaw
 				writer.WriteStartObject();
 
 				writer.WriteString("name", parameter.Name);
-				serializer.Serialize(null, parameter.ParameterType, true, writer, null);
+				serializer.Serialize(defaultArgs?[i], parameter.ParameterType, true, writer, null);
 
 				writer.WriteEndObject();
 			}

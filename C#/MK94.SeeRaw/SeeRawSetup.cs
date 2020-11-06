@@ -7,10 +7,8 @@ using System.Threading;
 
 namespace MK94.SeeRaw
 {
-    public static class SeeRawDefault
+    public static class SeeRawSetup
     {
-        internal static AsyncLocal<Context> localSeeRawContext = new AsyncLocal<Context>();
-
         internal static Server server;
 
         public static Server WithServer(short port = 3054) => WithServer(IPAddress.Loopback, port);
@@ -23,10 +21,8 @@ namespace MK94.SeeRaw
 
         public static Server WithGlobalRenderer(this Server server, Action initialise = null, bool defaultGlobalRenderer = true)
         {
-            var renderer = new Renderer(server, defaultGlobalRenderer);
+            var renderer = new SharedStateRenderer(server, defaultGlobalRenderer, initialise);
             server.WithRenderer(() => renderer);
-
-            initialise?.Invoke();
 
             return server;
         }
@@ -50,6 +46,8 @@ namespace MK94.SeeRaw
 
     public static class SeeRawContext
     {
+        internal static AsyncLocal<Context> localSeeRawContext = new AsyncLocal<Context>();
+
         internal static Server Server => ValueOrException(x => x.Server);
         internal static RenderRoot RenderRoot => ValueOrException(x => x.RenderRoot);
         internal static RendererBase Renderer => ValueOrException(x => x.Renderer);
@@ -67,10 +65,10 @@ namespace MK94.SeeRaw
 
         private static T ValueOrException<T>(Func<Context, T> property)
         {
-            if (SeeRawDefault.localSeeRawContext.Value == null)
+            if (localSeeRawContext.Value == null)
                 throw new InvalidOperationException($"{nameof(SeeRawContext)} is not available. Make sure your method is a callback from the Renderer");
 
-            return property(SeeRawDefault.localSeeRawContext.Value);
+            return property(localSeeRawContext.Value);
         }
     }
 }
