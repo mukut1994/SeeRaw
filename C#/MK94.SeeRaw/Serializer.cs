@@ -88,7 +88,7 @@ namespace MK94.SeeRaw
 
 			else
 			{
-				var typeName = obj.GetType().GetCustomAttribute<SeeRawType>()?.Name ?? "object";
+				var typeName = obj.GetType().GetCustomAttribute<SeeRawTypeAttribute>()?.Name ?? "object";
 
 				writer.WriteString("type", typeName);
 				writer.WriteStartObject("target");

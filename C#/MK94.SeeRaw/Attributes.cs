@@ -5,9 +5,9 @@ using System.Text;
 namespace MK94.SeeRaw
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public class SeeRawType : Attribute
+    public class SeeRawTypeAttribute : Attribute
     {
-        public SeeRawType(string name)
+        public SeeRawTypeAttribute(string name)
         {
             Name = name;
         }

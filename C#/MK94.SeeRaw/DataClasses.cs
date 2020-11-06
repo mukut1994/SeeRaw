@@ -210,7 +210,7 @@ namespace MK94.SeeRaw
 		}
     }
 
-	[SeeRawType("navigation")]
+	[SeeRawTypeAttribute("navigation")]
     public class Navigation
     {
 		public List<Actionable> Actions { get; } = new List<Actionable>();
