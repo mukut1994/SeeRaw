@@ -111,12 +111,15 @@ namespace MK94.SeeRaw
 	{
 		private Server server;
 		private RenderRoot state;
-		private Dictionary<string, Delegate> callbacks = new Dictionary<string, Delegate>();
+		private SerializerContext serializerContext;
 
 		public SharedStateRenderer(Server server, bool setGlobalContext, Action initialise)
 		{
 			this.server = server;
-			state = new RenderRoot(r => Refresh());
+			state = new RenderRoot();
+
+			serializerContext = new SerializerContext();
+			serializerContext.onPropertyChanged = (s, e) => Refresh();
 
 			if (setGlobalContext)
 				SetContext(server, state, null);
@@ -134,12 +137,13 @@ namespace MK94.SeeRaw
 		}
 
 		public override object OnClientConnected(Server server, WebSocket websocket) { Refresh(); return null; }
-		public override void OnMessageReceived(object state, Server server, WebSocket websocket, string message) => ExecuteCallback(server, this.state, websocket, callbacks, message);
+		public override void OnMessageReceived(object state, Server server, WebSocket websocket, string message) => ExecuteCallback(server, this.state, websocket, serializerContext.Callbacks, message);
 
 		public void Refresh()
 		{
-			callbacks.Clear();
-			server.Broadcast(serializer.SerializeState(state, callbacks));
+			serializerContext.Callbacks.Clear();
+			serializerContext.ClearPropertyChangedHandlers();
+			server.Broadcast(serializer.SerializeState(state, serializerContext));
 		}
     }
 
@@ -147,18 +151,16 @@ namespace MK94.SeeRaw
 	{
 		private class ClientState
 		{
-			public ClientState(RenderRoot state, Dictionary<string, Delegate> callbacks)
-			{
-				State = state;
-				Callbacks = callbacks;
-			}
-
 			internal RenderRoot State { get; }
 
-			internal Dictionary<string, Delegate> Callbacks { get; }
+			internal SerializerContext serializerContext;
 
-
-		}
+            public ClientState(RenderRoot state, SerializerContext serializerContext)
+            {
+                State = state;
+                this.serializerContext = serializerContext;
+            }
+        }
 
 		private readonly Action onClientConnected;
 
@@ -168,18 +170,25 @@ namespace MK94.SeeRaw
 		}
 
         public override object OnClientConnected(Server server, WebSocket websocket)
-        {
-			var callbacks = new Dictionary<string, Delegate>();
-			var renderRoot = new RenderRoot(r =>
-			{
-				var message = serializer.SerializeState(r, callbacks);
-				Task.Run(() => websocket.SendAsync(message, WebSocketMessageType.Text, true, default));
-			});
+		{
+			var renderRoot = new RenderRoot();
+			var serializerContext = new SerializerContext();
 
-			var state = new ClientState(renderRoot, callbacks);
+			var state = new ClientState(renderRoot, serializerContext);
+
+			void Refresh(object o, System.ComponentModel.PropertyChangedEventArgs args)
+			{
+				serializerContext.Callbacks.Clear();
+				serializerContext.ClearPropertyChangedHandlers();
+				var message = serializer.SerializeState(renderRoot, state.serializerContext);
+				Task.Run(() => websocket.SendAsync(message, WebSocketMessageType.Text, true, default));
+			};
+
+			serializerContext.onPropertyChanged = Refresh;
 
 			SetContext(server, state.State, websocket);
 			onClientConnected();
+			Refresh(null, null);
 			ResetContext();
 
 			return state;
@@ -189,7 +198,7 @@ namespace MK94.SeeRaw
         {
 			var clientState = state as ClientState;
 
-			ExecuteCallback(server, clientState.State, websocket, clientState.Callbacks, message);
+			ExecuteCallback(server, clientState.State, websocket, clientState.serializerContext.Callbacks, message);
         }
 	}
 }

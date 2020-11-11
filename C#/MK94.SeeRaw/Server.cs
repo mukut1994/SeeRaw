@@ -331,7 +331,7 @@ namespace MK94.SeeRaw
             await writer.WriteLineAsync();
             await writer.FlushAsync();
 
-            var websocket = WebSocket.CreateFromStream(stream, true, null, TimeSpan.FromSeconds(30));
+            var websocket = new System.Web.we;// WebSocket.createFromStream(stream, true, null, TimeSpan.FromSeconds(30));
 
             connections.TryAdd(remoteEndpoint, websocket);
 

@@ -16,7 +16,7 @@ namespace MK94.SeeRaw.Example
         {
             SeeRawSetup
                 .WithServer()
-                .WithGlobalRenderer(RenderClientMenu)
+                .WithPerClientRenderer(RenderClientMenu)
                 .OpenBrowserAfterWait(TimeSpan.FromSeconds(15))
                 .RunInBackground();
 

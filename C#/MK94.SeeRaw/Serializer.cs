@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -9,17 +10,39 @@ using System.Text.Json;
 
 namespace MK94.SeeRaw
 {
+	public class SerializerContext
+    {
+		public Dictionary<string, Delegate> Callbacks { get; } = new Dictionary<string, Delegate>();
+		private List<INotifyPropertyChanged> PropertyChangedNotifiers { get; } = new List<INotifyPropertyChanged>();
+
+		internal PropertyChangedEventHandler onPropertyChanged;
+
+        public void AddPropertyChangedNotifier(INotifyPropertyChanged notifyPropertyChanged)
+        {
+			PropertyChangedNotifiers.Add(notifyPropertyChanged);
+			notifyPropertyChanged.PropertyChanged += onPropertyChanged;
+		}	
+		
+		public void ClearPropertyChangedHandlers()
+        {
+			foreach(var p in PropertyChangedNotifiers)
+            {
+				p.PropertyChanged -= onPropertyChanged;
+            }
+        }
+	}
+
 	public class Serializer
 	{
 		internal Dictionary<Type, ISerialize> serializers = new Dictionary<Type, ISerialize>();
 
-		internal ArraySegment<byte> SerializeState(RenderRoot state, Dictionary<string, Delegate> callbacks)
+		internal ArraySegment<byte> SerializeState(RenderRoot state, SerializerContext context)
 		{
 			var memStream = new MemoryStream();
 			var writer = new Utf8JsonWriter(memStream);
 			writer.WriteStartObject();
 
-			Serialize(state, typeof(RenderRoot), false, writer, callbacks);
+			Serialize(state, typeof(RenderRoot), false, writer, context);
 
 			writer.WriteEndObject();
 			writer.Flush();
@@ -27,13 +50,16 @@ namespace MK94.SeeRaw
 			return new ArraySegment<byte>(memStream.GetBuffer(), 0, (int)memStream.Position);
 		}
 
-		public void Serialize(object obj, Type type, bool serializeNulls, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
+		public void Serialize(object obj, Type type, bool serializeNulls, Utf8JsonWriter writer, SerializerContext context)
 		{
+			if (obj is INotifyPropertyChanged notify)
+				context.AddPropertyChangedNotifier(notify);
+
 			if (serializers.TryGetValue(type, out var globalSerializer))
-				globalSerializer.Serialize(obj, this, writer, callbacks, serializeNulls);
+				globalSerializer.Serialize(obj, this, writer, context, serializeNulls);
 
 			else if (obj is ISerializeable serializeable)
-				serializeable.Serialize(this, writer, callbacks, serializeNulls);
+				serializeable.Serialize(this, writer, context, serializeNulls);
 
 			else if (obj == null && !serializeNulls)
 			{
@@ -65,7 +91,7 @@ namespace MK94.SeeRaw
 				SerializeEnum(obj, type, writer);
 
 			else if (typeof(IEnumerable).IsAssignableFrom(type))
-				SerializeArrayLike(obj, serializeNulls, writer, callbacks);
+				SerializeArrayLike(obj, serializeNulls, writer, context);
 
 			else if (obj is RenderRoot root)
 			{
@@ -74,7 +100,7 @@ namespace MK94.SeeRaw
 				foreach (var target in root.Targets)
 				{
 					writer.WriteStartObject();
-					Serialize(target, typeof(RenderTarget), false, writer, callbacks);
+					Serialize(target, typeof(RenderTarget), false, writer, context);
 					writer.WriteEndObject();
 				}
 
@@ -83,7 +109,7 @@ namespace MK94.SeeRaw
 
 			else if (obj is RenderTarget target)
 			{
-				Serialize(target.Value, target.Value.GetType(), serializeNulls, writer, callbacks);
+				Serialize(target.Value, target.Value.GetType(), serializeNulls, writer, context);
 			}
 
 			else
@@ -97,7 +123,7 @@ namespace MK94.SeeRaw
 				{
 					writer.WriteStartObject(prop.Name);
 
-					Serialize(prop.GetValue(obj), prop.PropertyType, serializeNulls, writer, callbacks);
+					Serialize(prop.GetValue(obj), prop.PropertyType, serializeNulls, writer, context);
 					writer.WriteEndObject();
 				}
 
@@ -105,7 +131,7 @@ namespace MK94.SeeRaw
 			}
 		}
 
-        private void SerializeArrayLike(object obj, bool serializeNulls, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks)
+        private void SerializeArrayLike(object obj, bool serializeNulls, Utf8JsonWriter writer, SerializerContext context)
         {
             writer.WriteString("type", "array");
             writer.WriteStartArray("target");
@@ -113,7 +139,7 @@ namespace MK94.SeeRaw
             foreach (var elm in (IEnumerable)obj)
             {
                 writer.WriteStartObject();
-                Serialize(elm, elm.GetType(), serializeNulls, writer, callbacks);
+                Serialize(elm, elm.GetType(), serializeNulls, writer, context);
                 writer.WriteEndObject();
             }
 
@@ -155,7 +181,7 @@ namespace MK94.SeeRaw
 		/// <param name="serializeNulls">Useful for UI elements that need to know the data type even if its empty. <br />
 		/// E.g. allows Actionable to render a form with parameter inputs. <br />
 		/// For custom UI Renderers you can safely ignore this one</param>
-		public void Serialize(Serializer serializer, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks, bool serializeNulls);
+		public void Serialize(Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls);
     }
 
 	public interface ISerialize
@@ -166,10 +192,11 @@ namespace MK94.SeeRaw
 		/// <param name="instance">The object being serialized</param>
 		/// <param name="serializer">The default serializer. Call <see cref="Serializer.Serialize(object, Type, bool, Utf8JsonWriter, Dictionary{string, Delegate})"/> to append the default json properties</param>
 		/// <param name="writer">The json writer used to create the message</param>
+		/// <param name="notifyProperties">The list of objects that can notify</param>
 		/// <param name="callbacks">Messages that the client can send back to us. <br /> The key is used to identify which callback the client wants to execute and should be a random guid in most cases.</param>
 		/// <param name="serializeNulls">Useful for UI elements that need to know the data type even if its empty. <br />
 		/// E.g. allows Actionable to render a form with parameter inputs. <br />
 		/// For custom UI Renderers you can safely ignore this one</param>
-		public void Serialize(object instance, Serializer serializer, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks, bool serializeNulls);
+		public void Serialize(object instance, Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls);
 	}
 }

@@ -3,21 +3,17 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
 
 namespace MK94.SeeRaw
 {
-    public class RenderRoot
+    public class RenderRoot : INotifyPropertyChanged
 	{
-		private readonly Action<RenderRoot> onChange;
-
-		internal RenderRoot(Action<RenderRoot> onChange)
-        {
-			this.onChange = onChange;
-        }
-
 		internal List<RenderTarget> Targets { get; } = new List<RenderTarget>();
+
+		public event PropertyChangedEventHandler PropertyChanged = delegate { };
 
 		public RenderTarget Render(object obj, string name = null)
         {
@@ -32,37 +28,50 @@ namespace MK94.SeeRaw
 				}
             }
 
-			var ret = new RenderTarget(() => onChange(this), obj, name ?? Guid.NewGuid().ToString());
+			var ret = new RenderTarget(obj, name ?? Guid.NewGuid().ToString());
 			Targets.Add(ret);
+
+			PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(Targets)));
+
 			return ret;
         }
 	}
 
-	public class RenderTarget
+	public class RenderTarget : INotifyPropertyChanged
 	{
 		public string Name { get; }
-		private readonly Action onChange;
 		private object value;
+		internal bool disposed = false;
 
-		public object Value
+        public event PropertyChangedEventHandler PropertyChanged = delegate { };
+
+        public object Value
 		{
 			get => value;
 			set
 			{
+				if(disposed)
+					throw new ObjectDisposedException($"{nameof(RenderTarget)} '{Name}' was disposed and its value cannot be updated");
+
 				this.value = value;
-				onChange();
+				PropertyChanged.Invoke(this, null);
 			}
 		}
 
-		public RenderTarget(Action onChange, object obj, string name)
+		public RenderTarget(object obj, string name)
 		{
 			this.Name = name;
-			this.onChange = onChange;
 
 			value = obj;
 		}
 
-		public void Refresh() => onChange();
+		public void Refresh()
+		{
+			if (disposed)
+				throw new ObjectDisposedException($"{nameof(RenderTarget)} '{Name}' was disposed and cannot be refreshed");
+
+			PropertyChanged.Invoke(this, null);
+		}
 	}
 
 	public class Actionable : ISerializeable
@@ -79,13 +88,13 @@ namespace MK94.SeeRaw
 			Text = text;
 		}
 
-        public void Serialize(Serializer serializer, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks, bool serializeNulls)
+        public void Serialize(Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls)
         {
 			writer.WriteString("text", Text);
 
 			var id = Guid.NewGuid().ToString();
 
-			callbacks.Add(id, action);
+			context.Callbacks.Add(id, action);
 			writer.WriteString("id", id);
 
 			if (action is Action)
@@ -119,27 +128,35 @@ namespace MK94.SeeRaw
 		}
     }
 
-	public class Progress : ISerializeable
+	public class Progress : ISerializeable, INotifyPropertyChanged
     {
+		private int _percent;
+		private string _value;
+		private string _speed;
+		private string _min;
+		private string _max;
+
+		private bool paused { get; set; }
+
 		/// <summary>
 		/// Value from 0 to 100; Changes the progress bar
 		/// </summary>
-		public int Percent { get; set; }
+		public int Percent { get => _percent; set { _percent = value; OnPropertyChanged(); } }
 
-		/// <summary>
-		/// The value to display on the bar itself. If empty Percent is used.
-		/// Useful if the steps of the operations can be named (e.g. Initialising Job, Copying files, Cleaning up)
-		/// </summary>
-		public string Value { get; set; }
+        /// <summary>
+        /// The value to display on the bar itself. If empty Percent is used.
+        /// Useful if the steps of the operations can be named (e.g. Initialising Job, Copying files, Cleaning up)
+        /// </summary>
+        public string Value { get => _value; set { _value = value; OnPropertyChanged(); } }
 
 		/// <summary>
 		/// An optional speed message (e.g. 100kb/s, 5m/s)
 		/// </summary>
-		public string Speed { get; set; }
+		public string Speed { get => _speed; set { _speed = value; OnPropertyChanged(); } }
 
-		public string Min { get; set; }
+		public string Min { get => _min; set { _min = value; OnPropertyChanged(); } }
 
-		public string Max { get; set; }
+		public string Max { get => _max; set { _max = value; OnPropertyChanged(); } }
 
 		internal Action pauseToggle { get; }
 
@@ -147,7 +164,7 @@ namespace MK94.SeeRaw
 
 		internal CancellationTokenSource cancellationTokenSource { get; }
 
-		internal bool paused { get; set; }
+		public event PropertyChangedEventHandler PropertyChanged;
 
 		public Progress(Action<bool> pause = null, Action<int?> setSpeed = null, CancellationTokenSource cancellationTokenSource = null)
 		{
@@ -162,8 +179,12 @@ namespace MK94.SeeRaw
 				};
 
         }
+		protected void OnPropertyChanged([CallerMemberName] string name = null)
+		{
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+		}
 
-		public void Serialize(Serializer serializer, Utf8JsonWriter writer, Dictionary<string, Delegate> callbacks, bool serializeNulls)
+		public void Serialize(Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls)
 		{
 			writer.WriteString("type", "progress");
 
@@ -181,7 +202,7 @@ namespace MK94.SeeRaw
 			{
 				var id = Guid.NewGuid().ToString();
 
-				callbacks.Add(id, pauseToggle);
+				context.Callbacks.Add(id, pauseToggle);
 				writer.WriteString("pause", id);
 				writer.WriteBoolean("paused", paused);
 			}
@@ -192,7 +213,7 @@ namespace MK94.SeeRaw
 			{
 				var id = Guid.NewGuid().ToString();
 
-				callbacks.Add(id, setSpeed);
+				context.Callbacks.Add(id, setSpeed);
 				writer.WriteString("setSpeed", id);
 			}
 			else
@@ -202,7 +223,7 @@ namespace MK94.SeeRaw
 			{
 				var id = Guid.NewGuid().ToString();
 
-				callbacks.Add(id, (Action)cancellationTokenSource.Cancel);
+				context.Callbacks.Add(id, (Action)cancellationTokenSource.Cancel);
 				writer.WriteString("cancel", id);
 			}
 			else
@@ -210,7 +231,7 @@ namespace MK94.SeeRaw
 		}
     }
 
-	[SeeRawTypeAttribute("navigation")]
+	[SeeRawType("navigation")]
     public class Navigation
     {
 		public List<Actionable> Actions { get; } = new List<Actionable>();
