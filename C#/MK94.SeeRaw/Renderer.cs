@@ -47,7 +47,11 @@ namespace MK94.SeeRaw
 			if (callbacks.TryGetValue(id, out var @delegate))
 			{
 				if (type == "link" && @delegate is Action a)
+				{
+					SetContext(server, renderRoot, webSocket);
 					a();
+					ResetContext();
+				}
 
 				else if (type == "form")
 				{
