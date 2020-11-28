@@ -59,12 +59,38 @@ namespace MK94.SeeRaw
 					var parameters = @delegate.Method.GetParameters();
 					var deserializedArgs = new List<object>();
 
-					for (int i = 0; i < parameters.Length; i++)
+					if (parameters.Length == 1 && parameters[0].ParameterType == typeof(Dictionary<string, object>))
 					{
-						// Hacky way to deserialize until https://github.com/dotnet/runtime/issues/31274 is implemented
-						var jsonArg = JsonSerializer.Deserialize(jsonArgs[i].GetRawText(), parameters[i].ParameterType, jsonOptions);
+						var dict = new Dictionary<string, object>();
 
-						deserializedArgs.Add(jsonArg);
+						foreach(var kvpair in jsonArgs.EnumerateArray())
+                        {
+							var key = kvpair.GetProperty("key").GetString();
+							object value = kvpair.GetProperty("value").ValueKind switch
+							{
+								JsonValueKind.Null => null,
+								JsonValueKind.Number => kvpair.GetProperty("value").GetInt32(),
+								JsonValueKind.String => kvpair.GetProperty("value").GetString(),
+								JsonValueKind.True => true,
+								JsonValueKind.False => false,
+
+								_ => throw new NotImplementedException()
+							};
+
+							dict[key] = value;
+						}
+
+						deserializedArgs.Add(dict);
+					}
+					else
+					{
+						for (int i = 0; i < parameters.Length; i++)
+						{
+							// Hacky way to deserialize until https://github.com/dotnet/runtime/issues/31274 is implemented
+							var jsonArg = JsonSerializer.Deserialize(jsonArgs[i].GetProperty("value").GetRawText(), parameters[i].ParameterType, jsonOptions);
+
+							deserializedArgs.Add(jsonArg);
+						}
 					}
 
 					SetContext(server, renderRoot, webSocket);

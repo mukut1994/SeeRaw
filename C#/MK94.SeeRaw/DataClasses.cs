@@ -74,6 +74,70 @@ namespace MK94.SeeRaw
 		}
 	}
 
+	public class Form : ISerializeable
+	{
+		private class FormValue
+		{
+			public string Name;
+			public Type Type;
+			public object Default;
+		}
+
+		private Action<Dictionary<string, object>> callback;
+		private List<FormValue> FormValues = new List<FormValue>();
+
+		public string Text { get; }
+
+		public Form(string text, Action<Dictionary<string, object>> callback)
+		{
+			Text = text;
+			this.callback = callback;
+		}
+
+		public Form WithInput<T>(string name, T @default = default)
+		{
+			FormValues.Add(new FormValue { Name = name, Type = typeof(T), Default = @default });
+
+			return this;
+		}
+
+		public void Serialize(Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls)
+		{
+			writer.WriteString("text", Text);
+
+			var id = Guid.NewGuid().ToString();
+			writer.WriteString("id", id);
+
+			if (!FormValues.Any())
+			{
+				context.Callbacks.Add(id, (Action)(() => callback(new Dictionary<string, object>())));
+				writer.WriteString("type", "link");
+
+				return;
+			}
+
+			AppendDelegate(id, context, serializer, writer);
+		}
+
+		private void AppendDelegate(string id, SerializerContext context, Serializer serializer, Utf8JsonWriter writer)
+		{
+			context.Callbacks.Add(id, callback);
+			writer.WriteString("type", "form");
+
+			writer.WriteStartArray("inputs");
+			foreach (var formValue in FormValues)
+			{
+				writer.WriteStartObject();
+
+				writer.WriteString("name", formValue.Name);
+				serializer.Serialize(formValue.Default, formValue.Type, true, writer, null);
+
+				writer.WriteEndObject();
+			}
+			writer.WriteEndArray();
+		}
+	}
+
 	public class Actionable : ISerializeable
 	{
 		private Delegate action { get; }
