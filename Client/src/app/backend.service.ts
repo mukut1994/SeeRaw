@@ -1,38 +1,45 @@
 import { Injectable, Output, EventEmitter } from "@angular/core";
+import { webSocket } from 'rxjs/webSocket';
 import { RenderRoot } from "./data.model";
 
 @Injectable({
   providedIn: "root",
 })
 export class BackendService {
-  private socket: WebSocket;
+  private socketLink = 'ws://localhost:3054';
+  private socket;
 
   renderRoot: RenderRoot;
 
   @Output() messageHandler = new EventEmitter<RenderRoot>();
 
   constructor() {
-    this.socket = new WebSocket("ws:localhost:3054");
+    this.socket = webSocket(this.socketLink);
 
-    this.socket.onmessage = this.onMessage.bind(this);
-    this.socket.onclose = (x) => console.log(x);
+    this.socket.subscribe(
+      msg => this.onMessage(msg),
+      err => console.log(err),
+      x => console.log(x)
+    );
+
+    // this.socket.onmessage = this.onMessage.bind(this);
+    // this.socket.onclose = (x) => console.log(x);
   }
 
-  onMessage(message: MessageEvent) {
-    const deserialized = JSON.parse(message.data);
-
-    if (deserialized.download) {
-      this.download(new URL(deserialized.download, window.location.href).href);
+  onMessage(message) {
+    if (message.download) {
+      this.download(new URL(message.download, window.location.href).href);
       return;
     }
 
-    this.renderRoot = deserialized;
+    this.renderRoot = message;
 
     this.messageHandler.emit(this.renderRoot);
   }
 
   sendMessage(message: string) {
-    this.socket.send(message);
+    console.log(message);
+    this.socket.next({message: message});
   }
 
   download(sUrl) {
