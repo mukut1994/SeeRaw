@@ -16,10 +16,10 @@ export class AnyRenderComponent implements OnInit {
 
   linkClick(id: string) {
     this.backend.sendMessage(
-      JSON.stringify({
+      {
         type: 'link',
         id,
-      })
+      }
     );
   }
 }

@@ -37,9 +37,9 @@ export class BackendService {
     this.messageHandler.emit(this.renderRoot);
   }
 
-  sendMessage(message: string) {
+  sendMessage(message: any) {
     console.log(message);
-    this.socket.next({message: message});
+    this.socket.next(message);
   }
 
   download(sUrl) {

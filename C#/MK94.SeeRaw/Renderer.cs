@@ -39,10 +39,7 @@ namespace MK94.SeeRaw
 
 		protected void ExecuteCallback(Server server, RenderRoot renderRoot, WebSocket webSocket, Dictionary<string, Delegate> callbacks, string message)
 		{
-			using var doc = JsonDocument.Parse(message);
-			var deserialized = doc.RootElement;
-
-			//JsonElement deserialized = (JsonElement) JsonSerializer.Deserialize<Object>(message);
+			JsonElement deserialized = (JsonElement) JsonSerializer.Deserialize<Object>(message);
 
 			var id = deserialized.GetProperty("id").GetString();
 			var type = deserialized.GetProperty("type").GetString();
