@@ -137,13 +137,13 @@ namespace MK94.SeeRaw
 		}
 	}
 
-	public class SharedStateRenderer : RendererBase
+	public class GlobalStateRenderer : RendererBase
 	{
 		private Server server;
 		private RenderRoot state;
 		private SerializerContext serializerContext;
 
-		public SharedStateRenderer(Server server, bool setGlobalContext, Action initialise)
+		public GlobalStateRenderer(Server server, bool setGlobalContext, Action initialise)
 		{
 			this.server = server;
 			state = new RenderRoot();
