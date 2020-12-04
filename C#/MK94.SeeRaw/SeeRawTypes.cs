@@ -12,6 +12,8 @@ namespace MK94.SeeRaw
 
         public static Navigation Navigation() => new Navigation();
 
+        public static Form Form(string text, Action<Dictionary<string, object>> callback) => new Form(text, callback);
+
         #region Action
         // Yes this looks wrong, but Action has 17 different generic variations and there doesn't seem to be a better way of supporting all of them
 
