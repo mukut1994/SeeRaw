@@ -18,12 +18,8 @@ export class BackendService {
 
     this.socket.subscribe(
       msg => this.onMessage(msg),
-      err => console.log(err),
-      x => console.log(x)
+      err => console.log(err)
     );
-
-    // this.socket.onmessage = this.onMessage.bind(this);
-    // this.socket.onclose = (x) => console.log(x);
   }
 
   onMessage(message) {
@@ -38,7 +34,6 @@ export class BackendService {
   }
 
   sendMessage(message: any) {
-    console.log(message);
     this.socket.next(message);
   }
 
