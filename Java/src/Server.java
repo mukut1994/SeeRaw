@@ -1,11 +1,12 @@
+import java.net.InetAddress;
 import java.net.ServerSocket;
 
 public class Server {
 
-    private IPAddress ip;
+    private InetAddress ip;
     private short port;
 
-    public Server(IPAddress ip, short port)
+    public Server(InetAddress ip, short port)
     {
         this.ip = ip;
         this.port = port;
@@ -19,6 +20,10 @@ public class Server {
     }
 
     public Runnable RunAsync() {
-        ServerSocket serverSocket = new ServerSocket(port, 50, ip);
+        try {
+            ServerSocket serverSocket = new ServerSocket(port, 50, ip);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
