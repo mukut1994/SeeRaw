@@ -25,6 +25,8 @@ namespace MK94.SeeRaw
 		{
 			jsonOptions = new JsonSerializerOptions();
 			jsonOptions.Converters.Add(new JsonStringEnumConverter());
+
+			serializer.serializers[typeof(DateTime)] = new DateTimeSerializer();
 		}
 
 		public abstract object OnClientConnected(Server server, WebSocket websocket);
@@ -32,9 +34,9 @@ namespace MK94.SeeRaw
 
 		public virtual void DownloadFile(Stream stream, string fileName, string mimeType = "text/plain")
 		{
-			var path = SeeRawContext.localSeeRawContext.Value.Server.ServeFile(() => stream, fileName, mimeType, timeout: TimeSpan.FromSeconds(30));
+			var path = SeeRawContext.Current.Server.ServeFile(() => stream, fileName, mimeType, timeout: TimeSpan.FromSeconds(30));
 
-			SeeRawContext.localSeeRawContext.Value.WebSocket.SendAsync(Encoding.ASCII.GetBytes(@$"{{ ""download"": ""{path}"" }}"), WebSocketMessageType.Text, true, default);
+			SeeRawContext.Current.WebSocket.SendAsync(Encoding.ASCII.GetBytes(@$"{{ ""download"": ""{path}"" }}"), WebSocketMessageType.Text, true, default);
 		}
 
 		protected void ExecuteCallback(Server server, RenderRoot renderRoot, WebSocket webSocket, Dictionary<string, Delegate> callbacks, string message)
