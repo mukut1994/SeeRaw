@@ -1,6 +1,6 @@
 import java.net.InetAddress;
 
-public static class SeeRawSetup {
+public class SeeRawSetup {
 
     static Server server;
 

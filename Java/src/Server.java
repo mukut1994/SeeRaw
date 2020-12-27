@@ -12,18 +12,22 @@ public class Server {
         this.port = port;
     }
 
-    public Server RunInBackground() {
+    /*public Server RunInBackground() {
 
 
-        new Thread(RunAsync());
+        new Thread(RunAsync()).run();
         return this;
     }
 
     public Runnable RunAsync() {
-        try {
-            ServerSocket serverSocket = new ServerSocket(port, 50, ip);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+        Runnable r = () => {
+            try {
+                ServerSocket serverSocket = new ServerSocket(port, 50, ip);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        };
+
+        return r;
+    }*/
 }
