@@ -18,7 +18,7 @@ namespace MK94.SeeRaw
 
         public static Server WithGlobalRenderer(this Server server, Action initialise = null, Action<RendererBase> configure = null, bool defaultGlobalRenderer = true)
         {
-            var renderer = new SharedStateRenderer(server, defaultGlobalRenderer, initialise);
+            var renderer = new GlobalStateRenderer(server, defaultGlobalRenderer, initialise);
             configure(renderer);
             server.WithRenderer(() => renderer);
 
