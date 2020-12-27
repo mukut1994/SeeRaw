@@ -41,7 +41,7 @@ namespace MK94.SeeRaw
 
 		protected void ExecuteCallback(Server server, RenderRoot renderRoot, WebSocket webSocket, Dictionary<string, Delegate> callbacks, string message)
 		{
-			var deserialized = JsonSerializer.Deserialize<JsonElement>(message);
+			JsonElement deserialized = (JsonElement) JsonSerializer.Deserialize<Object>(message);
 
 			var id = deserialized.GetProperty("id").GetString();
 			var type = deserialized.GetProperty("type").GetString();
@@ -139,13 +139,13 @@ namespace MK94.SeeRaw
 		}
 	}
 
-	public class SharedStateRenderer : RendererBase
+	public class GlobalStateRenderer : RendererBase
 	{
 		private Server server;
 		private RenderRoot state;
 		private SerializerContext serializerContext;
 
-		public SharedStateRenderer(Server server, bool setGlobalContext, Action initialise)
+		public GlobalStateRenderer(Server server, bool setGlobalContext, Action initialise)
 		{
 			this.server = server;
 			state = new RenderRoot();
