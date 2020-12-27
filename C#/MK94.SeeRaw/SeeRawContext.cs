@@ -3,15 +3,16 @@ using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace MK94.SeeRaw
 {
-    internal class Context
+    public class Context
     {
-        public Server Server;
-        public RenderRoot RenderRoot;
-        public RendererBase Renderer;
-        public WebSocket WebSocket;
+        public Server Server { get; internal set; }
+        public RenderRoot RenderRoot { get; internal set; }
+        public RendererBase Renderer { get; internal set; }
+        public WebSocket WebSocket { get; internal set; }
     }
 
     /// <summary>
@@ -22,6 +23,19 @@ namespace MK94.SeeRaw
     public static class SeeRawContext
     {
         internal static AsyncLocal<Context> localSeeRawContext = new AsyncLocal<Context>();
+
+        public static Context Current => localSeeRawContext.Value;
+        public static void ExecuteOnRenderThread(Context context, Action action)
+        {
+            Task.Run(() =>
+            {
+                localSeeRawContext.Value = context;
+
+                action();
+
+                localSeeRawContext.Value = null;
+            });
+        }
 
         /// <summary>
         /// The Server instance of the current async context

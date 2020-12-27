@@ -21,7 +21,7 @@ namespace MK94.SeeRaw
         {
 			PropertyChangedNotifiers.Add(notifyPropertyChanged);
 			notifyPropertyChanged.PropertyChanged += onPropertyChanged;
-		}	
+		}
 		
 		public void ClearPropertyChangedHandlers()
         {
@@ -123,7 +123,9 @@ namespace MK94.SeeRaw
 				{
 					writer.WriteStartObject(prop.Name);
 
-					Serialize(prop.GetValue(obj), prop.PropertyType, serializeNulls, writer, context);
+					var value = prop.GetValue(obj);
+
+					Serialize(value, value?.GetType() ?? prop.PropertyType, serializeNulls, writer, context);
 					writer.WriteEndObject();
 				}
 
@@ -199,4 +201,13 @@ namespace MK94.SeeRaw
 		/// For custom UI Renderers you can safely ignore this one</param>
 		public void Serialize(object instance, Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls);
 	}
+
+    public class DateTimeSerializer : ISerialize
+    {
+        public void Serialize(object instance, Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls)
+        {
+			writer.WriteString("type", "string");
+			writer.WriteString("target", ((DateTime)instance).ToString());
+        }
+    }
 }
