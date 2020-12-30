@@ -6,7 +6,7 @@ import { RenderRoot } from "./data.model";
   providedIn: "root",
 })
 export class BackendService {
-  private socketLink = 'ws://localhost:3054';
+  private socketLink = `ws://${window.location.hostname}:3054`;
   private socket;
 
   renderRoot: RenderRoot;
