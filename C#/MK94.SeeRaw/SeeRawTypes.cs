@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -13,6 +14,11 @@ namespace MK94.SeeRaw
         public static Navigation Navigation() => new Navigation();
 
         public static Form Form(string text, Action<Dictionary<string, object>> callback) => new Form(text, callback);
+
+        public static HorizontalRun HorizontalRun(params object[] objects) => new HorizontalRun { Objects = objects.ToList() };
+        public static VerticalRun VerticalRun(params object[] objects) => new VerticalRun { Objects = objects.ToList() };
+
+        public static Logger Logger() => new Logger();
 
         #region Action
         // Yes this looks wrong, but Action has 17 different generic variations and there doesn't seem to be a better way of supporting all of them

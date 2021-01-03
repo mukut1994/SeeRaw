@@ -1,15 +1,15 @@
 <ng-container [ngSwitch]="target.type">
   <span *ngSwitchCase="'string'" class="string">
-    <div *ngIf="!editable; else edittext">"{{ target.target }}"</div>
+    <span *ngIf="!editable; else edittext">"{{ target.target }}"</span>
     <ng-template #edittext>
       <input type="text" [(ngModel)]="target.target">
     </ng-template>
   </span>
 
   <span *ngSwitchCase="'number'" class="number">
-    <div *ngIf="!editable; else editnumber">
+    <span *ngIf="!editable; else editnumber">
       {{ target.target }}
-    </div>
+    </span>
     <ng-template #editnumber>
       <input type="number" [(ngModel)]="target.target" />
     </ng-template>
@@ -42,6 +42,18 @@
 
   <span *ngSwitchCase="'navigation'">
     <app-navigation-render [target]="target"></app-navigation-render>
+  </span>
+
+  <span *ngSwitchCase="'horizontal'">
+    <app-horizontal-render [target]="target" [editable]="editable"></app-horizontal-render>
+  </span>
+
+  <span *ngSwitchCase="'vertical'">
+    <app-vertical-render [target]="target" [editable]="editable"></app-vertical-render>
+  </span>
+
+  <span *ngSwitchCase="'log'">
+    <app-log-render [target]="target"></app-log-render>
   </span>
 
   <span *ngSwitchDefault>

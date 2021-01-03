@@ -36,10 +36,10 @@ namespace MK94.SeeRaw
 	{
 		internal Dictionary<Type, ISerialize> serializers = new Dictionary<Type, ISerialize>();
 
-		internal ArraySegment<byte> SerializeState(RenderRoot state, SerializerContext context)
+		public ArraySegment<byte> SerializeState(RenderRoot state, SerializerContext context, JsonWriterOptions options = default)
 		{
 			var memStream = new MemoryStream();
-			var writer = new Utf8JsonWriter(memStream);
+			var writer = new Utf8JsonWriter(memStream, options);
 			writer.WriteStartObject();
 
 			Serialize(state, typeof(RenderRoot), false, writer, context);

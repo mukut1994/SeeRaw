@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MK94.SeeRaw.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -306,4 +307,67 @@ namespace MK94.SeeRaw
 			return this;
         }
     }
+
+	[SeeRawType("horizontal")]
+	public class HorizontalRun
+    {
+		public List<object> Objects { get; set; }
+    }
+
+	[SeeRawType("vertical")]
+	public class VerticalRun
+	{
+		public List<object> Objects { get; set; }
+	}
+
+	public class Logger : ILogger, INotifyPropertyChanged
+	{
+		public string Message { get; set; }
+
+		public List<ILogger> Children { get; } = new List<ILogger>();
+
+		private Logger parent;
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		public ILogger CreateChild(string message = null)
+		{
+			var ret = new Logger
+			{
+				Message = message,
+				parent = this
+			};
+
+			Children.Add(ret);
+
+			return ret;
+		}
+
+		public IEnumerable<T> EnumerateWithProgress<T>(List<T> collection)
+		{
+			for (int i = 0; i < collection.Count; i++)
+			{
+				WithMessage($"{i + 1} of {collection.Count}");
+				yield return collection[i];
+			}
+		}
+
+		public void RemoveSelf()
+		{
+			parent?.Children.Remove(this);
+		}
+
+		public ILogger WithMessage(string messaage)
+		{
+			Console.WriteLine(messaage);
+			Message = messaage;
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Message)));
+			return this;
+		}
+
+		public void Dispose()
+		{
+			RemoveSelf();
+		}
+	}
 }

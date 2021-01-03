@@ -1,0 +1,30 @@
+{
+  "targets": [
+    {
+      "text": "Form test",
+      "id": "8f3838f5-855f-4453-9011-74d892e5359f",
+      "type": "form",
+      "inputs": [
+        {
+          "name": "Text input",
+          "type": "string",
+          "target": "default text"
+        }
+      ]
+    },
+    {
+      "type": "horizontal",
+      "target": {
+        "Objects": {
+          "type": "array",
+          "target": [
+            {
+              "type": "string",
+              "target": "Horizontal Test"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

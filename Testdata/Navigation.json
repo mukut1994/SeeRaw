@@ -1,0 +1,71 @@
+{
+  "targets": [
+    {
+      "text": "Form test",
+      "id": "7fe64b6c-f16e-4cda-a210-042653d60d5e",
+      "type": "form",
+      "inputs": [
+        {
+          "name": "Text input",
+          "type": "string",
+          "target": "default text"
+        }
+      ]
+    },
+    {
+      "type": "horizontal",
+      "target": {
+        "Objects": {
+          "type": "array",
+          "target": [
+            {
+              "type": "string",
+              "target": "Horizontal Test"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "text": "Link test",
+      "id": "49903086-f579-41b1-b432-6656915d5db7",
+      "type": "link"
+    },
+    {
+      "type": "array",
+      "target": [
+        {
+          "type": "number",
+          "target": 1
+        },
+        {
+          "type": "number",
+          "target": 2
+        },
+        {
+          "type": "number",
+          "target": 3
+        }
+      ]
+    },
+    {
+      "type": "log",
+      "message": "Child 1"
+    },
+    {
+      "type": "navigation",
+      "target": {
+        "Actions": {
+          "type": "array",
+          "target": [
+            {
+              "text": "Navication Test",
+              "id": "4acd19d5-d848-4baa-8e78-c3f5ad053c3b",
+              "type": "link"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

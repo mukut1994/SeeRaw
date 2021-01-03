@@ -1,0 +1,52 @@
+{
+  "targets": [
+    {
+      "text": "Form test",
+      "id": "de883043-36e2-4a0a-9419-0c668aeba2b8",
+      "type": "form",
+      "inputs": [
+        {
+          "name": "Text input",
+          "type": "string",
+          "target": "default text"
+        }
+      ]
+    },
+    {
+      "type": "horizontal",
+      "target": {
+        "Objects": {
+          "type": "array",
+          "target": [
+            {
+              "type": "string",
+              "target": "Horizontal Test"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "text": "Link test",
+      "id": "9583bb30-d8c2-4841-898a-85daec362096",
+      "type": "link"
+    },
+    {
+      "type": "array",
+      "target": [
+        {
+          "type": "number",
+          "target": 1
+        },
+        {
+          "type": "number",
+          "target": 2
+        },
+        {
+          "type": "number",
+          "target": 3
+        }
+      ]
+    }
+  ]
+}

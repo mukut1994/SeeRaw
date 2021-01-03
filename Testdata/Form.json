@@ -1,0 +1,16 @@
+{
+  "targets": [
+    {
+      "text": "Form test",
+      "id": "95bad6c1-fad8-4070-8ec1-b708cb0953ce",
+      "type": "form",
+      "inputs": [
+        {
+          "name": "Text input",
+          "type": "string",
+          "target": "default text"
+        }
+      ]
+    }
+  ]
+}

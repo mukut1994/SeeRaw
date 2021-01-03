@@ -1,0 +1,90 @@
+{
+  "targets": [
+    {
+      "text": "Form test",
+      "id": "c4b5407e-60f1-4b97-8213-49f1a0e3a3c2",
+      "type": "form",
+      "inputs": [
+        {
+          "name": "Text input",
+          "type": "string",
+          "target": "default text"
+        }
+      ]
+    },
+    {
+      "type": "horizontal",
+      "target": {
+        "Objects": {
+          "type": "array",
+          "target": [
+            {
+              "type": "string",
+              "target": "Horizontal Test"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "text": "Link test",
+      "id": "a272cf78-1843-42be-a172-29ccc549a46d",
+      "type": "link"
+    },
+    {
+      "type": "array",
+      "target": [
+        {
+          "type": "number",
+          "target": 1
+        },
+        {
+          "type": "number",
+          "target": 2
+        },
+        {
+          "type": "number",
+          "target": 3
+        }
+      ]
+    },
+    {
+      "type": "log",
+      "message": "Child 1"
+    },
+    {
+      "type": "navigation",
+      "target": {
+        "Actions": {
+          "type": "array",
+          "target": [
+            {
+              "text": "Navication Test",
+              "id": "e671756e-ee75-428d-805a-1f90ca0884b0",
+              "type": "link"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "number",
+      "target": 1
+    },
+    {
+      "type": "progress",
+      "percent": 0,
+      "value": null,
+      "max": null,
+      "min": null,
+      "speed": null,
+      "pause": null,
+      "setSpeed": null,
+      "speed": null
+    },
+    {
+      "type": "string",
+      "target": "string test"
+    }
+  ]
+}
