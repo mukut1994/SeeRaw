@@ -13,9 +13,10 @@ namespace MK94.SeeRaw.UT
     public class Tests
     {
         SerializerContext context = new SerializerContext();
-        RenderRoot root = new RenderRoot();
         Serializer serializer = new Serializer();
         JsonWriterOptions options = new JsonWriterOptions { Indented = true };
+
+        RenderRoot root;
 
         void AssertMatches([CallerMemberName]string caller = "")
         {
@@ -32,6 +33,12 @@ namespace MK94.SeeRaw.UT
 
             var expected = File.ReadAllText(Path.GetFullPath(Path.Combine("/", testDataPath, $"{caller}.json")));
             Assert.AreEqual(expected, actual);
+        }
+
+        [SetUp]
+        void Setup()
+        {
+            root = new RenderRoot();
         }
 
         [Test]
