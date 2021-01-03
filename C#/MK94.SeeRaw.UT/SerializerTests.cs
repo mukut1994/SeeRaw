@@ -36,7 +36,7 @@ namespace MK94.SeeRaw.UT
         }
 
         [SetUp]
-        void Setup()
+        public void Setup()
         {
             root = new RenderRoot();
         }
