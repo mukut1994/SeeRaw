@@ -30,7 +30,7 @@ namespace MK94.SeeRaw.UT
             // uncomment to update Testdata files; do not check in uncommented!!!
             //File.WriteAllText(Path.Combine(testDataPath, $"{caller}.json"), actual);
 
-            var expected = File.ReadAllText(Path.GetFullPath(Path.Combine(testDataPath, $"{caller}.json")));
+            var expected = File.ReadAllText(Path.GetFullPath(Path.Combine("/", testDataPath, $"{caller}.json")));
             Assert.AreEqual(expected, actual);
         }
 
