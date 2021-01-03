@@ -1,34 +1,8 @@
 {
   "targets": [
     {
-      "text": "Form test",
-      "id": "1eae0752-bc43-40ad-8156-01fdb1cd0a72",
-      "type": "form",
-      "inputs": [
-        {
-          "name": "Text input",
-          "type": "string",
-          "target": "default text"
-        }
-      ]
-    },
-    {
-      "type": "horizontal",
-      "target": {
-        "Objects": {
-          "type": "array",
-          "target": [
-            {
-              "type": "string",
-              "target": "Horizontal Test"
-            }
-          ]
-        }
-      }
-    },
-    {
       "text": "Link test",
-      "id": "80f12c74-2adf-4f38-bea5-877988d32fec",
+      "id": "00000000-0000-0000-0000-000000000000",
       "type": "link"
     }
   ]

@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace MK94.SeeRaw.UT
 {
@@ -22,6 +23,8 @@ namespace MK94.SeeRaw.UT
         {
             var actual = Encoding.UTF8.GetString(serializer.SerializeState(root, context, options));
 
+            actual = Regex.Replace(actual, "[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}", Guid.Empty.ToString());
+
             var testDataPath = Directory.GetCurrentDirectory()
                 .Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
                 .TakeWhile(x => x != "C#")
@@ -29,9 +32,10 @@ namespace MK94.SeeRaw.UT
                 .Aggregate(Path.Combine);
            
             // uncomment to update Testdata files; do not check in uncommented!!!
-            //File.WriteAllText(Path.Combine(testDataPath, $"{caller}.json"), actual);
+            // File.WriteAllText(Path.Combine(testDataPath, $"{caller}.json"), actual);
 
             var expected = File.ReadAllText(Path.GetFullPath(Path.Combine("/", testDataPath, $"{caller}.json")));
+
             Assert.AreEqual(expected, actual);
         }
 

@@ -1,54 +1,6 @@
 {
   "targets": [
     {
-      "text": "Form test",
-      "id": "ae91322b-54c6-41b8-b264-d83a9d68d430",
-      "type": "form",
-      "inputs": [
-        {
-          "name": "Text input",
-          "type": "string",
-          "target": "default text"
-        }
-      ]
-    },
-    {
-      "type": "horizontal",
-      "target": {
-        "Objects": {
-          "type": "array",
-          "target": [
-            {
-              "type": "string",
-              "target": "Horizontal Test"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "text": "Link test",
-      "id": "36e7248c-148c-41e7-bf15-1988bf5a0693",
-      "type": "link"
-    },
-    {
-      "type": "array",
-      "target": [
-        {
-          "type": "number",
-          "target": 1
-        },
-        {
-          "type": "number",
-          "target": 2
-        },
-        {
-          "type": "number",
-          "target": 3
-        }
-      ]
-    },
-    {
       "type": "log",
       "message": "Child 1"
     }
