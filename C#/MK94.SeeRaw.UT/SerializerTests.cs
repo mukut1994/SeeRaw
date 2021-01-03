@@ -22,10 +22,10 @@ namespace MK94.SeeRaw.UT
             var actual = Encoding.UTF8.GetString(serializer.SerializeState(root, context, options));
 
             var testDataPath = Directory.GetCurrentDirectory()
-                .Split(System.IO.Path.DirectorySeparatorChar)
+                .Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
                 .TakeWhile(x => x != "C#")
                 .Concat(new[] { "Testdata" })
-                .Aggregate(System.IO.Path.Combine);
+                .Aggregate(Path.Combine);
            
             // uncomment to update Testdata files; do not check in uncommented!!!
             //File.WriteAllText(Path.Combine(testDataPath, $"{caller}.json"), actual);
