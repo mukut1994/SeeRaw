@@ -1,0 +1,8 @@
+<span>
+  {{ target.message }}
+  <ng-container *ngFor="let item of target.children">
+    <div style="margin-left: 5px;">
+      ∟<app-log-render [target]="item"></app-log-render>
+    </div>
+  </ng-container>
+</span>

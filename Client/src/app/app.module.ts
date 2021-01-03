@@ -12,6 +12,9 @@ import { FormRenderComponent } from './form-render/form-render.component';
 import { ProgressRenderComponent } from './progress-render/progress-render.component';
 import { EnumRenderComponent } from './enum-render/enum-render.component';
 import { NavigationRenderComponent } from './navigation-render/navigation-render.component';
+import { HorizontalRenderComponent } from './horizontal-render/horizontal-render.component';
+import { VerticalRenderComponent } from './vertical-render/vertical-render.component';
+import { LogRenderComponent } from './log-render/log-render.component';
 
 @NgModule({
   declarations: [
@@ -23,7 +26,10 @@ import { NavigationRenderComponent } from './navigation-render/navigation-render
     FormRenderComponent,
     ProgressRenderComponent,
     EnumRenderComponent,
-    NavigationRenderComponent
+    NavigationRenderComponent,
+    HorizontalRenderComponent,
+    VerticalRenderComponent,
+    LogRenderComponent
   ],
   imports: [
     BrowserModule,

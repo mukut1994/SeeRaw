@@ -1,0 +1,19 @@
+{
+  "targets": [
+    {
+      "type": "navigation",
+      "target": {
+        "Actions": {
+          "type": "array",
+          "target": [
+            {
+              "text": "Navication Test",
+              "id": "00000000-0000-0000-0000-000000000000",
+              "type": "link"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

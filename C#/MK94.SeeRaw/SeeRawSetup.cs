@@ -19,7 +19,8 @@ namespace MK94.SeeRaw
         public static Server WithGlobalRenderer(this Server server, Action initialise = null, Action<RendererBase> configure = null, bool defaultGlobalRenderer = true)
         {
             var renderer = new GlobalStateRenderer(server, defaultGlobalRenderer, initialise);
-            configure(renderer);
+            if(configure != null)
+                configure(renderer);
             server.WithRenderer(() => renderer);
 
             return server;
@@ -28,7 +29,8 @@ namespace MK94.SeeRaw
         public static Server WithPerClientRenderer(this Server server, Action onClientConnected, Action<RendererBase> configure = null)
         {
             var renderer = new PerClientRenderer(onClientConnected);
-            configure(renderer);
+            if (configure != null)
+                configure(renderer);
             server.WithRenderer(() => renderer);
 
             return server;

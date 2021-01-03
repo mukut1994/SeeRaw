@@ -1,0 +1,15 @@
+{
+  "targets": [
+    {
+      "type": "progress",
+      "percent": 0,
+      "value": null,
+      "max": null,
+      "min": null,
+      "speed": null,
+      "pause": null,
+      "setSpeed": null,
+      "speed": null
+    }
+  ]
+}

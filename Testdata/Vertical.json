@@ -1,0 +1,18 @@
+{
+  "targets": [
+    {
+      "type": "vertical",
+      "target": {
+        "Objects": {
+          "type": "array",
+          "target": [
+            {
+              "type": "string",
+              "target": "Vertical Test"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

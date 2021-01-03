@@ -1,0 +1,21 @@
+{
+  "targets": [
+    {
+      "type": "array",
+      "target": [
+        {
+          "type": "number",
+          "target": 1
+        },
+        {
+          "type": "number",
+          "target": 2
+        },
+        {
+          "type": "number",
+          "target": 3
+        }
+      ]
+    }
+  ]
+}
