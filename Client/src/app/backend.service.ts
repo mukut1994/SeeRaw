@@ -23,6 +23,9 @@ export class BackendService {
   }
 
   onMessage(message: MessageEvent<any>) {
+    if(message == null)
+      return;
+
     let data = JSON.parse(message.data);
 
     if (data.download) {
@@ -83,7 +86,7 @@ export class BackendService {
   }
 
   async onSocketClose() {
-    this.onMessage({});
+    this.onMessage(null);
 
     if(this.backoffIndex > this.backoffTimeSeconds.length)
     {
