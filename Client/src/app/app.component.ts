@@ -8,6 +8,21 @@ import { BackendService } from './backend.service';
 })
 export class AppComponent {
   title = 'SeeRaw';
+  state: string;
 
-  constructor() {}
+  constructor(backendService: BackendService) {
+    backendService.onConnected.subscribe(() => this.state = "Connected");
+    backendService.onDisconnected.subscribe(this.updateState.bind(this));
+  }
+
+  updateState(reconnectingIn: number) {
+    if(reconnectingIn > 0)
+      this.state = "Reconnecting in " + reconnectingIn;
+
+    else if (reconnectingIn == -1)
+      this.state = "Automatic reconnection failed";
+
+    else
+      this.state = "Connecting....";
+  }
 }

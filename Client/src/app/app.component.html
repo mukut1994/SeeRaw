@@ -1,5 +1,7 @@
-<!--The content below is only a placeholder and can be replaced.-->
 <div>
+  <div style="width: 100%; text-align: center; justify-content: center;" [ngStyle]="{'background-color': state == 'Connected' ? 'lightgreen' : '#fc6666'}">
+      {{ state }}
+  </div>
   <app-root-render>
 
   </app-root-render>

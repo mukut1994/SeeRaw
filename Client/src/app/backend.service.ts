@@ -1,5 +1,6 @@
 import { Injectable, Output, EventEmitter } from "@angular/core";
-import { webSocket } from 'rxjs/webSocket';
+import { Observable, timer } from 'rxjs';
+import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { RenderRoot } from "./data.model";
 
 @Injectable({
@@ -7,34 +8,35 @@ import { RenderRoot } from "./data.model";
 })
 export class BackendService {
   private socketLink = `ws://${window.location.hostname}:3054`;
-  private socket;
+  private backoffTimeSeconds = [ 5, 5, 10, 10, 30, 30, 60, 60 ];
+  private backoffIndex = 0;
+  private socket : WebSocket;
 
   renderRoot: RenderRoot;
 
   @Output() messageHandler = new EventEmitter<RenderRoot>();
+  @Output() onDisconnected = new EventEmitter<number>();
+  @Output() onConnected = new EventEmitter();
 
   constructor() {
-    this.socket = webSocket(this.socketLink);
-
-    this.socket.subscribe(
-      msg => this.onMessage(msg),
-      err => console.log(err)
-    );
+    this.reconnect();
   }
 
-  onMessage(message) {
-    if (message.download) {
-      this.download(new URL(message.download, window.location.href).href);
+  onMessage(message: MessageEvent<any>) {
+    let data = JSON.parse(message.data);
+
+    if (data.download) {
+      this.download(new URL(data.download, window.location.href).href);
       return;
     }
 
-    this.renderRoot = message;
+    this.renderRoot = data;
 
     this.messageHandler.emit(this.renderRoot);
   }
 
   sendMessage(message: any) {
-    this.socket.next(message);
+    this.socket.send(JSON.stringify(message));
   }
 
   download(sUrl) {
@@ -70,6 +72,38 @@ export class BackendService {
 
     window.open(sUrl, '_self');
     return true;
-}
+  }
 
+  reconnect() {
+    this.socket = new WebSocket(this.socketLink);
+
+    this.socket.onopen = () => { this.backoffIndex = 0; this.onConnected.emit(); }
+    this.socket.onmessage = this.onMessage.bind(this);
+    this.socket.onclose = this.onSocketClose.bind(this);
+  }
+
+  async onSocketClose() {
+    this.onMessage({});
+
+    if(this.backoffIndex > this.backoffTimeSeconds.length)
+    {
+      this.onDisconnected.emit(-1);
+      return;
+    }
+
+    const sleepTime = this.backoffTimeSeconds[this.backoffIndex];
+    for(let i = 0; i < sleepTime; i++)
+    {
+      await this.sleep(1000);
+      this.onDisconnected.emit(sleepTime - i);
+    }
+
+    this.onDisconnected.emit(0);
+    this.backoffIndex++;
+    this.reconnect();
+  }
+
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 }
