@@ -18,5 +18,8 @@ export class RootRenderComponent implements OnInit {
     this.backend.messageHandler.subscribe(x => {
       this.renderRoot = x;
     });
+    this.backend.onDisconnected.subscribe(x => {
+      this.renderRoot = null;
+    })
   }
 }

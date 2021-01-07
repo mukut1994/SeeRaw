@@ -26,6 +26,21 @@ namespace MK94.SeeRaw.Example
 
         static void RenderClientMenu()
         {
+            new List<object>
+            {
+                1, 
+                new List<object>
+                {
+                    2, 
+                    new List<object>
+                    {
+                        3
+                    }
+                }
+            }.Render();
+
+            return;
+
             // Show a basic hello world
             "Hello World".Render();
 

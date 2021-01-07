@@ -1,11 +1,31 @@
-<div class="container">
-  <div class="header">Length: {{ value.length }}</div>
-  <table>
-    <ng-container *ngFor="let item of value; let i = index">
-      <tr class="content">
-        <td>{{i}}</td>
-        <td><app-any-render [target]="item"></app-any-render></td>
-      </tr>
-    </ng-container>
-  </table>
-</div>
+<ngb-accordion>
+  <ngb-panel>
+    <ng-template ngbPanelHeader let-opened="opened">
+      <button class="btn btn-link" ngbPanelToggle>
+
+        ▼ ►
+
+        Length: {{ value.length }}
+      </button>
+    </ng-template>
+    <ng-template ngbPanelContent>
+      <table id="test" class="collapse show table table-striped">
+        <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Value</th>
+        </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of value; let i = index">
+            <th style="width: 1%;" scope="row">{{i}}</th>
+            <td>
+              <app-any-render [target]="item"></app-any-render>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </ng-template>
+  </ngb-panel>
+</ngb-accordion>
+
