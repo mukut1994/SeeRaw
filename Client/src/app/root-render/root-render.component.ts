@@ -1,5 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { RenderRoot } from './../data.model';
+import { RenderRoot, RenderContext } from './../data.model';
 import { BackendService } from '../backend.service';
 
 @Component({
@@ -10,6 +10,8 @@ import { BackendService } from '../backend.service';
 export class RootRenderComponent implements OnInit {
 
   renderRoot: RenderRoot;
+
+  context = new RenderContext("root");
 
   constructor(private backend: BackendService) { }
 

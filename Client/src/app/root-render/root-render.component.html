@@ -1,6 +1,6 @@
 
 <p *ngIf="renderRoot?.targets">
   <ng-container *ngFor="let target of renderRoot.targets">
-      <app-any-render class="content" [target]="target"></app-any-render>
+      <app-any-render class="content" [context]="context" [target]="target"></app-any-render>
   </ng-container>
 </p>

@@ -1,3 +1,33 @@
+export class RenderContext {
+  public currentPath: string;
+  public options: Options[] = [];
+
+  constructor(currentPath: string = null) {
+    this.currentPath = currentPath;
+  }
+
+  public child(name: string) {
+    var ret = new RenderContext();
+    ret.currentPath = this.currentPath + "." + name;
+    ret.options = this.options;
+
+    return ret;
+  }
+
+  public array(index: number) {
+    var ret = new RenderContext();
+    ret.currentPath = this.currentPath + "[" + index + "]";
+    ret.options = this.options;
+
+    return ret;
+  }
+}
+
+export class Options {
+  public jsonPath: string;
+  public typeOptions: { [typeName: string]: any };
+}
+
 export class RenderRoot {
   public targets: RenderTarget[];
 }
