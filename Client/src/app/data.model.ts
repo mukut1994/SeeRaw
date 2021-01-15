@@ -1,6 +1,5 @@
 export class RenderContext {
   public currentPath: string;
-  public options: Options[] = [];
 
   constructor(currentPath: string = null) {
     this.currentPath = currentPath;
@@ -8,16 +7,14 @@ export class RenderContext {
 
   public child(name: string) {
     var ret = new RenderContext();
-    ret.currentPath = this.currentPath + "." + name;
-    ret.options = this.options;
+    ret.currentPath = this.currentPath + ".target." + name;
 
     return ret;
   }
 
   public array(index: number) {
     var ret = new RenderContext();
-    ret.currentPath = this.currentPath + "[" + index + "]";
-    ret.options = this.options;
+    ret.currentPath = this.currentPath + ".target[" + index + "]";
 
     return ret;
   }
@@ -25,7 +22,7 @@ export class RenderContext {
 
 export class Options {
   public jsonPath: string;
-  public typeOptions: { [typeName: string]: any };
+  public typeOptions: { [typeName: string]: any } = {};
 }
 
 export class RenderRoot {

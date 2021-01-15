@@ -63,19 +63,19 @@ namespace MK94.SeeRaw
 
 			else if (obj == null && !serializeNulls)
 			{
-				writer.WriteString("type", "null");
+				writer.WriteString("$type", "null");
 				writer.WriteNull("target");
 			}
 
 			else if (type == typeof(bool))
 			{
-				writer.WriteString("type", "bool");
+				writer.WriteString("$type", "bool");
 				writer.WriteBoolean("target", (bool)obj);
 			}
 
 			else if (IsNumericalType(type))
 			{
-				writer.WriteString("type", "number");
+				writer.WriteString("$type", "number");
 
 				var writeNumber = typeof(Utf8JsonWriter).GetMethod(nameof(Utf8JsonWriter.WriteNumber), new[] { typeof(string), type });
 				writeNumber.Invoke(writer, new[] { "target", obj });
@@ -83,7 +83,7 @@ namespace MK94.SeeRaw
 
 			else if (type == typeof(string))
 			{
-				writer.WriteString("type", "string");
+				writer.WriteString("$type", "string");
 				writer.WriteString("target", (string)obj);
 			}
 
@@ -107,18 +107,11 @@ namespace MK94.SeeRaw
 				writer.WriteEndArray();
 			}
 
-			else if (obj is RenderTarget target)
-			{
-				Serialize(target.Value, target.Value.GetType(), serializeNulls, writer, context);
-			}
-
 			else
 			{
 				var typeName = obj.GetType().GetCustomAttribute<SeeRawTypeAttribute>()?.Name ?? "object";
 
-				writer.WriteString("type", typeName);
-				writer.WriteStartObject("target");
-
+				writer.WriteString("$type", typeName);
 				foreach (var prop in obj.GetType().GetProperties())
 				{
 					writer.WriteStartObject(prop.Name);
@@ -128,14 +121,12 @@ namespace MK94.SeeRaw
 					Serialize(value, value?.GetType() ?? prop.PropertyType, serializeNulls, writer, context);
 					writer.WriteEndObject();
 				}
-
-				writer.WriteEndObject();
 			}
 		}
 
         private void SerializeArrayLike(object obj, bool serializeNulls, Utf8JsonWriter writer, SerializerContext context)
         {
-            writer.WriteString("type", "array");
+            writer.WriteString("$type", "array");
             writer.WriteStartArray("target");
 
             foreach (var elm in (IEnumerable)obj)
@@ -152,7 +143,7 @@ namespace MK94.SeeRaw
         {
 			var enumNames = type.GetEnumNames().Aggregate((a, b) => $"{a}, {b}");
 			
-			writer.WriteString("type", $"enum");
+			writer.WriteString("$type", $"enum");
 			writer.WriteString("enum-values", $"{enumNames}");
 			writer.WriteString("target", obj?.ToString());
         }
@@ -206,7 +197,7 @@ namespace MK94.SeeRaw
     {
         public void Serialize(object instance, Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls)
         {
-			writer.WriteString("type", "string");
+			writer.WriteString("$type", "string");
 			writer.WriteString("target", ((DateTime)instance).ToString());
         }
     }

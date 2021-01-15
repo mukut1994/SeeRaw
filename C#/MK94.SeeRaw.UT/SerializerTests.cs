@@ -51,6 +51,15 @@ namespace MK94.SeeRaw.UT
             AssertMatches();
         }
 
+
+        [Test]
+        public void CustomType()
+        {
+            root.Render(new { PropString = "A", PropInt = 1 });
+
+            AssertMatches();
+        }
+
         [Test]
         public void String()
         {

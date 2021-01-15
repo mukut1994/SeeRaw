@@ -28,15 +28,8 @@ namespace MK94.SeeRaw.Example
         {
             new List<object>
             {
-                1, 
-                new List<object>
-                {
-                    2, 
-                    new List<object>
-                    {
-                        3
-                    }
-                }
+                new List<int> { 1 },
+                new List<int> { 2 }
             }.Render();
 
             return;

@@ -1,10 +1,9 @@
-<ngb-accordion [activeIds]="options.collapsed ? 'panel' : ''">
+<ngb-accordion *ngIf="options?.visible" [activeIds]="options.collapsed ? 'panel' : ''">
   <ngb-panel id="panel">
 
-
     <ng-template ngbPanelHeader let-opened="opened">
-      <button class="btn btn-link" ngbPanelToggle>
 
+      <button class="btn btn-link" ngbPanelToggle>
         <ng-container *ngIf="opened; else closed">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
             <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
@@ -15,7 +14,6 @@
             <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
           </svg>
         </ng-template>
-
         Length: {{ value.length }}
       </button>
 
@@ -24,7 +22,7 @@
 
 
     <ng-template ngbPanelContent>
-      <table id="test" class="collapse show table table-striped">
+      <table class="collapse show table table-striped">
         <thead>
         <tr>
           <th *ngIf="options.showIndex" scope="col">#</th>
@@ -51,7 +49,7 @@
     Array display settings
   </div>
   <div class="modal-body">
-    Apply to: <input (change)="optionPath = $event.value" type="text" [value]="context.currentPath"> <br />
+    Apply to: <input (change)="optionPath = $event.target.value" type="text" [value]="context.currentPath"> <br />
     qwe<input [(ngModel)]="options.showIndex" type="checkbox">
   </div>
   <button class="btn btn-outline-primary" (click)="modal.close()">Save</button>
