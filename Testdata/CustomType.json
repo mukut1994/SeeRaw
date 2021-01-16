@@ -1,0 +1,15 @@
+{
+  "targets": [
+    {
+      "type": "object",
+      "PropString": {
+        "type": "string",
+        "target": "A"
+      },
+      "PropInt": {
+        "type": "number",
+        "target": 1
+      }
+    }
+  ]
+}

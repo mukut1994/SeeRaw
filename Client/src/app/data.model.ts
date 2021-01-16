@@ -1,3 +1,30 @@
+export class RenderContext {
+  public currentPath: string;
+
+  constructor(currentPath: string = null) {
+    this.currentPath = currentPath;
+  }
+
+  public child(name: string) {
+    var ret = new RenderContext();
+    ret.currentPath = this.currentPath + ".target." + name;
+
+    return ret;
+  }
+
+  public array(index: number) {
+    var ret = new RenderContext();
+    ret.currentPath = this.currentPath + ".target[" + index + "]";
+
+    return ret;
+  }
+}
+
+export class Options {
+  public jsonPath: string;
+  public typeOptions: { [typeName: string]: any } = {};
+}
+
 export class RenderRoot {
   public targets: RenderTarget[];
 }

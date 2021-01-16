@@ -1,4 +1,4 @@
-<ng-container [ngSwitch]="target.type">
+<ng-container [ngSwitch]="target['$type']">
   <span *ngSwitchCase="'string'" class="string">
     <span *ngIf="!editable; else edittext">"{{ target.target }}"</span>
     <ng-template #edittext>
@@ -25,6 +25,8 @@
     <app-array-render
       [value]="target.target"
       [editable]="editable"
+      [context]="context"
+      [options]="optionsService.get(context.currentPath, 'array')"
     ></app-array-render>
   </span>
 

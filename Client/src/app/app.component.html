@@ -1,7 +1,8 @@
 <div>
-  <div style="width: 100%; text-align: center; justify-content: center;" [ngStyle]="{'background-color': state == 'Connected' ? 'lightgreen' : '#fc6666'}">
+  <div class="text-light align-middle text-center" [ngClass]="{'bg-success': state == 'Connected', 'bg-danger': state != 'Connected'}">
       {{ state }}
   </div>
+
   <app-root-render>
 
   </app-root-render>

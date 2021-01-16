@@ -15,6 +15,7 @@ import { NavigationRenderComponent } from './navigation-render/navigation-render
 import { HorizontalRenderComponent } from './horizontal-render/horizontal-render.component';
 import { VerticalRenderComponent } from './vertical-render/vertical-render.component';
 import { LogRenderComponent } from './log-render/log-render.component';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 @NgModule({
   declarations: [
@@ -34,7 +35,8 @@ import { LogRenderComponent } from './log-render/log-render.component';
   imports: [
     BrowserModule,
     AppRoutingModule,
-    FormsModule
+    FormsModule,
+    NgbModule
   ],
   providers: [],
   bootstrap: [AppComponent]

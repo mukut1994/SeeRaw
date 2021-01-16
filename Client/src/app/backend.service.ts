@@ -39,7 +39,7 @@ export class BackendService {
   }
 
   sendMessage(message: any) {
-    this.socket.send(JSON.stringify(message));
+    this.socket.send(message);
   }
 
   download(sUrl) {

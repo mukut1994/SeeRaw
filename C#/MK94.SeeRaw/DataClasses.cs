@@ -39,7 +39,7 @@ namespace MK94.SeeRaw
         }
 	}
 
-	public class RenderTarget : INotifyPropertyChanged
+	public class RenderTarget : INotifyPropertyChanged, ISerializeable
 	{
 		public string Name { get; }
 		private object value;
@@ -74,7 +74,12 @@ namespace MK94.SeeRaw
 
 			PropertyChanged.Invoke(this, null);
 		}
-	}
+
+        public void Serialize(Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls)
+		{
+			serializer.Serialize(Value, Value.GetType(), serializeNulls, writer, context);
+		}
+    }
 
 	[JsonConverter(typeof(FormSerializer))]
 	[MetadataConverter(typeof(FormSerializer))]

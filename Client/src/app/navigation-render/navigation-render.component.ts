@@ -14,10 +14,11 @@ export class NavigationRenderComponent {
 
   click(id: string) {
     this.backendService.sendMessage(
+    JSON.stringify(
       {
         type: 'link',
         id,
-      }
+      })
     );
   }
 }

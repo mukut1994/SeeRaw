@@ -15,6 +15,8 @@ export class OptionsService {
   renderRoot: RenderRoot;
   parsedOptions: { [path: string]: Options } = {};
 
+  @Output() optionsObserveable: BehaviorSubject<Options[]> = new BehaviorSubject(this.options);
+
   constructor(private backend: BackendService) {
     this.renderRoot = this.backend.renderRoot;
     this.backend.messageHandler.subscribe(x => this.renderRoot = x);
@@ -65,5 +67,6 @@ export class OptionsService {
       })
     });
 
+    this.optionsObserveable.next(this.options);
   }
 }
