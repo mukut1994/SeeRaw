@@ -6,13 +6,14 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 
 namespace MK94.SeeRaw
 {
     public class RenderRoot : INotifyPropertyChanged
 	{
-		internal List<RenderTarget> Targets { get; } = new List<RenderTarget>();
+		public List<RenderTarget> Targets { get; } = new List<RenderTarget>();
 
 		public event PropertyChangedEventHandler PropertyChanged = delegate { };
 
@@ -75,9 +76,63 @@ namespace MK94.SeeRaw
 		}
 	}
 
-	public class Form : ISerializeable
+	[JsonConverter(typeof(FormSerializer))]
+	[MetadataConverter(typeof(FormSerializer))]
+	public class Form
 	{
-		private class FormValue
+        private class FormSerializer : JsonConverter<Form>, IMetadataConverter
+        {
+            public override Form Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void Write(Utf8JsonWriter writer, Form value, JsonSerializerOptions options)
+            {
+				writer.WriteString("Text", value.Text);
+
+				writer.WriteStartArray("inputs");
+				foreach (var formValue in value.FormValues)
+				{
+					writer.WriteStartObject();
+
+					writer.WriteString(formValue.Name, formValue.Default.ToString());
+
+					writer.WriteEndObject();
+				}
+				writer.WriteEndArray();
+			}
+
+            public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
+			{
+				var form = value as Form;
+				var id = Guid.NewGuid().ToString();
+
+				if (!form.FormValues.Any())
+				{
+					writer.WriteString("Type", "link");
+					context.RegisterCallback(id, (Action)(() => form.callback(new Dictionary<string, object>())));
+					return;
+				}
+
+				context.RegisterCallback(id, form.callback);
+				writer.WriteString("Type", "form");
+
+				writer.WriteStartObject("inputs");
+				foreach (var formValue in form.FormValues)
+				{
+					writer.WriteStartObject(formValue.Name);
+
+					// TODO serialize inputs metadata
+
+					writer.WriteEndObject();
+				}
+				writer.WriteEndObject();
+
+			}
+        }
+
+        private class FormValue
 		{
 			public string Name;
 			public Type Type;
@@ -101,45 +156,9 @@ namespace MK94.SeeRaw
 
 			return this;
 		}
-
-		public void Serialize(Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls)
-		{
-			writer.WriteString("text", Text);
-
-			var id = Guid.NewGuid().ToString();
-			writer.WriteString("id", id);
-
-			if (!FormValues.Any())
-			{
-				context.Callbacks.Add(id, (Action)(() => callback(new Dictionary<string, object>())));
-				writer.WriteString("type", "link");
-
-				return;
-			}
-
-			AppendDelegate(id, context, serializer, writer);
-		}
-
-		private void AppendDelegate(string id, SerializerContext context, Serializer serializer, Utf8JsonWriter writer)
-		{
-			context.Callbacks.Add(id, callback);
-			writer.WriteString("type", "form");
-
-			writer.WriteStartArray("inputs");
-			foreach (var formValue in FormValues)
-			{
-				writer.WriteStartObject();
-
-				writer.WriteString("name", formValue.Name);
-				serializer.Serialize(formValue.Default, formValue.Type, true, writer, null);
-
-				writer.WriteEndObject();
-			}
-			writer.WriteEndArray();
-		}
 	}
 
-	public class Actionable : ISerializeable
+	public class Actionable
 	{
 		private Delegate action { get; }
 		private List<object> defaultArgs { get; }
@@ -152,8 +171,8 @@ namespace MK94.SeeRaw
 			this.defaultArgs = defaultArgs.ToList();
 			Text = text;
 		}
-
-        public void Serialize(Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls)
+		/*
+        public void Serialize(Serializer serializer, Utf8JsonWriter writer, RendererContext context, bool serializeNulls)
         {
 			writer.WriteString("text", Text);
 
@@ -190,10 +209,10 @@ namespace MK94.SeeRaw
 				writer.WriteEndObject();
 			}
 			writer.WriteEndArray();
-		}
+		}*/
     }
 
-	public class Progress : ISerializeable, INotifyPropertyChanged
+	public class Progress : INotifyPropertyChanged
     {
 		private int _percent;
 		private string _value;
@@ -248,8 +267,8 @@ namespace MK94.SeeRaw
 		{
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 		}
-
-		public void Serialize(Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls)
+		/*
+		public void Serialize(Serializer serializer, Utf8JsonWriter writer, RendererContext context, bool serializeNulls)
 		{
 			writer.WriteString("type", "progress");
 
@@ -293,7 +312,7 @@ namespace MK94.SeeRaw
 			}
 			else
 				writer.WriteNull("speed");
-		}
+		}*/
     }
 
 	[SeeRawType("navigation")]

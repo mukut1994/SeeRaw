@@ -1,8 +1,7 @@
 {
-  "targets": [
-    {
-      "type": "string",
-      "target": "string test"
-    }
-  ]
+  "Kind": "Full",
+  "Value": "string test",
+  "Metadata": {
+    "Type": "string"
+  }
 }

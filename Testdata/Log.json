@@ -1,8 +1,18 @@
 {
-  "targets": [
-    {
-      "type": "log",
-      "message": "Child 1"
+  "Kind": "Full",
+  "Value": {
+    "Message": "Child 1",
+    "Children": []
+  },
+  "Metadata": {
+    "$type": "Logger",
+    "Message": {
+      "Type": "string"
+    },
+    "Children": {
+      "Type": "array",
+      "ExtendedType": "List\u003CILogger\u003E",
+      "Children": []
     }
-  ]
+  }
 }

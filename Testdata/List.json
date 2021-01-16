@@ -1,21 +1,26 @@
 {
-  "targets": [
-    {
-      "type": "array",
-      "target": [
-        {
-          "type": "number",
-          "target": 1
-        },
-        {
-          "type": "number",
-          "target": 2
-        },
-        {
-          "type": "number",
-          "target": 3
-        }
-      ]
-    }
-  ]
+  "Kind": "Full",
+  "Value": [
+    1,
+    2,
+    3
+  ],
+  "Metadata": {
+    "Type": "array",
+    "ExtendedType": "List\u003CInt32\u003E",
+    "Children": [
+      {
+        "Type": "number",
+        "ExtendedType": "Int32"
+      },
+      {
+        "Type": "number",
+        "ExtendedType": "Int32"
+      },
+      {
+        "Type": "number",
+        "ExtendedType": "Int32"
+      }
+    ]
+  }
 }

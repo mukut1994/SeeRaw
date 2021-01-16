@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -14,6 +15,33 @@ using System.Threading.Tasks;
 
 namespace MK94.SeeRaw
 {
+	public class RendererContext
+	{
+		internal Dictionary<string, Delegate> Callbacks { get; } = new Dictionary<string, Delegate>();
+		private List<INotifyPropertyChanged> PropertyChangedNotifiers { get; } = new List<INotifyPropertyChanged>();
+
+		internal PropertyChangedEventHandler onPropertyChanged;
+
+		public void AddPropertyChangedNotifier(INotifyPropertyChanged notifyPropertyChanged)
+		{
+			PropertyChangedNotifiers.Add(notifyPropertyChanged);
+			notifyPropertyChanged.PropertyChanged += onPropertyChanged;
+		}
+
+		public void ClearPropertyChangedHandlers()
+		{
+			foreach (var p in PropertyChangedNotifiers)
+			{
+				p.PropertyChanged -= onPropertyChanged;
+			}
+		}
+
+        internal void RegisterCallback(string id, Delegate action)
+        {
+			Callbacks.Add(id, action);
+        }
+    }
+
 	public abstract class RendererBase
 	{
 		protected JsonSerializerOptions jsonOptions;
@@ -26,7 +54,7 @@ namespace MK94.SeeRaw
 			jsonOptions = new JsonSerializerOptions();
 			jsonOptions.Converters.Add(new JsonStringEnumConverter());
 
-			serializer.serializers[typeof(DateTime)] = new DateTimeSerializer();
+			//serializer.serializers[typeof(DateTime)] = new DateTimeSerializer();
 		}
 
 		public abstract object OnClientConnected(Server server, WebSocket websocket);
@@ -129,29 +157,21 @@ namespace MK94.SeeRaw
 			SeeRawContext.localSeeRawContext.Value = previousContext;
 			previousContext = null;
 		}
-
-		public RendererBase WithSerializer<T>(ISerialize serializer) => WithSerializer(typeof(T), serializer);
-
-		public RendererBase WithSerializer(Type type, ISerialize serializer)
-		{
-			this.serializer.serializers[type] = serializer;
-			return this;
-		}
 	}
 
 	public class GlobalStateRenderer : RendererBase
 	{
 		private Server server;
 		private RenderRoot state;
-		private SerializerContext serializerContext;
+		private RendererContext context;
 
 		public GlobalStateRenderer(Server server, bool setGlobalContext, Action initialise)
 		{
 			this.server = server;
 			state = new RenderRoot();
 
-			serializerContext = new SerializerContext();
-			serializerContext.onPropertyChanged = (s, e) => Refresh();
+			context = new RendererContext();
+			context.onPropertyChanged = (s, e) => Refresh();
 
 			if (setGlobalContext)
 				SetContext(server, state, null);
@@ -169,13 +189,13 @@ namespace MK94.SeeRaw
 		}
 
 		public override object OnClientConnected(Server server, WebSocket websocket) { Refresh(); return null; }
-		public override void OnMessageReceived(object state, Server server, WebSocket websocket, string message) => ExecuteCallback(server, this.state, websocket, serializerContext.Callbacks, message);
+		public override void OnMessageReceived(object state, Server server, WebSocket websocket, string message) => ExecuteCallback(server, this.state, websocket, context.Callbacks, message);
 
 		public void Refresh()
 		{
-			serializerContext.Callbacks.Clear();
-			serializerContext.ClearPropertyChangedHandlers();
-			server.Broadcast(serializer.SerializeState(state, serializerContext));
+			context.Callbacks.Clear();
+			context.ClearPropertyChangedHandlers();
+			server.Broadcast(serializer.Serialize(state.Targets[0].Value, context));
 		}
     }
 
@@ -185,9 +205,9 @@ namespace MK94.SeeRaw
 		{
 			internal RenderRoot State { get; }
 
-			internal SerializerContext serializerContext;
+			internal RendererContext serializerContext;
 
-            public ClientState(RenderRoot state, SerializerContext serializerContext)
+            public ClientState(RenderRoot state, RendererContext serializerContext)
             {
                 State = state;
                 this.serializerContext = serializerContext;
@@ -204,7 +224,7 @@ namespace MK94.SeeRaw
         public override object OnClientConnected(Server server, WebSocket websocket)
 		{
 			var renderRoot = new RenderRoot();
-			var serializerContext = new SerializerContext();
+			var serializerContext = new RendererContext();
 
 			var state = new ClientState(renderRoot, serializerContext);
 
@@ -212,7 +232,7 @@ namespace MK94.SeeRaw
 			{
 				serializerContext.Callbacks.Clear();
 				serializerContext.ClearPropertyChangedHandlers();
-				var message = serializer.SerializeState(renderRoot, state.serializerContext);
+				var message = serializer.Serialize(renderRoot.Targets[0].Value, state.serializerContext);
 				Task.Run(() => websocket.SendAsync(message, WebSocketMessageType.Text, true, default));
 			};
 

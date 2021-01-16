@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace MK94.SeeRaw.Interfaces
 {
-    public interface ILogger : INotifyPropertyChanged, IDisposable, ISerializeable
+    public interface ILogger : INotifyPropertyChanged, IDisposable
     {
         string Message { get; }
         List<ILogger> Children { get; }
@@ -18,7 +18,7 @@ namespace MK94.SeeRaw.Interfaces
 
         IEnumerable<T> EnumerateWithProgress<T>(List<T> collection);
 
-        void ISerializeable.Serialize(Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls)
+        void Serialize(Serializer serializer, Utf8JsonWriter writer, RendererContext context, bool serializeNulls)
         {
             void writeILogger(ILogger log)
             {

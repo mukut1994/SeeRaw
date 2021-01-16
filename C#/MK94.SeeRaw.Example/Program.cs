@@ -26,6 +26,10 @@ namespace MK94.SeeRaw.Example
 
         static void RenderClientMenu()
         {
+            new List<int>() { 1, 2, 3 }
+                .Render();
+            return;
+
             // Show a basic hello world
             "Hello World".Render();
 

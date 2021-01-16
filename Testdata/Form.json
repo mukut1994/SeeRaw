@@ -1,16 +1,7 @@
 {
-  "targets": [
-    {
-      "text": "Form test",
-      "id": "00000000-0000-0000-0000-000000000000",
-      "type": "form",
-      "inputs": [
-        {
-          "name": "Text input",
-          "type": "string",
-          "target": "default text"
-        }
-      ]
-    }
-  ]
+  "Kind": "Full",
+  "Value": {},
+  "Metadata": {
+    "$type": "RenderRoot"
+  }
 }

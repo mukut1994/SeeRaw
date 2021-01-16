@@ -1,15 +1,29 @@
 {
-  "targets": [
-    {
-      "type": "progress",
-      "percent": 0,
-      "value": null,
-      "max": null,
-      "min": null,
-      "speed": null,
-      "pause": null,
-      "setSpeed": null,
-      "speed": null
+  "Kind": "Full",
+  "Value": {
+    "Percent": 0,
+    "Value": null,
+    "Speed": null,
+    "Min": null,
+    "Max": null
+  },
+  "Metadata": {
+    "$type": "Progress",
+    "Percent": {
+      "Type": "number",
+      "ExtendedType": "Int32"
+    },
+    "Value": {
+      "Type": "null"
+    },
+    "Speed": {
+      "Type": "null"
+    },
+    "Min": {
+      "Type": "null"
+    },
+    "Max": {
+      "Type": "null"
     }
-  ]
+  }
 }

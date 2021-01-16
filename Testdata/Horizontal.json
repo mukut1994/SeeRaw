@@ -1,18 +1,20 @@
 {
-  "targets": [
-    {
-      "type": "horizontal",
-      "target": {
-        "Objects": {
-          "type": "array",
-          "target": [
-            {
-              "type": "string",
-              "target": "Horizontal Test"
-            }
-          ]
+  "Kind": "Full",
+  "Value": {
+    "Objects": [
+      "Horizontal Test"
+    ]
+  },
+  "Metadata": {
+    "$type": "HorizontalRun",
+    "Objects": {
+      "Type": "array",
+      "ExtendedType": "List\u003CObject\u003E",
+      "Children": [
+        {
+          "Type": "string"
         }
-      }
+      ]
     }
-  ]
+  }
 }
