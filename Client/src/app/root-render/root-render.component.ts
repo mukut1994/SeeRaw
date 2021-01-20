@@ -12,7 +12,7 @@ export class RootRenderComponent implements OnInit {
 
   renderRoot: RenderRoot;
 
-  context = new RenderContext("$");
+  context = new RenderContext('$');
 
   constructor(private backend: BackendService, private options: OptionsService, private changeDetector: ChangeDetectorRef) { }
 
@@ -22,7 +22,7 @@ export class RootRenderComponent implements OnInit {
     this.backend.messageHandler.subscribe(x => {
       this.renderRoot = x;
     });
-    this.backend.onDisconnected.subscribe(x => {
+    this.backend.disconnected.subscribe(x => {
       this.renderRoot = null;
     })
   }

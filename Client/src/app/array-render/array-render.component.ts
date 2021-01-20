@@ -1,14 +1,14 @@
 import { CONTEXT_NAME } from '@angular/compiler/src/render3/view/util';
-import { Component, OnInit, Input, OnDestroy } from "@angular/core";
+import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { pipe, Subscription } from 'rxjs';
 import { Metadata, RenderOption, RenderContext } from './../data.model';
 import { OptionsService } from './../options.service';
 
 @Component({
-  selector: "app-array-render",
-  templateUrl: "./array-render.component.html",
-  styleUrls: ["./array-render.component.scss"],
+  selector: 'app-array-render',
+  templateUrl: './array-render.component.html',
+  styleUrls: ['./array-render.component.scss'],
 })
 export class ArrayRenderComponent implements OnInit {
   @Input() context: RenderContext;
@@ -34,7 +34,7 @@ export class ArrayRenderComponent implements OnInit {
 
   open(content) {
     this.modalService.open(content, { backdrop: false }).result.then(r => {
-      this.optionsService.set("array", "$..*", this.options);
+      this.optionsService.set('array', '$..*', this.options);
     });
   }
 }

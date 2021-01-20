@@ -1,5 +1,5 @@
 import { Injectable, Output, OnInit } from '@angular/core';
-import { Metadata, RenderOption, RenderContext, Message, Options, RenderTarget, RenderRoot } from './data.model';
+import { Metadata, RenderOption, RenderContext, Message, RenderTarget, RenderRoot } from './data.model';
 import { EventEmitter } from '@angular/core';
 import { BehaviorSubject, of, pipe, scheduled, Subject } from 'rxjs';
 import { concatAll, filter, map, startWith } from 'rxjs/operators';
@@ -20,7 +20,7 @@ export class OptionsService {
   constructor(private backend: BackendService) {
     this.renderRoot = this.backend.renderRoot;
     this.backend.messageHandler.subscribe(x => this.renderRoot = x);
-    this.backend.onDisconnected.subscribe(x => this.renderRoot = null);
+    this.backend.disconnected.subscribe(x => this.renderRoot = null);
   }
 
   get(path: string, type: string) {
@@ -39,7 +39,7 @@ export class OptionsService {
     //  '$..target[?(@.$type=="number")]'
     //   $..*[?(@.$type)]
     //   $..*[?(@.$type && @.$type=="array")]
-    const existingOptions = this.options.filter(x => x.jsonPath == path);
+    const existingOptions = this.options.filter(x => x.jsonPath === path);
     let update: RenderOption;
 
     if(existingOptions.length > 0)
@@ -62,7 +62,7 @@ export class OptionsService {
       const matches = jp.paths(this.renderRoot.targets[0].value, element.jsonPath);
 
       matches.forEach(x => {
-        let m = this.GetMetadataOfPath(this.renderRoot.targets[0].metadata, x);
+        /*const m = this.GetMetadataOfPath(this.renderRoot.targets[0].metadata, x);
 
         m.renderOptions = element.typeOptions;
         console.log(m);
@@ -70,7 +70,7 @@ export class OptionsService {
         return;
         console.log(this.GetMetadataPath(x));
         console.log(jp.query(this.renderRoot.targets[0].metadata, this.GetMetadataPath(x)));
-        jp.apply(this.renderRoot.targets[0].metadata, this.GetMetadataPath(x), r => r.renderOptions = element.typeOptions);
+        jp.apply(this.renderRoot.targets[0].metadata, this.GetMetadataPath(x), r => r.renderOptions = element.typeOptions);*/
       })
     });
 
@@ -80,19 +80,20 @@ export class OptionsService {
   private GetMetadataOfPath(metadata: Metadata, path: (string | number)[]) {
 
     for(let i = 1; i < path.length; i++) {
-      metadata = jp.value(metadata.children, [ "$", path[i] ]);
+      metadata = jp.value(metadata.children, [ '$', path[i] ]);
     }
 
     return metadata;
   }
 
   private GetMetadataPath(path: (string | number)[]) {
-    let ret = [];
+    const ret = [];
 
-    for(let i = 0; i < path.length; i++) {
-      ret.push(path[i]);
-      ret.push("children");
+    for(const p of path) {
+      ret.push(p);
+      ret.push('children');
     }
+
     return jp.stringify(ret);
   }
 }

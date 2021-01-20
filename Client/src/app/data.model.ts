@@ -7,15 +7,15 @@ export class RenderContext {
   }
 
   public child(name: string) {
-    var ret = new RenderContext();
-    ret.currentPath = this.currentPath + ".target." + name;
+    const ret = new RenderContext();
+    ret.currentPath = this.currentPath + '.target.' + name;
 
     return ret;
   }
 
   public array(index: number) {
-    var ret = new RenderContext();
-    ret.currentPath = this.currentPath + ".target[" + index + "]";
+    const ret = new RenderContext();
+    ret.currentPath = this.currentPath + '.target[' + index + ']';
 
     return ret;
   }

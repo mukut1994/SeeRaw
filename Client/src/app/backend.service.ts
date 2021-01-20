@@ -1,10 +1,10 @@
-import { Injectable, Output, EventEmitter } from "@angular/core";
+import { Injectable, Output, EventEmitter } from '@angular/core';
 import { Observable, timer } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { Kind, Message, RenderRoot, RenderTarget } from "./data.model";
+import { Kind, Message, RenderRoot, RenderTarget } from './data.model';
 
 @Injectable({
-  providedIn: "root",
+  providedIn: 'root',
 })
 export class BackendService {
   private socketLink = `ws://${window.location.hostname}:3054`;
@@ -15,8 +15,8 @@ export class BackendService {
   renderRoot: RenderRoot;
 
   @Output() messageHandler = new EventEmitter<RenderRoot>();
-  @Output() onDisconnected = new EventEmitter<number>();
-  @Output() onConnected = new EventEmitter();
+  @Output() disconnected = new EventEmitter<number>();
+  @Output() connected = new EventEmitter();
 
   constructor() {
     this.renderRoot = new RenderRoot();
@@ -29,20 +29,20 @@ export class BackendService {
     if(message == null)
       return;
 
-    let data = JSON.parse(message.data);
+    const data = JSON.parse(message.data);
 
     if (data.download) {
       this.download(new URL(data.download, window.location.href).href);
       return;
     }
 
-    let m = <Message>data;
+    const m = data as Message;
 
     switch(m.kind)
     {
       case Kind.Full:
-        let renderTarget = <RenderTarget>m;
-        const index = this.renderRoot.targets.findIndex(x => x.id == renderTarget.id);
+        const renderTarget = m as RenderTarget;
+        const index = this.renderRoot.targets.findIndex(x => x.id === renderTarget.id);
         if(index > -1)
           this.renderRoot.targets[index] = renderTarget;
         else
@@ -94,7 +94,7 @@ export class BackendService {
   reconnect() {
     this.socket = new WebSocket(this.socketLink);
 
-    this.socket.onopen = () => { this.backoffIndex = 0; this.onConnected.emit(); }
+    this.socket.onopen = () => { this.backoffIndex = 0; this.connected.emit(); }
     this.socket.onmessage = this.onMessage.bind(this);
     this.socket.onclose = this.onSocketClose.bind(this);
   }
@@ -104,7 +104,7 @@ export class BackendService {
 
     if(this.backoffIndex > this.backoffTimeSeconds.length)
     {
-      this.onDisconnected.emit(-1);
+      this.disconnected.emit(-1);
       return;
     }
 
@@ -112,10 +112,10 @@ export class BackendService {
     for(let i = 0; i < sleepTime; i++)
     {
       await this.sleep(1000);
-      this.onDisconnected.emit(sleepTime - i);
+      this.disconnected.emit(sleepTime - i);
     }
 
-    this.onDisconnected.emit(0);
+    this.disconnected.emit(0);
     this.backoffIndex++;
     this.reconnect();
   }
