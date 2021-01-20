@@ -1,16 +1,21 @@
 {
-  "targets": [
-    {
-      "text": "Form test",
-      "id": "00000000-0000-0000-0000-000000000000",
-      "type": "form",
-      "inputs": [
-        {
-          "name": "Text input",
-          "type": "string",
-          "target": "default text"
-        }
-      ]
-    }
-  ]
+  "kind": 0,
+  "id": "target1",
+  "value": {
+    "text": "Form test",
+    "inputs": [
+      {
+        "Text input": "default text"
+      }
+    ]
+  },
+  "metadata": {
+    "type": "form",
+    "inputs": [
+      {
+        "type": "string",
+        "name": "Text input"
+      }
+    ]
+  }
 }

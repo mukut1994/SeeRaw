@@ -2,7 +2,7 @@
   <thead>
     <tr>
       <td colspan="2">
-        Object
+        Object ( {{metadata.type}} )
       </td>
     </tr>
   </thead>
@@ -12,7 +12,7 @@
         {{ prop }}
       </td>
       <td>
-        <app-any-render [target]="target[prop]" [editable]="editable"></app-any-render>
+        <app-any-render [value]="value[prop]" [context]="context.child(prop)" [metadata]="metadata.children[prop]"></app-any-render>
       </td>
     </tr>
   </ng-container>

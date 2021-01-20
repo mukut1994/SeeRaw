@@ -7,13 +7,13 @@
       </td>
     </tr>
   </thead>
-  <ng-container *ngFor="let item of value.inputs">
+  <ng-container *ngFor="let item of metadata.inputs">
     <tr>
       <td>
         {{ item.name }}
       </td>
       <td>
-        <app-any-render [target]="item" [editable]="true"></app-any-render>
+        <app-any-render [value]="value[item.name]" [context]="context.child(item.name).WithEditMode()" [metadata]="item"></app-any-render>
       </td>
     </tr>
   </ng-container>

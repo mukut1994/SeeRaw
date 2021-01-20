@@ -1,5 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { BackendService } from './../backend.service';
+import { Metadata, RenderContext } from './../data.model';
+import { OptionsService } from './../options.service';
 
 @Component({
   selector: 'app-any-render',
@@ -7,10 +9,11 @@ import { BackendService } from './../backend.service';
   styleUrls: ['./any-render.component.css'],
 })
 export class AnyRenderComponent implements OnInit {
-  @Input() editable: boolean;
-  @Input() target: any;
+  @Input() value: any;
+  @Input() context: RenderContext;
+  @Input() metadata: Metadata;
 
-  constructor(private backend: BackendService) {}
+  constructor(private backend: BackendService, private optionsService:OptionsService) {}
 
   ngOnInit() {}
 

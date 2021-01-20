@@ -1,38 +1,57 @@
-import { Component, OnInit, Input } from "@angular/core";
-import { Progress } from "../data.model";
-import { BackendService } from "./../backend.service";
+import { Component, OnInit, Input } from '@angular/core';
+import { Metadata } from '../data.model';
+import { BackendService } from './../backend.service';
+import { RenderContext } from './../data.model';
 
 @Component({
-  selector: "app-progress-render",
-  templateUrl: "./progress-render.component.html",
-  styleUrls: ["./progress-render.component.css"],
+  selector: 'app-progress-render',
+  templateUrl: './progress-render.component.html',
+  styleUrls: ['./progress-render.component.css'],
 })
 export class ProgressRenderComponent {
-  @Input() target: Progress;
+
+  @Input() context: RenderContext;
+  @Input() value: Progress;
+  @Input() metadata: ProgressMetadata;
 
   constructor(private readonly backendService: BackendService) {}
 
   setSpeed() {
-    const speed = prompt("Enter speed (0 for unlimited): ", "0");
+    const speed = prompt('Enter speed (0 for unlimited): ', '0');
 
     this.backendService.sendMessage(
       JSON.stringify({
-        type: "form",
-        id: this.target.setSpeed,
-        args: [ parseInt(speed) ]
+        type: 'form',
+        id: this.metadata.setSpeed,
+        args: [ parseInt(speed, 10) ]
       })
     );
   }
 
   pause() {
     this.backendService.sendMessage(
-      JSON.stringify({ type: "link", id: this.target.pause })
+      JSON.stringify({ type: 'link', id: this.metadata.pause })
     );
   }
 
   cancel() {
     this.backendService.sendMessage(
-      JSON.stringify({ type: "link", id: this.target.cancel })
+      JSON.stringify({ type: 'link', id: this.metadata.cancel })
     );
   }
+}
+
+class Progress {
+  percent: number;
+  value: string | null;
+  min: string;
+  max: string;
+  speed: string | null;
+  paused: boolean
+}
+
+class ProgressMetadata extends Metadata {
+  pause: string;
+  setSpeed: string;
+  cancel: string;
 }

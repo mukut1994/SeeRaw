@@ -1,8 +1,9 @@
 {
-  "targets": [
-    {
-      "type": "number",
-      "target": 1
-    }
-  ]
+  "kind": 0,
+  "id": "target1",
+  "value": 1,
+  "metadata": {
+    "type": "number",
+    "extendedType": "Int32"
+  }
 }

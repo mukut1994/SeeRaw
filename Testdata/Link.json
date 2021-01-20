@@ -1,9 +1,11 @@
 {
-  "targets": [
-    {
-      "text": "Link test",
-      "id": "00000000-0000-0000-0000-000000000000",
-      "type": "link"
-    }
-  ]
+  "kind": 0,
+  "id": "target1",
+  "value": {
+    "text": "Link test",
+    "inputs": []
+  },
+  "metadata": {
+    "type": "link"
+  }
 }

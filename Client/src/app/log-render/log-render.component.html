@@ -1,8 +1,8 @@
 <span>
-  {{ target.message }}
-  <ng-container *ngFor="let item of target.children">
+  {{ value.message }}
+  <ng-container *ngFor="let item of value.children; let i = index">
     <div style="margin-left: 5px;">
-      ∟<app-log-render [target]="item"></app-log-render>
+      ∟<app-log-render [value]="item" [context]="context.array(i)" [metadata]="metadata"></app-log-render>
     </div>
   </ng-container>
 </span>

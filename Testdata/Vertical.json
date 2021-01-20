@@ -1,18 +1,23 @@
 {
-  "targets": [
-    {
-      "type": "vertical",
-      "target": {
-        "Objects": {
-          "type": "array",
-          "target": [
-            {
-              "type": "string",
-              "target": "Vertical Test"
-            }
-          ]
-        }
+  "kind": 0,
+  "id": "target1",
+  "value": {
+    "Objects": [
+      "Vertical Test"
+    ]
+  },
+  "metadata": {
+    "type": "VerticalRun",
+    "children": {
+      "Objects": {
+        "type": "array",
+        "extendedType": "List\u003CObject\u003E",
+        "children": [
+          {
+            "type": "string"
+          }
+        ]
       }
     }
-  ]
+  }
 }

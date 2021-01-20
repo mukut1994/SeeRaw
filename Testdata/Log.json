@@ -1,8 +1,11 @@
 {
-  "targets": [
-    {
-      "type": "log",
-      "message": "Child 1"
-    }
-  ]
+  "kind": 0,
+  "id": "target1",
+  "value": {
+    "message": "Child 1",
+    "children": []
+  },
+  "metadata": {
+    "type": "log"
+  }
 }

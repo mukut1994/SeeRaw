@@ -13,15 +13,14 @@ namespace MK94.SeeRaw.UT
 {
     public class Tests
     {
-        SerializerContext context = new SerializerContext();
+        RendererContext context = new RendererContext();
         Serializer serializer = new Serializer();
-        JsonWriterOptions options = new JsonWriterOptions { Indented = true };
 
         RenderRoot root;
 
         void AssertMatches([CallerMemberName]string caller = "")
         {
-            var actual = Encoding.UTF8.GetString(serializer.SerializeState(root, context, options));
+            var actual = Encoding.UTF8.GetString(serializer.Serialize("target1", root.Targets[0].Value, context));
 
             actual = Regex.Replace(actual, "[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}", Guid.Empty.ToString());
 
@@ -46,8 +45,10 @@ namespace MK94.SeeRaw.UT
         }
 
         [Test]
-        public void EmptyRenderRoot()
+        public void CustomType()
         {
+            root.Render(new { PropString = "A", PropInt = 1, PropObj = new { PropInt2 = 2 } });
+
             AssertMatches();
         }
 

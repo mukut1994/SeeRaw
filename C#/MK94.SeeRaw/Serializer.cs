@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -7,207 +8,271 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MK94.SeeRaw
 {
 	public class SerializerContext
     {
-		public Dictionary<string, Delegate> Callbacks { get; } = new Dictionary<string, Delegate>();
-		private List<INotifyPropertyChanged> PropertyChangedNotifiers { get; } = new List<INotifyPropertyChanged>();
+		public Utf8JsonWriter Main;
+    }
+	
+	public class MetadataSerializer
+	{
+		internal Dictionary<Type, IMetadataConverter> converters = new Dictionary<Type, IMetadataConverter>();
+		private static MetadataConverter DefaultConverter = new MetadataConverter();
 
-		internal PropertyChangedEventHandler onPropertyChanged;
+		public void Serialize(Utf8JsonWriter writer, object? value, IEnumerable<string> valuePath, RendererContext context)
+		{
+			try
+			{
+				var converter = GetConverter(value?.GetType() ?? typeof(object));
 
-        public void AddPropertyChangedNotifier(INotifyPropertyChanged notifyPropertyChanged)
-        {
-			PropertyChangedNotifiers.Add(notifyPropertyChanged);
-			notifyPropertyChanged.PropertyChanged += onPropertyChanged;
+				converter.Write(this, writer, value, valuePath, context);
+			}
+			catch (Exception e)
+			{
+				throw new Exception($"Failed to serialize at path {MetadataConverter.GetFullPath(valuePath)}", e);
+			}
 		}
-		
-		public void ClearPropertyChangedHandlers()
-        {
-			foreach(var p in PropertyChangedNotifiers)
-            {
-				p.PropertyChanged -= onPropertyChanged;
-            }
-        }
+
+		private IMetadataConverter GetConverter(Type type)
+		{
+			if (converters.TryGetValue(type, out var converter))
+				return converter;
+
+			var attr = type.GetCustomAttribute<MetadataConverterAttribute>();
+
+			if (attr != null)
+				return (IMetadataConverter) Activator.CreateInstance(attr.ConverterType);
+
+			return DefaultConverter;
+		}
+	}
+
+	// TODO add property suppport
+	[AttributeUsage(AttributeTargets.Class)]
+	public class MetadataConverterAttribute : Attribute
+	{
+		public Type ConverterType { get; }
+
+		public MetadataConverterAttribute(Type converterType)
+		{
+			if (!typeof(IMetadataConverter).IsAssignableFrom(converterType))
+				throw new InvalidProgramException($"Argument {nameof(converterType)} must inherit from {nameof(IMetadataConverter)}");
+
+			ConverterType = converterType;
+		}
+	}
+
+	public interface IMetadataConverter
+    {
+		void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object? value, IEnumerable<string> valuePath, RendererContext context);
+
+	}
+
+	public class MetadataConverter : IMetadataConverter
+	{
+		public virtual void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object? value, IEnumerable<string> valuePath, RendererContext context)
+		{
+			if (value == null)
+			{
+				writer.WriteString("type", "null");
+				return;
+			}
+
+			switch (value)
+			{
+				case sbyte:
+				case byte:
+				case short:
+				case ushort:
+				case int:
+				case uint:
+				case long:
+				case ulong:
+				case float:
+				case double:
+				case decimal:
+					writer.WriteString("type", "number");
+					writer.WriteString("extendedType", GetFullName(value.GetType()));
+					return;
+
+				case string:
+					writer.WriteString("type", "string");
+					return;
+
+				case bool:
+					writer.WriteString("type", "bool");
+					return;
+
+				case IEnumerable ie:
+					writer.WriteString("type", "array");
+					writer.WriteString("extendedType", GetFullName(value.GetType()));
+
+					writer.WriteStartArray("children");
+
+					foreach (var elem in ie)
+					{
+						writer.WriteStartObject();
+						serializer.Serialize(writer, elem, valuePath, context);
+						writer.WriteEndObject();
+					}
+
+					writer.WriteEndArray();
+					return;
+
+			}
+
+			var type = value.GetType();
+
+			if (type.IsEnum)
+			{
+				var enumNames = type.GetEnumNames();
+
+				writer.WriteString("type", $"enum");
+				writer.WriteStartArray("values");
+
+				foreach (var enumName in enumNames)
+					writer.WriteStringValue(enumName);
+
+				writer.WriteEndArray();
+				return;
+			}
+
+			writer.WriteString("type", GetFullName(value.GetType()));
+
+			writer.WriteStartObject("children");
+			foreach (var prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
+			{
+				writer.WriteStartObject(prop.Name);
+				serializer.Serialize(writer, prop.GetValue(value), valuePath, context);
+				writer.WriteEndObject();
+			}
+			writer.WriteEndObject();
+		}
+
+		protected internal static string GetFullPath(IEnumerable<string> path)
+		{
+			StringBuilder s = new StringBuilder();
+
+			foreach (var p in path)
+				s.Append(p);
+
+			return s.ToString();
+		}
+
+		protected static string GetFullName(Type t)
+		{
+			if (!t.IsGenericType)
+				return t.Name;
+
+			StringBuilder sb = new StringBuilder();
+
+			sb.Append(t.Name.Substring(0, t.Name.LastIndexOf("`")));
+			sb.Append(t.GetGenericArguments().Aggregate("<",
+				(string aggregate, Type type) => aggregate + (aggregate == "<" ? "" : ",") + GetFullName(type)
+				));
+			sb.Append(">");
+
+			return sb.ToString();
+		}
 	}
 
 	public class Serializer
 	{
-		internal Dictionary<Type, ISerialize> serializers = new Dictionary<Type, ISerialize>();
-
-		public ArraySegment<byte> SerializeState(RenderRoot state, SerializerContext context, JsonWriterOptions options = default)
+		enum Kind
 		{
-			var memStream = new MemoryStream();
-			var writer = new Utf8JsonWriter(memStream, options);
+			Full = 0,
+			RemoveTarget = 1,
+			Delta = 2,
+			Download = 3
+		}
+
+		private ConcurrentBag<(MemoryStream stream, Utf8JsonWriter writer)> pool = new ConcurrentBag<(MemoryStream stream, Utf8JsonWriter writer)>();
+
+		private JsonSerializerOptions valueSerializationOptions = new JsonSerializerOptions
+		{
+#if DEBUG
+			WriteIndented = true
+#endif
+		};
+		private static MetadataSerializer metadataSerializer = new MetadataSerializer();
+
+		public Serializer()
+        {
+			valueSerializationOptions.Converters.Add(new JsonStringEnumConverter());
+        }
+
+		// TODO serialization should be done in 1 pass
+		// Using multiple passes gives a different thread time to modify the data midway
+		// Because of that the Value, Metadata and callbacks could be out of sync
+		public ArraySegment<byte> Serialize(string targetId, object instance, RendererContext rendererContext)
+		{
+			var (stream, writer) = RequestFromPool();
+
+			writer.Reset();
+
 			writer.WriteStartObject();
 
-			Serialize(state, typeof(RenderRoot), false, writer, context);
+			writer.WriteNumber("kind", (int)Kind.Full);
+			writer.WriteString("id", targetId);
+
+			writer.WritePropertyName("value");
+			JsonSerializer.Serialize(writer, instance, valueSerializationOptions);
+			writer.WriteStartObject("metadata");
+			metadataSerializer.Serialize(writer, instance, new[] { "$" }, rendererContext);
+			writer.WriteEndObject();
 
 			writer.WriteEndObject();
+
 			writer.Flush();
-
-			return new ArraySegment<byte>(memStream.GetBuffer(), 0, (int)memStream.Position);
+			// TODO return to pool
+			return new ArraySegment<byte>(stream.GetBuffer(), 0, (int)writer.BytesCommitted);
 		}
 
-		public void Serialize(object obj, Type type, bool serializeNulls, Utf8JsonWriter writer, SerializerContext context)
+		private (MemoryStream stream, Utf8JsonWriter writer) RequestFromPool()
+        {
+			if (pool.TryTake(out var instance))
+				return instance;
+
+			var stream = new MemoryStream();
+			var writer = new Utf8JsonWriter(stream
+#if DEBUG
+		, new JsonWriterOptions { Indented = true }
+#endif
+		);
+
+			return (stream, writer);
+        }
+
+		private void ReturnToPool(MemoryStream stream, Utf8JsonWriter writer)
+        {
+			pool.Add((stream, writer));
+        }
+
+		public Serializer WithMetadataConverter<T>(IMetadataConverter converter)
 		{
-			if (obj is INotifyPropertyChanged notify)
-				context.AddPropertyChangedNotifier(notify);
+			metadataSerializer.converters.Add(typeof(T), converter);
 
-			if (serializers.TryGetValue(type, out var globalSerializer))
-				globalSerializer.Serialize(obj, this, writer, context, serializeNulls);
-
-			else if (obj is ISerializeable serializeable)
-				serializeable.Serialize(this, writer, context, serializeNulls);
-
-			else if (obj == null && !serializeNulls)
-			{
-				writer.WriteString("type", "null");
-				writer.WriteNull("target");
-			}
-
-			else if (type == typeof(bool))
-			{
-				writer.WriteString("type", "bool");
-				writer.WriteBoolean("target", (bool)obj);
-			}
-
-			else if (IsNumericalType(type))
-			{
-				writer.WriteString("type", "number");
-
-				var writeNumber = typeof(Utf8JsonWriter).GetMethod(nameof(Utf8JsonWriter.WriteNumber), new[] { typeof(string), type });
-				writeNumber.Invoke(writer, new[] { "target", obj });
-			}
-
-			else if (type == typeof(string))
-			{
-				writer.WriteString("type", "string");
-				writer.WriteString("target", (string)obj);
-			}
-
-			else if (type.IsEnum)
-				SerializeEnum(obj, type, writer);
-
-			else if (typeof(IEnumerable).IsAssignableFrom(type))
-				SerializeArrayLike(obj, serializeNulls, writer, context);
-
-			else if (obj is RenderRoot root)
-			{
-				writer.WriteStartArray("targets");
-
-				foreach (var target in root.Targets)
-				{
-					writer.WriteStartObject();
-					Serialize(target, typeof(RenderTarget), false, writer, context);
-					writer.WriteEndObject();
-				}
-
-				writer.WriteEndArray();
-			}
-
-			else if (obj is RenderTarget target)
-			{
-				Serialize(target.Value, target.Value.GetType(), serializeNulls, writer, context);
-			}
-
-			else
-			{
-				var typeName = obj.GetType().GetCustomAttribute<SeeRawTypeAttribute>()?.Name ?? "object";
-
-				writer.WriteString("type", typeName);
-				writer.WriteStartObject("target");
-
-				foreach (var prop in obj.GetType().GetProperties())
-				{
-					writer.WriteStartObject(prop.Name);
-
-					var value = prop.GetValue(obj);
-
-					Serialize(value, value?.GetType() ?? prop.PropertyType, serializeNulls, writer, context);
-					writer.WriteEndObject();
-				}
-
-				writer.WriteEndObject();
-			}
+			return this;
 		}
 
-        private void SerializeArrayLike(object obj, bool serializeNulls, Utf8JsonWriter writer, SerializerContext context)
-        {
-            writer.WriteString("type", "array");
-            writer.WriteStartArray("target");
-
-            foreach (var elm in (IEnumerable)obj)
-            {
-                writer.WriteStartObject();
-                Serialize(elm, elm.GetType(), serializeNulls, writer, context);
-                writer.WriteEndObject();
-            }
-
-            writer.WriteEndArray();
-        }
-
-		private void SerializeEnum(object obj, Type type, Utf8JsonWriter writer)
-        {
-			var enumNames = type.GetEnumNames().Aggregate((a, b) => $"{a}, {b}");
-			
-			writer.WriteString("type", $"enum");
-			writer.WriteString("enum-values", $"{enumNames}");
-			writer.WriteString("target", obj?.ToString());
-        }
-
-        private bool IsNumericalType(Type t)
+		public Serializer WithValueConverter(JsonConverter converter)
 		{
-			return t == typeof(sbyte) ||
-					t == typeof(byte) ||
-					t == typeof(short) ||
-					t == typeof(ushort) ||
-					t == typeof(int) ||
-					t == typeof(uint) ||
-					t == typeof(long) ||
-					t == typeof(ulong) ||
-					t == typeof(float) ||
-					t == typeof(decimal);
+			valueSerializationOptions.Converters.Add(converter);
+
+			return this;
 		}
 	}
 
-	public interface ISerializeable
+	/*
+	public class DateTimeSerializer : ISerialize
     {
-		/// <summary>
-		/// Serializes the object into json for the client. Has to include a "type" property so the client knows which renderer to pick.
-		/// </summary>
-		/// <param name="serializer">The default serializer. Call <see cref="Serializer.Serialize(object, Type, bool, Utf8JsonWriter, Dictionary{string, Delegate})"/> to append the default json properties</param>
-		/// <param name="writer">The json writer used to create the message</param>
-		/// <param name="callbacks">Messages that the client can send back to us. <br /> The key is used to identify which callback the client wants to execute and should be a random guid in most cases.</param>
-		/// <param name="serializeNulls">Useful for UI elements that need to know the data type even if its empty. <br />
-		/// E.g. allows Actionable to render a form with parameter inputs. <br />
-		/// For custom UI Renderers you can safely ignore this one</param>
-		public void Serialize(Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls);
-    }
-
-	public interface ISerialize
-    {
-		/// <summary>
-		/// Serializes the object into json for the client. Has to include a "type" property so the client knows which renderer to pick.
-		/// </summary>
-		/// <param name="instance">The object being serialized</param>
-		/// <param name="serializer">The default serializer. Call <see cref="Serializer.Serialize(object, Type, bool, Utf8JsonWriter, Dictionary{string, Delegate})"/> to append the default json properties</param>
-		/// <param name="writer">The json writer used to create the message</param>
-		/// <param name="notifyProperties">The list of objects that can notify</param>
-		/// <param name="callbacks">Messages that the client can send back to us. <br /> The key is used to identify which callback the client wants to execute and should be a random guid in most cases.</param>
-		/// <param name="serializeNulls">Useful for UI elements that need to know the data type even if its empty. <br />
-		/// E.g. allows Actionable to render a form with parameter inputs. <br />
-		/// For custom UI Renderers you can safely ignore this one</param>
-		public void Serialize(object instance, Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls);
-	}
-
-    public class DateTimeSerializer : ISerialize
-    {
-        public void Serialize(object instance, Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls)
+        public void Serialize(object instance, Serializer serializer, Utf8JsonWriter writer, RendererContext context, bool serializeNulls)
         {
 			writer.WriteString("type", "string");
 			writer.WriteString("target", ((DateTime)instance).ToString());
         }
-    }
+    }*/
 }

@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { BackendService } from './backend.service';
+import { RenderContext } from './data.model';
 
 @Component({
   selector: 'app-root',
@@ -11,18 +12,18 @@ export class AppComponent {
   state: string;
 
   constructor(backendService: BackendService) {
-    backendService.onConnected.subscribe(() => this.state = "Connected");
-    backendService.onDisconnected.subscribe(this.updateState.bind(this));
+    backendService.connected.subscribe(() => this.state = 'Connected');
+    backendService.disconnected.subscribe(this.updateState.bind(this));
   }
 
   updateState(reconnectingIn: number) {
     if(reconnectingIn > 0)
-      this.state = "Reconnecting in " + reconnectingIn;
+      this.state = 'Reconnecting in ' + reconnectingIn;
 
-    else if (reconnectingIn == -1)
-      this.state = "Automatic reconnection failed";
+    else if (reconnectingIn === -1)
+      this.state = 'Automatic reconnection failed';
 
     else
-      this.state = "Connecting....";
+      this.state = 'Connecting....';
   }
 }

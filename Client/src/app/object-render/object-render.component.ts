@@ -1,4 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { Metadata, RenderContext } from './../data.model';
 
 @Component({
   selector: 'app-object-render',
@@ -7,15 +8,16 @@ import { Component, OnInit, Input } from '@angular/core';
 })
 export class ObjectRenderComponent implements OnInit {
 
-  @Input() editable: boolean;
-  @Input() target: any;
+  @Input() context: RenderContext;
+  @Input() value: any;
+  @Input() metadata: Metadata;
 
   keys: any;
 
   constructor() { }
 
   ngOnInit() {
-    this.keys = Object.keys(this.target);
+    this.keys = Object.keys(this.value);
   }
 
 }

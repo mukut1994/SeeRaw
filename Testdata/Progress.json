@@ -1,15 +1,18 @@
 {
-  "targets": [
-    {
-      "type": "progress",
-      "percent": 0,
-      "value": null,
-      "max": null,
-      "min": null,
-      "speed": null,
-      "pause": null,
-      "setSpeed": null,
-      "speed": null
-    }
-  ]
+  "kind": 0,
+  "id": "target1",
+  "value": {
+    "percent": 0,
+    "value": null,
+    "max": null,
+    "min": null,
+    "speed": null,
+    "paused": null
+  },
+  "metadata": {
+    "type": "progress",
+    "pause": null,
+    "setSpeed": null,
+    "cancel": null
+  }
 }

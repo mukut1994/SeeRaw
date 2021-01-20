@@ -1,7 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Form } from '../data.model';
+import { Metadata } from '../data.model';
 import { BackendService } from './../backend.service';
-import { FormInput } from './../data.model';
+import { RenderContext } from './../data.model';
 
 @Component({
   selector: 'app-form-render',
@@ -9,7 +9,10 @@ import { FormInput } from './../data.model';
   styleUrls: ['./form-render.component.css'],
 })
 export class FormRenderComponent implements OnInit {
-  @Input() value: Form;
+
+  @Input() metadata: FormMetadata;
+  @Input() value: any;
+  @Input() context: RenderContext;
 
   constructor(readonly backendService: BackendService) {}
 
@@ -38,4 +41,12 @@ export class FormRenderComponent implements OnInit {
 
     return 'obj';
   }
+}
+
+class FormMetadata extends Metadata {
+  inputs: FormInput[]
+}
+
+class FormInput extends Metadata {
+  name: string;
 }

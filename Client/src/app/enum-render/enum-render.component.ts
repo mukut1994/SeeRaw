@@ -1,4 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
+import { Metadata } from '../data.model';
+import { RenderContext } from './../data.model';
 
 @Component({
   selector: 'app-enum-render',
@@ -7,11 +9,12 @@ import { Component, Input, OnInit } from '@angular/core';
 })
 export class EnumRenderComponent {
 
-  @Input() editable: boolean;
-  @Input() target: any;
+  @Input() metadata: EnumMetadata;
+  @Input() value: any;
+  @Input() context: RenderContext;
 
-  getValues() {
-    return (this.target["enum-values"] as string).split(',').map(a => a.trim());
-  }
+}
 
+class EnumMetadata {
+  values: any[]
 }

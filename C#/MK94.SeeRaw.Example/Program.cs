@@ -21,7 +21,8 @@ namespace MK94.SeeRaw.Example
                 .RunInBackground();
 
             Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
+            Console.ReadLine();
+            Console.WriteLine("Enter");
         }
 
         static void RenderClientMenu()
