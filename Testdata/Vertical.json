@@ -1,20 +1,23 @@
 {
-  "Kind": "Full",
-  "Value": {
+  "kind": 0,
+  "id": "target1",
+  "value": {
     "Objects": [
       "Vertical Test"
     ]
   },
-  "Metadata": {
-    "$type": "VerticalRun",
-    "Objects": {
-      "Type": "array",
-      "ExtendedType": "List\u003CObject\u003E",
-      "Children": [
-        {
-          "Type": "string"
-        }
-      ]
+  "metadata": {
+    "type": "VerticalRun",
+    "children": {
+      "Objects": {
+        "type": "array",
+        "extendedType": "List\u003CObject\u003E",
+        "children": [
+          {
+            "type": "string"
+          }
+        ]
+      }
     }
   }
 }

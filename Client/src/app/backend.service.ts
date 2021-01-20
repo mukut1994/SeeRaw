@@ -1,7 +1,7 @@
 import { Injectable, Output, EventEmitter } from "@angular/core";
 import { Observable, timer } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { RenderRoot } from "./data.model";
+import { Kind, Message, RenderRoot, RenderTarget } from "./data.model";
 
 @Injectable({
   providedIn: "root",
@@ -19,6 +19,9 @@ export class BackendService {
   @Output() onConnected = new EventEmitter();
 
   constructor() {
+    this.renderRoot = new RenderRoot();
+    this.renderRoot.targets = [];
+
     this.reconnect();
   }
 
@@ -33,7 +36,18 @@ export class BackendService {
       return;
     }
 
-    this.renderRoot = data;
+    let m = <Message>data;
+
+    switch(m.kind)
+    {
+      case Kind.Full:
+        let renderTarget = <RenderTarget>m;
+        const index = this.renderRoot.targets.findIndex(x => x.id == renderTarget.id);
+        if(index > -1)
+          this.renderRoot.targets[index] = renderTarget;
+        else
+          this.renderRoot.targets.push(renderTarget);
+    }
 
     this.messageHandler.emit(this.renderRoot);
   }

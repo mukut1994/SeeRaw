@@ -195,7 +195,10 @@ namespace MK94.SeeRaw
 		{
 			context.Callbacks.Clear();
 			context.ClearPropertyChangedHandlers();
-			server.Broadcast(serializer.Serialize(state.Targets[0].Value, context));
+			foreach (var target in state.Targets)
+			{
+				server.Broadcast(serializer.Serialize(target.Name, target.Value, context));
+			}
 		}
     }
 
@@ -232,8 +235,12 @@ namespace MK94.SeeRaw
 			{
 				serializerContext.Callbacks.Clear();
 				serializerContext.ClearPropertyChangedHandlers();
-				var message = serializer.Serialize(renderRoot.Targets[0].Value, state.serializerContext);
-				Task.Run(() => websocket.SendAsync(message, WebSocketMessageType.Text, true, default));
+
+				foreach (var target in renderRoot.Targets)
+				{
+					var message = serializer.Serialize(target.Name, target.Value, state.serializerContext);
+					Task.Run(() => websocket.SendAsync(message, WebSocketMessageType.Text, true, default));
+				}
 			};
 
 			serializerContext.onPropertyChanged = Refresh;

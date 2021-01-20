@@ -1,25 +1,30 @@
 {
-  "Kind": "Full",
-  "Value": {
+  "kind": 0,
+  "id": "target1",
+  "value": {
     "Actions": [
       {
         "Text": "Navication Test"
       }
     ]
   },
-  "Metadata": {
-    "$type": "Navigation",
-    "Actions": {
-      "Type": "array",
-      "ExtendedType": "List\u003CActionable\u003E",
-      "Children": [
-        {
-          "$type": "Actionable",
-          "Text": {
-            "Type": "string"
+  "metadata": {
+    "type": "Navigation",
+    "children": {
+      "Actions": {
+        "type": "array",
+        "extendedType": "List\u003CActionable\u003E",
+        "children": [
+          {
+            "type": "Actionable",
+            "children": {
+              "Text": {
+                "type": "string"
+              }
+            }
           }
-        }
-      ]
+        ]
+      }
     }
   }
 }

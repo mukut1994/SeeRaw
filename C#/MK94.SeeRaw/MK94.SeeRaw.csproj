@@ -15,7 +15,7 @@
     <ClientSrcFiles Include="$(ProjectDir)/../../Client/src/**" />
   </ItemGroup>
 
-  <Target Inputs="@(ClientSrcFiles)" Outputs="$(ProjectDir)/../../Client/dist/seeraw/index.html" Name="ClientBuild" BeforeTargets="BeforeBuild">
+  <Target Condition="'$(Configuration)' != 'Debug'" Inputs="@(ClientSrcFiles)" Outputs="$(ProjectDir)/../../Client/dist/seeraw/index.html" Name="ClientBuild" BeforeTargets="BeforeBuild">
     <Exec WorkingDirectory="$(ProjectDir)/../../Client" Command="yarn build --prod" />
   </Target>
   

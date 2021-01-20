@@ -1,67 +1,63 @@
-<ng-container [ngSwitch]="target['$type']">
+<ng-container [ngSwitch]="metadata.type">
   <span *ngSwitchCase="'string'" class="string">
-    <span *ngIf="!editable; else edittext">"{{ target.target }}"</span>
+    <span *ngIf="!context.editMode; else edittext">"{{ value }}"</span>
     <ng-template #edittext>
-      <input type="text" [(ngModel)]="target.target">
+      <input type="text" [(ngModel)]="value">
     </ng-template>
   </span>
 
   <span *ngSwitchCase="'number'" class="number">
-    <span *ngIf="!editable; else editnumber">
-      {{ target.target }}
+    <span *ngIf="!context.editMode; else editnumber">
+      {{ value }}
     </span>
     <ng-template #editnumber>
-      <input type="number" [(ngModel)]="target.target" />
+      <input type="number" [(ngModel)]="context.editMode" />
     </ng-template>
   </span>
 
   <span *ngSwitchCase="'link'">
-    <a href="#" class="link" (click)="linkClick($any(target).id)">{{
-      $any(target).text
+    <a href="#" class="link" (click)="linkClick($any(value).id)">{{
+      $any(value).text
     }}</a>
   </span>
 
   <span *ngSwitchCase="'array'">
-    <app-array-render
-      [value]="target.target"
-      [editable]="editable"
-      [context]="context"
-      [options]="optionsService.get(context.currentPath, 'array')"
-    ></app-array-render>
-  </span>
-
-  <span *ngSwitchCase="'form'">
-    <app-form-render [value]="target"></app-form-render>
-  </span>
-
-  <span *ngSwitchCase="'progress'">
-    <app-progress-render [target]="target"></app-progress-render>
+    <app-array-render [value]="value" [context]="context" [metadata]="metadata"></app-array-render>
   </span>
 
   <span *ngSwitchCase="'enum'">
-    <app-enum-render [target]="target" [editable]="editable"></app-enum-render>
+    <app-enum-render [value]="value" [context]="context" [metadata]="metadata"></app-enum-render>
   </span>
 
-  <span *ngSwitchCase="'navigation'">
-    <app-navigation-render [target]="target"></app-navigation-render>
+  <span *ngSwitchCase="'form'">
+    <app-form-render [value]="value" [context]="context" [metadata]="metadata"></app-form-render>
   </span>
 
-  <span *ngSwitchCase="'horizontal'">
-    <app-horizontal-render [target]="target" [editable]="editable"></app-horizontal-render>
-  </span>
-
-  <span *ngSwitchCase="'vertical'">
-    <app-vertical-render [target]="target" [editable]="editable"></app-vertical-render>
+  <span *ngSwitchCase="'progress'">
+    <app-progress-render [value]="value" [context]="context" [metadata]="metadata"></app-progress-render>
   </span>
 
   <span *ngSwitchCase="'log'">
-    <app-log-render [target]="target"></app-log-render>
+    <app-log-render [value]="value" [context]="context" [metadata]="metadata"></app-log-render>
+  </span>
+
+
+
+
+  <span *ngSwitchCase="'navigation'">
+    <app-navigation-render [target]="value"></app-navigation-render>
+  </span>
+
+  <span *ngSwitchCase="'horizontal'">
+    <app-horizontal-render [target]="value"></app-horizontal-render>
+  </span>
+
+  <span *ngSwitchCase="'vertical'">
+    <app-vertical-render [target]="value"></app-vertical-render>
   </span>
 
   <span *ngSwitchDefault>
-    <app-object-render
-      [target]="target.target"
-      [editable]="editable">
+    <app-object-render [metadata]="metadata" [context]="context" [value]="value">
     </app-object-render>
   </span>
 </ng-container>

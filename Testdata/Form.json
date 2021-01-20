@@ -1,7 +1,21 @@
 {
-  "Kind": "Full",
-  "Value": {},
-  "Metadata": {
-    "$type": "RenderRoot"
+  "kind": 0,
+  "id": "target1",
+  "value": {
+    "text": "Form test",
+    "inputs": [
+      {
+        "Text input": "default text"
+      }
+    ]
+  },
+  "metadata": {
+    "type": "form",
+    "inputs": [
+      {
+        "type": "string",
+        "name": "Text input"
+      }
+    ]
   }
 }

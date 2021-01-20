@@ -1,4 +1,5 @@
 export class RenderContext {
+  public editMode: boolean;
   public currentPath: string;
 
   constructor(currentPath: string = null) {
@@ -18,47 +19,43 @@ export class RenderContext {
 
     return ret;
   }
+
+  public WithEditMode() {
+    this.editMode = true;
+    return this;
+  }
 }
 
-export class Options {
+export class Metadata {
+  type: string;
+  extendedType: string | undefined;
+  children: Metadata | Metadata[] | undefined;
+
+  renderOptions: { [typeName: string]: any } | undefined;
+}
+
+export class RenderRoot {
+  targets: RenderTarget[];
+}
+
+export class RenderOption {
   public jsonPath: string;
   public typeOptions: { [typeName: string]: any } = {};
 }
 
-export class RenderRoot {
-  public targets: RenderTarget[];
+export class Message {
+  public kind: Kind;
 }
 
-export class RenderTarget {
-  public type: string;
-  public target: any;
-}
-
-export class Link {
+export class RenderTarget extends Message {
   public id: string;
-  public text: string;
+  public value: any;
+  public metadata: Metadata;
 }
 
-export class Form {
-  public id: string;
-  public text: string;
-  public inputs: FormInput[];
-}
-
-export class FormInput {
-  public type: string;
-  public name: string;
-  public target: any;
-}
-
-export class Progress {
-  public percent: number;
-  public value: string;
-  public min: string;
-  public max: string;
-  public speed: string;
-  public pause: string;
-  public paused: boolean;
-  public setSpeed: string;
-  public cancel: string;
+export enum Kind {
+  Full = 0,
+  RemoveTarget = 1,
+  Delta = 2,
+  Download = 3
 }

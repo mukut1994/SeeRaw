@@ -1,6 +1,7 @@
 import { Component, OnInit, Input } from "@angular/core";
-import { Progress } from "../data.model";
+import { Metadata } from "../data.model";
 import { BackendService } from "./../backend.service";
+import { RenderContext } from './../data.model';
 
 @Component({
   selector: "app-progress-render",
@@ -8,7 +9,10 @@ import { BackendService } from "./../backend.service";
   styleUrls: ["./progress-render.component.css"],
 })
 export class ProgressRenderComponent {
-  @Input() target: Progress;
+
+  @Input() context: RenderContext;
+  @Input() value: Progress;
+  @Input() metadata: ProgressMetadata;
 
   constructor(private readonly backendService: BackendService) {}
 
@@ -18,7 +22,7 @@ export class ProgressRenderComponent {
     this.backendService.sendMessage(
       JSON.stringify({
         type: "form",
-        id: this.target.setSpeed,
+        id: this.metadata.setSpeed,
         args: [ parseInt(speed) ]
       })
     );
@@ -26,13 +30,28 @@ export class ProgressRenderComponent {
 
   pause() {
     this.backendService.sendMessage(
-      JSON.stringify({ type: "link", id: this.target.pause })
+      JSON.stringify({ type: "link", id: this.metadata.pause })
     );
   }
 
   cancel() {
     this.backendService.sendMessage(
-      JSON.stringify({ type: "link", id: this.target.cancel })
+      JSON.stringify({ type: "link", id: this.metadata.cancel })
     );
   }
+}
+
+class Progress {
+  percent: number;
+  value: string | null;
+  min: string;
+  max: string;
+  speed: string | null;
+  paused: boolean
+}
+
+class ProgressMetadata extends Metadata {
+  pause: string;
+  setSpeed: string;
+  cancel: string;
 }

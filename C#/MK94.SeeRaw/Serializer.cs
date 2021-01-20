@@ -44,7 +44,7 @@ namespace MK94.SeeRaw
 			var attr = type.GetCustomAttribute<MetadataConverterAttribute>();
 
 			if (attr != null)
-				return (MetadataConverter) Activator.CreateInstance(attr.ConverterType);
+				return (IMetadataConverter) Activator.CreateInstance(attr.ConverterType);
 
 			return DefaultConverter;
 		}
@@ -58,8 +58,8 @@ namespace MK94.SeeRaw
 
 		public MetadataConverterAttribute(Type converterType)
 		{
-			if (typeof(MetadataConverter).IsAssignableFrom(converterType))
-				throw new InvalidProgramException($"Argument {nameof(converterType)} must inherit from {nameof(MetadataConverter)}");
+			if (!typeof(IMetadataConverter).IsAssignableFrom(converterType))
+				throw new InvalidProgramException($"Argument {nameof(converterType)} must inherit from {nameof(IMetadataConverter)}");
 
 			ConverterType = converterType;
 		}
@@ -77,7 +77,7 @@ namespace MK94.SeeRaw
 		{
 			if (value == null)
 			{
-				writer.WriteString("Type", "null");
+				writer.WriteString("type", "null");
 				return;
 			}
 
@@ -94,23 +94,23 @@ namespace MK94.SeeRaw
 				case float:
 				case double:
 				case decimal:
-					writer.WriteString("Type", "number");
-					writer.WriteString("ExtendedType", GetFullName(value.GetType()));
+					writer.WriteString("type", "number");
+					writer.WriteString("extendedType", GetFullName(value.GetType()));
 					return;
 
 				case string:
-					writer.WriteString("Type", "string");
+					writer.WriteString("type", "string");
 					return;
 
 				case bool:
-					writer.WriteString("Type", "bool");
+					writer.WriteString("type", "bool");
 					return;
 
 				case IEnumerable ie:
-					writer.WriteString("Type", "array");
-					writer.WriteString("ExtendedType", GetFullName(value.GetType()));
+					writer.WriteString("type", "array");
+					writer.WriteString("extendedType", GetFullName(value.GetType()));
 
-					writer.WriteStartArray("Children");
+					writer.WriteStartArray("children");
 
 					foreach (var elem in ie)
 					{
@@ -130,23 +130,26 @@ namespace MK94.SeeRaw
 			{
 				var enumNames = type.GetEnumNames();
 
-				writer.WriteString("Type", $"enum");
-				writer.WriteStartArray("Values");
+				writer.WriteString("type", $"enum");
+				writer.WriteStartArray("values");
 
 				foreach (var enumName in enumNames)
 					writer.WriteStringValue(enumName);
 
 				writer.WriteEndArray();
+				return;
 			}
 
-			writer.WriteString((string)"$type", GetFullName(value.GetType()));
+			writer.WriteString("type", GetFullName(value.GetType()));
 
+			writer.WriteStartObject("children");
 			foreach (var prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
 			{
 				writer.WriteStartObject(prop.Name);
 				serializer.Serialize(writer, prop.GetValue(value), valuePath, context);
 				writer.WriteEndObject();
 			}
+			writer.WriteEndObject();
 		}
 
 		protected internal static string GetFullPath(IEnumerable<string> path)
@@ -178,6 +181,14 @@ namespace MK94.SeeRaw
 
 	public class Serializer
 	{
+		enum Kind
+		{
+			Full = 0,
+			RemoveTarget = 1,
+			Delta = 2,
+			Download = 3
+		}
+
 		private ConcurrentBag<(MemoryStream stream, Utf8JsonWriter writer)> pool = new ConcurrentBag<(MemoryStream stream, Utf8JsonWriter writer)>();
 
 		private JsonSerializerOptions valueSerializationOptions = new JsonSerializerOptions
@@ -188,10 +199,15 @@ namespace MK94.SeeRaw
 		};
 		private static MetadataSerializer metadataSerializer = new MetadataSerializer();
 
+		public Serializer()
+        {
+			valueSerializationOptions.Converters.Add(new JsonStringEnumConverter());
+        }
+
 		// TODO serialization should be done in 1 pass
 		// Using multiple passes gives a different thread time to modify the data midway
 		// Because of that the Value, Metadata and callbacks could be out of sync
-		public ArraySegment<byte> Serialize(object instance, RendererContext rendererContext)
+		public ArraySegment<byte> Serialize(string targetId, object instance, RendererContext rendererContext)
 		{
 			var (stream, writer) = RequestFromPool();
 
@@ -199,11 +215,12 @@ namespace MK94.SeeRaw
 
 			writer.WriteStartObject();
 
-			writer.WriteString("Kind", "Full");
+			writer.WriteNumber("kind", (int)Kind.Full);
+			writer.WriteString("id", targetId);
 
-			writer.WritePropertyName("Value");
+			writer.WritePropertyName("value");
 			JsonSerializer.Serialize(writer, instance, valueSerializationOptions);
-			writer.WriteStartObject("Metadata");
+			writer.WriteStartObject("metadata");
 			metadataSerializer.Serialize(writer, instance, new[] { "$" }, rendererContext);
 			writer.WriteEndObject();
 

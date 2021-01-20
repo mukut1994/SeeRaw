@@ -1,7 +1,8 @@
 {
-  "Kind": "Full",
-  "Value": "string test",
-  "Metadata": {
-    "Type": "string"
+  "kind": 0,
+  "id": "target1",
+  "value": "string test",
+  "metadata": {
+    "type": "string"
   }
 }

@@ -39,7 +39,7 @@ namespace MK94.SeeRaw
         }
 	}
 
-	public class RenderTarget : INotifyPropertyChanged, ISerializeable
+	public class RenderTarget : INotifyPropertyChanged
 	{
 		public string Name { get; }
 		private object value;
@@ -77,15 +77,15 @@ namespace MK94.SeeRaw
 
         public void Serialize(Serializer serializer, Utf8JsonWriter writer, SerializerContext context, bool serializeNulls)
 		{
-			serializer.Serialize(Value, Value.GetType(), serializeNulls, writer, context);
+			//serializer.Serialize(Value, Value.GetType(), serializeNulls, writer, context);
 		}
     }
 
-	[JsonConverter(typeof(FormSerializer))]
-	[MetadataConverter(typeof(FormSerializer))]
+	[JsonConverter(typeof(Form.Serializer))]
+	[MetadataConverter(typeof(Form.Serializer))]
 	public class Form
 	{
-        private class FormSerializer : JsonConverter<Form>, IMetadataConverter
+        private class Serializer : JsonConverter<Form>, IMetadataConverter
         {
             public override Form Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {
@@ -94,7 +94,8 @@ namespace MK94.SeeRaw
 
             public override void Write(Utf8JsonWriter writer, Form value, JsonSerializerOptions options)
             {
-				writer.WriteString("Text", value.Text);
+				writer.WriteStartObject();
+				writer.WriteString("text", value.Text);
 
 				writer.WriteStartArray("inputs");
 				foreach (var formValue in value.FormValues)
@@ -106,6 +107,7 @@ namespace MK94.SeeRaw
 					writer.WriteEndObject();
 				}
 				writer.WriteEndArray();
+				writer.WriteEndObject();
 			}
 
             public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
@@ -115,26 +117,56 @@ namespace MK94.SeeRaw
 
 				if (!form.FormValues.Any())
 				{
-					writer.WriteString("Type", "link");
+					writer.WriteString("type", "link");
 					context.RegisterCallback(id, (Action)(() => form.callback(new Dictionary<string, object>())));
 					return;
 				}
 
 				context.RegisterCallback(id, form.callback);
-				writer.WriteString("Type", "form");
+				writer.WriteString("type", "form");
 
-				writer.WriteStartObject("inputs");
+				writer.WriteStartArray("inputs");
 				foreach (var formValue in form.FormValues)
 				{
-					writer.WriteStartObject(formValue.Name);
+					writer.WriteStartObject();
 
-					// TODO serialize inputs metadata
+					// TODO add support for objects
+					writer.WriteString("type", GetTypeName(formValue.Type));
+					writer.WriteString("name", formValue.Name);
 
 					writer.WriteEndObject();
 				}
-				writer.WriteEndObject();
+				writer.WriteEndArray();
 
 			}
+
+			private static Dictionary<Type, string> typeNameLookup = new Dictionary<Type, string>
+			{
+				{ typeof(sbyte), "number" },
+				{ typeof(byte), "number" },
+				{ typeof(short), "number" },
+				{ typeof(ushort), "number" },
+				{ typeof(int), "number" },
+				{ typeof(uint), "number" },
+				{ typeof(long), "number" },
+				{ typeof(ulong), "number" },
+				{ typeof(float), "number" },
+				{ typeof(double), "number" },
+				{ typeof(decimal), "number" },
+				{ typeof(string), "string" },
+				{ typeof(bool), "bool" },				
+			};
+
+			private string GetTypeName(Type type)
+            {
+				if (typeNameLookup.TryGetValue(type, out var ret))
+					return ret;
+
+				if (type.IsEnum)
+					return "enum";
+
+				throw new ArgumentException($"Expecting primitive type, got: {type.FullName}");
+            }
         }
 
         private class FormValue
@@ -217,9 +249,75 @@ namespace MK94.SeeRaw
 		}*/
     }
 
+	[JsonConverter(typeof(Progress.Serializer))]
+	[MetadataConverter(typeof(Progress.Serializer))]
 	public class Progress : INotifyPropertyChanged
     {
-		private int _percent;
+        private class Serializer : JsonConverter<Progress>, IMetadataConverter
+        {
+            public override Progress Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => throw new NotImplementedException();
+
+            public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
+            {
+				var prog = value as Progress;
+
+				writer.WriteString("type", "progress");
+
+				if (prog.pauseToggle != null)
+				{
+					var id = Guid.NewGuid().ToString();
+
+					context.Callbacks.Add(id, prog.pauseToggle);
+					writer.WriteString("pause", id);
+				}
+				else
+					writer.WriteNull("pause");
+
+				if (prog.setSpeed != null)
+				{
+					var id = Guid.NewGuid().ToString();
+
+					context.Callbacks.Add(id, prog.setSpeed);
+					writer.WriteString("setSpeed", id);
+				}
+				else
+					writer.WriteNull("setSpeed");
+
+				if (prog.cancellationTokenSource != null)
+				{
+					var id = Guid.NewGuid().ToString();
+
+					context.Callbacks.Add(id, (Action)prog.cancellationTokenSource.Cancel);
+					writer.WriteString("cancel", id);
+				}
+				else
+					writer.WriteNull("cancel");
+			}
+
+            public override void Write(Utf8JsonWriter writer, Progress value, JsonSerializerOptions options)
+            {
+				writer.WriteStartObject();
+
+				writer.WriteNumber("percent", value.Percent);
+				writer.WriteString("value", value.Value);
+				writer.WriteString("max", value.Max);
+				writer.WriteString("min", value.Min);
+
+				if (value.Speed != null)
+					writer.WriteString("speed", value.Speed);
+				else
+					writer.WriteNull("speed");
+
+				if (value.pauseToggle != null)
+					writer.WriteBoolean("paused", value.paused);
+				else
+					writer.WriteNull("paused");
+
+				writer.WriteEndObject();
+			}
+        }
+
+        private int _percent;
 		private string _value;
 		private string _speed;
 		private string _min;
@@ -268,56 +366,11 @@ namespace MK94.SeeRaw
 				};
 
         }
+
 		protected void OnPropertyChanged([CallerMemberName] string name = null)
 		{
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 		}
-		/*
-		public void Serialize(Serializer serializer, Utf8JsonWriter writer, RendererContext context, bool serializeNulls)
-		{
-			writer.WriteString("type", "progress");
-
-			writer.WriteNumber("percent", Percent);
-			writer.WriteString("value", Value);
-			writer.WriteString("max", Max);
-			writer.WriteString("min", Min);
-
-			if (Speed != null)
-				writer.WriteString("speed", Speed);
-			else
-				writer.WriteNull("speed");
-
-			if (pauseToggle != null)
-			{
-				var id = Guid.NewGuid().ToString();
-
-				context.Callbacks.Add(id, pauseToggle);
-				writer.WriteString("pause", id);
-				writer.WriteBoolean("paused", paused);
-			}
-			else
-				writer.WriteNull("pause");
-
-			if (setSpeed != null)
-			{
-				var id = Guid.NewGuid().ToString();
-
-				context.Callbacks.Add(id, setSpeed);
-				writer.WriteString("setSpeed", id);
-			}
-			else
-				writer.WriteNull("setSpeed");
-
-			if (cancellationTokenSource != null)
-			{
-				var id = Guid.NewGuid().ToString();
-
-				context.Callbacks.Add(id, (Action)cancellationTokenSource.Cancel);
-				writer.WriteString("cancel", id);
-			}
-			else
-				writer.WriteNull("speed");
-		}*/
     }
 
 	[SeeRawType("navigation")]
@@ -344,9 +397,37 @@ namespace MK94.SeeRaw
 		public List<object> Objects { get; set; }
 	}
 
+	[JsonConverter(typeof(Logger.Serializer))]
+	[MetadataConverter(typeof(Logger.Serializer))]
 	public class Logger : ILogger, INotifyPropertyChanged
 	{
-		public string Message { get; set; }
+        public class Serializer : JsonConverter<Logger>, IMetadataConverter
+        {
+			public override Logger Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => throw new NotImplementedException();
+
+            public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
+            {
+				writer.WriteString("type", "log");
+            }
+
+            public override void Write(Utf8JsonWriter writer, Logger value, JsonSerializerOptions options)
+            {
+				writer.WriteStartObject();
+
+				writer.WriteString("message", value.Message);
+
+				writer.WriteStartArray("children");
+
+				foreach (var child in value.Children)
+					Write(writer, child as Logger, options);
+
+				writer.WriteEndArray();
+
+				writer.WriteEndObject();
+            }
+        }
+
+        public string Message { get; set; }
 
 		public List<ILogger> Children { get; } = new List<ILogger>();
 

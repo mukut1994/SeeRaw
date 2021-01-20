@@ -1,7 +1,11 @@
 {
-  "Kind": "Full",
-  "Value": {},
-  "Metadata": {
-    "$type": "RenderRoot"
+  "kind": 0,
+  "id": "target1",
+  "value": {
+    "text": "Link test",
+    "inputs": []
+  },
+  "metadata": {
+    "type": "link"
   }
 }

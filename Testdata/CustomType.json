@@ -1,15 +1,32 @@
 {
-  "targets": [
-    {
-      "type": "object",
+  "kind": 0,
+  "id": "target1",
+  "value": {
+    "PropString": "A",
+    "PropInt": 1,
+    "PropObj": {
+      "PropInt2": 2
+    }
+  },
+  "metadata": {
+    "type": "\u003C\u003Ef__AnonymousType0\u003CString,Int32,\u003C\u003Ef__AnonymousType1\u003CInt32\u003E\u003E",
+    "children": {
       "PropString": {
-        "type": "string",
-        "target": "A"
+        "type": "string"
       },
       "PropInt": {
         "type": "number",
-        "target": 1
+        "extendedType": "Int32"
+      },
+      "PropObj": {
+        "type": "\u003C\u003Ef__AnonymousType1\u003CInt32\u003E",
+        "children": {
+          "PropInt2": {
+            "type": "number",
+            "extendedType": "Int32"
+          }
+        }
       }
     }
-  ]
+  }
 }

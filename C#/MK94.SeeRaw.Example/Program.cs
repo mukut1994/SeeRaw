@@ -21,15 +21,12 @@ namespace MK94.SeeRaw.Example
                 .RunInBackground();
 
             Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
+            Console.ReadLine();
+            Console.WriteLine("Enter");
         }
 
         static void RenderClientMenu()
         {
-            new List<int>() { 1, 2, 3 }
-                .Render();
-            return;
-
             // Show a basic hello world
             "Hello World".Render();
 

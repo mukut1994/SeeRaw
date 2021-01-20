@@ -1,18 +1,11 @@
 {
-  "Kind": "Full",
-  "Value": {
-    "Message": "Child 1",
-    "Children": []
+  "kind": 0,
+  "id": "target1",
+  "value": {
+    "message": "Child 1",
+    "children": []
   },
-  "Metadata": {
-    "$type": "Logger",
-    "Message": {
-      "Type": "string"
-    },
-    "Children": {
-      "Type": "array",
-      "ExtendedType": "List\u003CILogger\u003E",
-      "Children": []
-    }
+  "metadata": {
+    "type": "log"
   }
 }

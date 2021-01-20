@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, ɵɵqueryRefresh, ChangeDetectorRef } from '@angular/core';
-import { RenderRoot, RenderContext } from './../data.model';
+import { Message, RenderContext, RenderRoot } from './../data.model';
 import { BackendService } from '../backend.service';
 import { OptionsService } from './../options.service';
 
