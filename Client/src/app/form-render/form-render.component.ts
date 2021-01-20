@@ -1,7 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Form, Metadata } from '../data.model';
+import { Metadata } from '../data.model';
 import { BackendService } from './../backend.service';
-import { FormInput, RenderContext } from './../data.model';
+import { RenderContext } from './../data.model';
 
 @Component({
   selector: 'app-form-render',
