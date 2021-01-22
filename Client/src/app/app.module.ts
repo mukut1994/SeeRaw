@@ -16,6 +16,9 @@ import { HorizontalRenderComponent } from './horizontal-render/horizontal-render
 import { VerticalRenderComponent } from './vertical-render/vertical-render.component';
 import { LogRenderComponent } from './log-render/log-render.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { NavBarComponent } from './navigation-render/nav-bar/nav-bar.component';
+import { CommonModule } from '@angular/common';
+import { RenderDirective } from './render.service';
 
 @NgModule({
   declarations: [
@@ -30,13 +33,16 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     NavigationRenderComponent,
     HorizontalRenderComponent,
     VerticalRenderComponent,
-    LogRenderComponent
+    LogRenderComponent,
+    NavBarComponent,
+    RenderDirective
   ],
   imports: [
-    BrowserModule,
+  BrowserModule,
     AppRoutingModule,
     FormsModule,
-    NgbModule
+    NgbModule,
+    CommonModule
   ],
   providers: [],
   bootstrap: [AppComponent]

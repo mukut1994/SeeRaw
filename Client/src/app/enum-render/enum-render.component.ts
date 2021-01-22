@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Metadata } from '../data.model';
 import { RenderContext } from './../data.model';
+import { RenderComponent } from './../render.service';
 
 @Component({
   selector: 'app-enum-render',
@@ -15,6 +16,6 @@ export class EnumRenderComponent {
 
 }
 
-class EnumMetadata {
+class EnumMetadata extends Metadata {
   values: any[]
 }

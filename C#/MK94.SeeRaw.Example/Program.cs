@@ -27,6 +27,22 @@ namespace MK94.SeeRaw.Example
 
         static void RenderClientMenu()
         {
+            new
+            {
+                Child1 = new
+                {
+                    Child1_1 = 11,
+                    Child1_2 = 12
+                },
+                Child2 = new
+                {
+                    Child2_1 = 21,
+                    Child2_2 = 22
+                }
+            }.Render();
+
+            return;
+
             // Show a basic hello world
             "Hello World".Render();
 

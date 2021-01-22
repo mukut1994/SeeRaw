@@ -13,13 +13,6 @@ export class RenderContext {
     return ret;
   }
 
-  public array(index: number) {
-    const ret = new RenderContext();
-    ret.currentPath = this.currentPath + '.target[' + index + ']';
-
-    return ret;
-  }
-
   public WithEditMode() {
     this.editMode = true;
     return this;
