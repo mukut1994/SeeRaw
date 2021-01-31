@@ -38,7 +38,9 @@ namespace MK94.SeeRaw.Example
                 {
                     Child2_1 = 21,
                     Child2_2 = 22
-                }
+                },
+                Enum = Title.Mr,
+                Link = SeeRawTypes.Action("Actionable", () => Console.WriteLine("Actionable"))
             }.Render();
 
             return;

@@ -1,13 +1,16 @@
 import { Component } from '@angular/core';
 import { BackendService } from './backend.service';
 import { RenderService } from './render.service';
-import { ArrayRenderComponent } from './array-render/array-render.component';
-import { EnumRenderComponent } from './enum-render/enum-render.component';
-import { FormRenderComponent } from './form-render/form-render.component';
-import { LogRenderComponent } from './log-render/log-render.component';
-import { NavigationRenderComponent } from './navigation-render/navigation-render.component';
-import { ObjectRenderComponent } from './object-render/object-render.component';
-import { ProgressRenderComponent } from './progress-render/progress-render.component';
+import { EnumRenderComponent } from '@renderer/enum-render/enum-render.component';
+import { FormRenderComponent } from '@renderer/form-render/form-render.component';
+import { LogRenderComponent } from '@renderer/log-render/log-render.component';
+import { NavigationRenderComponent } from '@renderer/navigation-render/navigation-render.component';
+import { ProgressRenderComponent } from '@renderer/progress-render/progress-render.component';
+import { TableRenderComponent } from './renderers/table-render/table-render.component';
+import { ValueRenderComponent } from './renderers/value-render/value-render.component';
+import { OptionsService } from '@service/options.service';
+import { NoRenderOptionsComponent } from './no-render-options/no-render-options.component';
+import { LinkRenderComponent } from './renderers/link-render/link-render.component';
 
 @Component({
   selector: 'app-root',
@@ -21,29 +24,34 @@ export class AppComponent {
   opt: OptionConfigurator[];
 
   constructor(private backendService: BackendService,
+    private optionsService: OptionsService,
     private renderService: RenderService) {
     backendService.connected.subscribe(() => this.state = 'Connected');
     backendService.disconnected.subscribe(this.updateState.bind(this));
 
-    this.initOptionsForms();
     this.initRenderComponents();
   }
 
-  // TODO this should go in the module initialiser so it can be extended
-  initOptionsForms() {
-
-  }
-
   initRenderComponents() {
-    this.renderService.registerComponent("array", ArrayRenderComponent);
-    this.renderService.registerComponent("object", ObjectRenderComponent);
-    this.renderService.registerComponent("enum", EnumRenderComponent);
-    this.renderService.registerComponent("form", FormRenderComponent);
-    this.renderService.registerComponent("log", LogRenderComponent);
-    this.renderService.registerComponent("progress", ProgressRenderComponent);
+    this.renderService.registerComponent('navigation', 'array', NavigationRenderComponent, NavigationRenderComponent.option);
+    this.renderService.registerComponent('navigation', 'object', NavigationRenderComponent,  NavigationRenderComponent.option);
 
-    this.renderService.registerComponent("array", NavigationRenderComponent);
-    this.renderService.registerComponent("object", NavigationRenderComponent);
+    this.renderService.registerComponent('table', 'array', TableRenderComponent, TableRenderComponent.option);
+    this.renderService.registerComponent('table', 'object', TableRenderComponent, TableRenderComponent.option);
+
+    this.renderService.registerComponent('value', 'string', ValueRenderComponent, ValueRenderComponent.option);
+    this.renderService.registerComponent('value', 'number', ValueRenderComponent, ValueRenderComponent.option);
+    this.renderService.registerComponent('value', 'bool', ValueRenderComponent, ValueRenderComponent.option);
+    this.renderService.registerComponent('value', 'enum', ValueRenderComponent, ValueRenderComponent.option);
+
+    this.renderService.registerComponent('enum', 'enum', EnumRenderComponent, NoRenderOptionsComponent);
+    this.renderService.registerComponent('enum', 'value', EnumRenderComponent, NoRenderOptionsComponent);
+
+    this.renderService.registerComponent('link', 'link', LinkRenderComponent, NoRenderOptionsComponent);
+
+    this.renderService.registerComponent('form', 'form', FormRenderComponent, NoRenderOptionsComponent);
+    this.renderService.registerComponent('log', 'log', LogRenderComponent, NoRenderOptionsComponent);
+    this.renderService.registerComponent('progess', 'progress', ProgressRenderComponent, NoRenderOptionsComponent);
   }
 
   updateState(reconnectingIn: number) {
@@ -55,6 +63,10 @@ export class AppComponent {
 
     else
       this.state = 'Connecting....';
+  }
+
+  resetOptions() {
+    this.optionsService.reset();
   }
 }
 

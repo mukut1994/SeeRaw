@@ -17,6 +17,11 @@
     "lib": [
       "es2018",
       "dom"
-    ]
+    ],
+    "paths": {
+      "@data/*": [ "src/app/*" ],
+      "@service/*": [ "src/app/*" ],
+      "@renderer/*": [ "src/app/renderers/*" ]
+    }
   }
 }
