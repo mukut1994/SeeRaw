@@ -8,14 +8,7 @@ export class RenderContext {
 
   public child(name: string) {
     const ret = new RenderContext();
-    ret.currentPath = this.currentPath + '.target.' + name;
-
-    return ret;
-  }
-
-  public array(index: number) {
-    const ret = new RenderContext();
-    ret.currentPath = this.currentPath + '.target[' + index + ']';
+    ret.currentPath = this.currentPath + '.' + name;
 
     return ret;
   }
@@ -31,7 +24,7 @@ export class Metadata {
   extendedType: string | undefined;
   children: Metadata | Metadata[] | undefined;
 
-  renderOptions: { [typeName: string]: any } | undefined;
+  renderOptions: Map<string, any> | undefined;
 }
 
 export class RenderRoot {
@@ -40,7 +33,7 @@ export class RenderRoot {
 
 export class RenderOption {
   public jsonPath: string;
-  public typeOptions: { [typeName: string]: any } = {};
+  public typeOptions: Map<string, any> = new Map<string, any>();
 }
 
 export class Message {
@@ -51,6 +44,11 @@ export class RenderTarget extends Message {
   public id: string;
   public value: any;
   public metadata: Metadata;
+}
+
+export class ParsedRenderOption {
+  renderer: string;
+  options: { [typeName: string]: any } = {};
 }
 
 export enum Kind {

@@ -9,14 +9,16 @@
     ]
   },
   "metadata": {
-    "type": "Navigation",
+    "type": "object",
+    "extendedType": "Navigation",
     "children": {
       "Actions": {
         "type": "array",
         "extendedType": "List\u003CActionable\u003E",
         "children": [
           {
-            "type": "Actionable",
+            "type": "object",
+            "extendedType": "Actionable",
             "children": {
               "Text": {
                 "type": "string"

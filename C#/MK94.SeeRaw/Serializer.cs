@@ -140,7 +140,8 @@ namespace MK94.SeeRaw
 				return;
 			}
 
-			writer.WriteString("type", GetFullName(value.GetType()));
+			writer.WriteString("type", "object");
+			writer.WriteString("extendedType", GetFullName(value.GetType()));
 
 			writer.WriteStartObject("children");
 			foreach (var prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
@@ -266,7 +267,18 @@ namespace MK94.SeeRaw
 		}
 	}
 
+	// TODO
 	/*
+    public class DictionaryMetadataConverter : IMetadataConverter
+    {
+        public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
+        {
+			writer.WriteString("type", "object");
+			writer.WriteString("extendedType", "")
+        }
+    }
+	*/
+    /*
 	public class DateTimeSerializer : ISerialize
     {
         public void Serialize(object instance, Serializer serializer, Utf8JsonWriter writer, RendererContext context, bool serializeNulls)

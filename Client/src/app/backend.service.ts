@@ -52,6 +52,10 @@ export class BackendService {
     this.messageHandler.emit(this.renderRoot);
   }
 
+  refresh() {
+    this.messageHandler.emit(this.renderRoot);
+  }
+
   sendMessage(message: any) {
     this.socket.send(message);
   }

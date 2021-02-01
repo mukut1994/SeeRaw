@@ -1,0 +1,14 @@
+<div class="p-1" *ngFor="let item of navbar; let i=index">
+
+  <ng-container *ngIf="item.children.length > 0; else clickable">
+    <span class="lead">{{item.title}}</span>
+  </ng-container>
+
+  <ng-template #clickable>
+    <button (click)="select.emit(item)" class="btn" [ngClass]="{ 'text-secondary': item != selected, 'bg-light': item != selected, 'btn-primary': item == selected }" >{{item.title}}</button>
+  </ng-template>
+
+  <div class="border-left border-primary pl-2">
+    <app-nav-bar (select)="select.emit($event)" [selected]="selected" [navbar]="item.children"></app-nav-bar>
+  </div>
+</div>

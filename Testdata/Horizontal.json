@@ -7,7 +7,8 @@
     ]
   },
   "metadata": {
-    "type": "HorizontalRun",
+    "type": "object",
+    "extendedType": "HorizontalRun",
     "children": {
       "Objects": {
         "type": "array",
