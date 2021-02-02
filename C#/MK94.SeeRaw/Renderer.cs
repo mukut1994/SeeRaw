@@ -71,19 +71,26 @@ namespace MK94.SeeRaw
 		{
 			JsonElement deserialized = (JsonElement) JsonSerializer.Deserialize<Object>(message);
 
-			var id = deserialized.GetProperty("id").GetString();
 			var type = deserialized.GetProperty("type").GetString();
+
+			if (!string.Equals(type, MessageType.Execute.ToString(), StringComparison.OrdinalIgnoreCase))
+			{ 
+				UnknownMessage();
+				return;
+			}
+
+			var id = deserialized.GetProperty("id").GetString();
 
 			if (callbacks.TryGetValue(id, out var @delegate))
 			{
-				if (type == "link" && @delegate is Action a)
+				if (@delegate is Action a)
 				{
 					SetContext(server, renderRoot, webSocket);
 					a();
 					ResetContext();
 				}
 
-				else if (type == "form")
+				else
 				{
 					var jsonArgs = deserialized.GetProperty("args");
 					var parameters = @delegate.Method.GetParameters();
@@ -127,7 +134,6 @@ namespace MK94.SeeRaw
 					@delegate.DynamicInvoke(deserializedArgs.ToArray());
 					ResetContext();
 				}
-				else UnknownMessage();
 			}
 			else UnknownMessage();
 

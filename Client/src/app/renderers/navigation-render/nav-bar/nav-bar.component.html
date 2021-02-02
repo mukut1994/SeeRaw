@@ -1,14 +1,13 @@
-<div class="p-1" *ngFor="let item of navbar; let i=index">
+<div class="pr-2" *ngFor="let item of navbar; let i=index">
+    <button
+      [disabled]="item.children.length > 0"
+      (click)="select.emit(item)"
+      class="btn opacity-5 m-0 p-2"
+      [ngClass]="{ 'text-decoration-underline': item.children.length == 0, 'btn-primary': item == selected }">
+      {{item.title}}
+    </button>
 
-  <ng-container *ngIf="item.children.length > 0; else clickable">
-    <span class="lead">{{item.title}}</span>
-  </ng-container>
-
-  <ng-template #clickable>
-    <button (click)="select.emit(item)" class="btn" [ngClass]="{ 'text-secondary': item != selected, 'bg-light': item != selected, 'btn-primary': item == selected }" >{{item.title}}</button>
-  </ng-template>
-
-  <div class="border-left border-primary pl-2">
-    <app-nav-bar (select)="select.emit($event)" [selected]="selected" [navbar]="item.children"></app-nav-bar>
-  </div>
+    <div class="border-left border-primary ml-2">
+      <app-nav-bar (select)="select.emit($event)" [selected]="selected" [navbar]="item.children"></app-nav-bar>
+    </div>
 </div>

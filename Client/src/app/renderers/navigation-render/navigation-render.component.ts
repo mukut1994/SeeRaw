@@ -3,7 +3,6 @@ import { Metadata, RenderContext } from '@data/data.model';
 import { NavBarData, NavigationEvent } from './nav-bar/data';
 import { EventEmitter } from '@angular/core';
 import * as jp from 'jsonpath'
-import { NavigationOptions, NavigationRenderOptionComponent } from './option/options.component';
 import { OptionsService } from '@service/options.service';
 import { RenderService } from '@data/render.service';
 import { RenderComponent } from './../../render.service';
@@ -15,28 +14,19 @@ import { RenderComponent } from './../../render.service';
 })
 export class NavigationRenderComponent implements OnInit, RenderComponent {
 
-  public static option = NavigationRenderOptionComponent;
-
   @Input() context: RenderContext;
   @Input() value: any;
-  @Input() metadata: NavigationMetadata;
+  @Input() metadata: Metadata;
 
   selected: NavigationEvent;
   navbar: NavBarData;
-  options: NavigationOptions;
+  options: any;
+
+  constructor(private optionsService: OptionsService) { }
 
   @Output() select: EventEmitter<string> = new EventEmitter<string>();
 
   ngOnInit() {
-    if(this.metadata.renderOptions && this.metadata.renderOptions.get(this.metadata.type)) {
-      this.options = this.metadata.renderOptions.get(this.metadata.type);
-    }
-    else  {
-      this.options = {
-        depth: 2
-      }
-    }
-
     this.navbar = this.convertToNavData(0, null, this.value, this.metadata, this.context);
     this.selected = this.firstSelectable(this.navbar);
   }
@@ -65,14 +55,16 @@ export class NavigationRenderComponent implements OnInit, RenderComponent {
       return ret;
     }
 
-    if(currentDepth >= this.options.depth) {
+    const childIsNav = this.optionsService.get(context, metadata)?.renderer == "navigation";
+
+    if(!childIsNav) {
       return ret;
     }
 
     if(typeof(value) === 'string')
       return ret;
 
-    for(const key of value) {
+    for(const key in value) {
       ret.children.push(this.convertToNavData(currentDepth + 1, key, value[key], metadata.children[key], context.child(key)));
     }
 
@@ -82,8 +74,4 @@ export class NavigationRenderComponent implements OnInit, RenderComponent {
   click(event: NavigationEvent) {
     this.selected = event;
   }
-}
-
-class NavigationMetadata extends Metadata {
-  renderOptions:  Map<string, NavigationOptions>;
 }
