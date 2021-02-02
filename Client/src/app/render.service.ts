@@ -56,7 +56,7 @@ export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDes
     }
 
     ngOnDestroy() {
-      this.sub.unsubscribe();
+      this.sub?.unsubscribe();
     }
 
     ngDoCheck(): void {
@@ -88,9 +88,11 @@ export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDes
     render() {
       this.viewContainer.clear();
 
-      const options = this.metadata.renderOptions ? this.metadata.renderOptions.get(this.metadata.type) : null;
+      const options = this.optionsService.get(this.context, this.metadata);
 
-      const type = this.renderService.getComponentFor(this.metadata.type, options?.renderer);
+      if(!options) return;
+
+      const type = this.renderService.getComponentFor(this.metadata.type, options.renderer);
 
       if(!type) return;
 

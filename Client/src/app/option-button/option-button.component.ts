@@ -13,6 +13,8 @@ export class OptionButtonComponent implements OnInit {
   @Input() metadata: Metadata;
   @Input() context: RenderContext;
   @Input() options: any;
+  @Input() type: string;
+  @Input() path: string;
 
   constructor(private renderService: RenderService) { }
 
@@ -20,7 +22,7 @@ export class OptionButtonComponent implements OnInit {
   }
 
   openOptions() {
-    this.renderService.openOptionModal(this.renderer, this.metadata.type, this.context.currentPath, this.options);
+    this.renderService.openOptionModal(this.renderer ?? this.options.renderer, this.metadata?.type ?? this.type, this.context?.currentPath ?? this.path, this.options);
   }
 
 }

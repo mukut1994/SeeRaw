@@ -12,8 +12,6 @@ export class RootRenderComponent implements OnInit {
 
   renderRoot: RenderRoot;
 
-  context = new RenderContext('$');
-
   constructor(private backend: BackendService, private options: OptionsService, private changeDetector: ChangeDetectorRef, private applicationRef: ApplicationRef) { }
 
   ngOnInit() {
@@ -27,5 +25,9 @@ export class RootRenderComponent implements OnInit {
     this.backend.disconnected.subscribe(x => {
       this.renderRoot = null;
     })
+  }
+
+  context(index: number) {
+    return new RenderContext('$', index);
   }
 }

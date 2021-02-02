@@ -1,9 +1,11 @@
 export class RenderContext {
-  public editMode: boolean;
-  public currentPath: string;
+  editMode: boolean;
+  currentPath: string;
+  index: number;
 
-  constructor(currentPath: string = null) {
+  constructor(currentPath: string = null, index: number = null) {
     this.currentPath = currentPath;
+    this.index = index;
   }
 
   public child(name: string) {
@@ -24,7 +26,11 @@ export class Metadata {
   extendedType: string | undefined;
   children: Metadata | Metadata[] | undefined;
 
-  renderOptions: Map<string, any> | undefined;
+  renderOptions: Map<string, Option>[] | undefined;
+}
+
+export class Option {
+  renderer: string;
 }
 
 export class RenderRoot {

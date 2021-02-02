@@ -115,6 +115,8 @@ namespace MK94.SeeRaw
 				var form = value as Form;
 				var id = Guid.NewGuid().ToString();
 
+				writer.WriteString("id", id);
+
 				if (!form.FormValues.Any())
 				{
 					writer.WriteString("type", "link");
@@ -197,7 +199,33 @@ namespace MK94.SeeRaw
 
 	public class Actionable
 	{
-		private Delegate action { get; }
+        private class Serializer : JsonConverter<Actionable>, IMetadataConverter
+        {
+            public override Actionable Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void Write(Utf8JsonWriter writer, Actionable value, JsonSerializerOptions options)
+            {
+				writer.WriteStartObject();
+
+				writer.WriteString("text", value.Text);
+				/*
+				foreach(var args in value.defaultArgs)
+					writer.WriteString
+				*/
+				writer.WriteEndObject();
+            }
+
+            public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+
+        private Delegate action { get; }
 		private List<object> defaultArgs { get; }
 
 		public string Text { get; }

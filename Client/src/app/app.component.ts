@@ -11,6 +11,8 @@ import { ValueRenderComponent } from './renderers/value-render/value-render.comp
 import { OptionsService } from '@service/options.service';
 import { NoRenderOptionsComponent } from './no-render-options/no-render-options.component';
 import { LinkRenderComponent } from './renderers/link-render/link-render.component';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { OptionListComponent } from './option-list/option-list.component';
 
 @Component({
   selector: 'app-root',
@@ -24,6 +26,7 @@ export class AppComponent {
   opt: OptionConfigurator[];
 
   constructor(private backendService: BackendService,
+    private ngbModal: NgbModal,
     private optionsService: OptionsService,
     private renderService: RenderService) {
     backendService.connected.subscribe(() => this.state = 'Connected');
@@ -33,8 +36,8 @@ export class AppComponent {
   }
 
   initRenderComponents() {
-    this.renderService.registerComponent('navigation', 'array', NavigationRenderComponent, NavigationRenderComponent.option);
-    this.renderService.registerComponent('navigation', 'object', NavigationRenderComponent,  NavigationRenderComponent.option);
+    this.renderService.registerComponent('navigation', 'array', NavigationRenderComponent, NoRenderOptionsComponent);
+    this.renderService.registerComponent('navigation', 'object', NavigationRenderComponent,  NoRenderOptionsComponent);
 
     this.renderService.registerComponent('table', 'array', TableRenderComponent, TableRenderComponent.option);
     this.renderService.registerComponent('table', 'object', TableRenderComponent, TableRenderComponent.option);
@@ -45,7 +48,6 @@ export class AppComponent {
     this.renderService.registerComponent('value', 'enum', ValueRenderComponent, ValueRenderComponent.option);
 
     this.renderService.registerComponent('enum', 'enum', EnumRenderComponent, NoRenderOptionsComponent);
-    this.renderService.registerComponent('enum', 'value', EnumRenderComponent, NoRenderOptionsComponent);
 
     this.renderService.registerComponent('link', 'link', LinkRenderComponent, NoRenderOptionsComponent);
 
@@ -66,7 +68,9 @@ export class AppComponent {
   }
 
   resetOptions() {
-    this.optionsService.reset();
+    let x = this.ngbModal.open(OptionListComponent, { size: "lg" });
+
+    (<OptionListComponent>x.componentInstance).modal = x;
   }
 }
 
