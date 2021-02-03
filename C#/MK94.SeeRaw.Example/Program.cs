@@ -16,6 +16,7 @@ namespace MK94.SeeRaw.Example
         {
             SeeRawSetup
                 .WithServer()
+                .WithErrorHandler(x => Console.WriteLine(x))
                 .WithGlobalRenderer(RenderClientMenu)
                 .OpenBrowserAfterWait(TimeSpan.FromSeconds(15))
                 .RunInBackground();
@@ -40,7 +41,9 @@ namespace MK94.SeeRaw.Example
                     Child2_2 = 22
                 },
                 Enum = Title.Mr,
-                Link = SeeRawTypes.Form("Link", (x) => Console.WriteLine("Actionable"))
+                Link = SeeRawTypes.Form("Link", (x) => Console.WriteLine("Actionable")),
+                ID = (Guid?)null,
+                Time = DateTime.Now
             }.Render();
 
             return;

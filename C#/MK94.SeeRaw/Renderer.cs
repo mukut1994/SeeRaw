@@ -47,6 +47,8 @@ namespace MK94.SeeRaw
 		protected JsonSerializerOptions jsonOptions;
 		protected Serializer serializer = new Serializer();
 
+		public ISerializerConfigure Serializer { get; }
+
 		private Context previousContext;
 
 		protected RendererBase()

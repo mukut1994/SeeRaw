@@ -20,6 +20,7 @@ export class OptionsService {
         [ "bool", { renderer: "value" } ],
         [ "number", { renderer: "value" } ],
         [ "enum", { renderer: "value" } ],
+        [ "datetime", { renderer: "value" } ],
 
         [ "object", { renderer: "table" } ],
         [ "array", { renderer: "table" } ],

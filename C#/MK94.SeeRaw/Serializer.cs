@@ -180,7 +180,14 @@ namespace MK94.SeeRaw
 		}
 	}
 
-	public class Serializer
+	public interface ISerializerConfigure
+    {
+		Serializer WithMetadataConverter<T>(IMetadataConverter converter);
+
+		Serializer WithValueConverter(JsonConverter converter);
+	}
+
+	public class Serializer : ISerializerConfigure
 	{
 		enum Kind
 		{
@@ -203,7 +210,10 @@ namespace MK94.SeeRaw
 		public Serializer()
         {
 			valueSerializationOptions.Converters.Add(new JsonStringEnumConverter());
-        }
+
+			metadataSerializer.converters.Add(typeof(DateTime), new DateTimeSerializer());
+			metadataSerializer.converters.Add(typeof(DateTime?), new DateTimeSerializer());
+		}
 
 		// TODO serialization should be done in 1 pass
 		// Using multiple passes gives a different thread time to modify the data midway
@@ -267,8 +277,8 @@ namespace MK94.SeeRaw
 		}
 	}
 
-	// TODO
-	/*
+    // TODO
+    /*
     public class DictionaryMetadataConverter : IMetadataConverter
     {
         public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
@@ -278,13 +288,12 @@ namespace MK94.SeeRaw
         }
     }
 	*/
-    /*
-	public class DateTimeSerializer : ISerialize
+
+    public class DateTimeSerializer : IMetadataConverter
     {
-        public void Serialize(object instance, Serializer serializer, Utf8JsonWriter writer, RendererContext context, bool serializeNulls)
-        {
-			writer.WriteString("type", "string");
-			writer.WriteString("target", ((DateTime)instance).ToString());
+        public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
+		{ 
+			writer.WriteString("type", "datetime");
         }
-    }*/
+    }
 }

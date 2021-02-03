@@ -46,6 +46,7 @@ export class AppComponent {
     this.renderService.registerComponent('value', 'number', ValueRenderComponent, ValueRenderComponent.option);
     this.renderService.registerComponent('value', 'bool', ValueRenderComponent, ValueRenderComponent.option);
     this.renderService.registerComponent('value', 'enum', ValueRenderComponent, ValueRenderComponent.option);
+    this.renderService.registerComponent('value', 'datetime', ValueRenderComponent, ValueRenderComponent.option);
 
     this.renderService.registerComponent('enum', 'enum', EnumRenderComponent, NoRenderOptionsComponent);
 

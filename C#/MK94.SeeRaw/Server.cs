@@ -46,6 +46,7 @@ namespace MK94.SeeRaw
         private readonly ConcurrentDictionary<string, ServerFile> files = new ConcurrentDictionary<string, ServerFile>();
 
         private Func<RendererBase> rendererFactory;
+        private Action<Exception> onError;
 
         public Server(IPAddress ip, short port)
         {
@@ -58,6 +59,13 @@ namespace MK94.SeeRaw
             Contract.Requires(rendererFactory == null, "Renderer already set");
 
             this.rendererFactory = rendererFactory;
+            return this;
+        }
+
+        public Server WithErrorHandler(Action<Exception> handler)
+        {
+            onError = handler;
+
             return this;
         }
 
@@ -212,36 +220,43 @@ namespace MK94.SeeRaw
 
         private async Task HandleClient(TcpClient client)
         {
-            using var _ = client;
-
-            var stream = client.GetStream();
-            var reader = new StreamReader(stream);
-            var writer = new StreamWriter(stream);
-
-            var request = reader.ReadLine();
-
-            if (request == null)
-                return;
-
-            var headers = new Dictionary<string, string>();
-
-            do
+            try
             {
-                var header = reader.ReadLine();
+                using var _ = client;
 
-                if (string.IsNullOrEmpty(header))
-                    break;
+                var stream = client.GetStream();
+                var reader = new StreamReader(stream);
+                var writer = new StreamWriter(stream);
 
-                var split = header.Split(new[] { ':' }, 2, StringSplitOptions.None);
+                var request = reader.ReadLine();
 
-                headers.Add(split[0], split[1].TrimStart());
+                if (request == null)
+                    return;
+
+                var headers = new Dictionary<string, string>();
+
+                do
+                {
+                    var header = reader.ReadLine();
+
+                    if (string.IsNullOrEmpty(header))
+                        break;
+
+                    var split = header.Split(new[] { ':' }, 2, StringSplitOptions.None);
+
+                    headers.Add(split[0], split[1].TrimStart());
+                }
+                while (true);
+
+                if (IsWebsocketUpgradeRequest(headers))
+                    await UpgradeToWebsocket(client.Client.RemoteEndPoint as IPEndPoint, headers, writer, stream);
+                else
+                    await ServeFile(request, writer);
             }
-            while (true);
-
-            if (IsWebsocketUpgradeRequest(headers))
-                await UpgradeToWebsocket(client.Client.RemoteEndPoint as IPEndPoint, headers, writer, stream);
-            else
-                await ServeFile(request, writer);
+            catch (Exception e)
+            {
+                onError?.Invoke(e);
+            }
         }
 
         private Task ServeFile(string request, StreamWriter writer)
