@@ -150,10 +150,19 @@ export class OptionsService {
     this.renderRoot.targets[0].metadata.renderOptions = [];
 
     this.options.forEach(element => {
-      let matches = jp.paths(this.renderRoot.targets[0].value, element.jsonPath);
+      let value = this.renderRoot.targets[0].value;
 
-      if(element.jsonPath === "$..*")
-        matches = (<[]>jp.paths(this.renderRoot.targets[0].value, "$")).concat(matches);
+      let matches;
+
+      if(typeof(value) != "object") {
+        matches = [ [ "$" ] ];
+      }
+      else {
+        matches = jp.paths(value, element.jsonPath);
+
+        if(element.jsonPath === "$..*")
+          matches = (<[]>jp.paths(this.renderRoot.targets[0].value, "$")).concat(matches);
+      }
 
       matches.forEach(x => {
         const m = this.GetMetadataOfPath(this.renderRoot.targets[0].metadata, x);

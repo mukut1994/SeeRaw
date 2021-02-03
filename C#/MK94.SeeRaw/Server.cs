@@ -298,7 +298,12 @@ namespace MK94.SeeRaw
             }
 
             await writer.WriteLineAsync("HTTP/1.1 200 OK");
-            await writer.WriteLineAsync("Content-Type: text/html");
+
+            if(!path.EndsWith(".css"))
+                await writer.WriteLineAsync("Content-Type: text/html");
+            else
+                await writer.WriteLineAsync("Content-Type: text/css");
+
             await writer.WriteLineAsync("");
             await writer.FlushAsync();
 
