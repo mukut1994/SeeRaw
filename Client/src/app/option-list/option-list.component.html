@@ -20,4 +20,5 @@
   </ng-container>
 
   <button (click)="optionService.reset()">Reset all options</button>
+  Exportable options <input type="text" [value]="optionService.serializedOptions()" (change)="import($event.target.value)" />
 </div>

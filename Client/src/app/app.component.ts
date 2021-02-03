@@ -51,10 +51,10 @@ export class AppComponent {
     this.renderService.registerComponent('enum', 'enum', EnumRenderComponent, NoRenderOptionsComponent);
 
     this.renderService.registerComponent('link', 'link', LinkRenderComponent, NoRenderOptionsComponent);
-
     this.renderService.registerComponent('form', 'form', FormRenderComponent, NoRenderOptionsComponent);
+
     this.renderService.registerComponent('log', 'log', LogRenderComponent, NoRenderOptionsComponent);
-    this.renderService.registerComponent('progess', 'progress', ProgressRenderComponent, NoRenderOptionsComponent);
+    this.renderService.registerComponent('progress', 'progress', ProgressRenderComponent, NoRenderOptionsComponent);
   }
 
   updateState(reconnectingIn: number) {

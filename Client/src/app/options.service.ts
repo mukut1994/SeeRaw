@@ -1,7 +1,7 @@
 import { Injectable, Output } from '@angular/core';
 import { Metadata, RenderOption, RenderRoot } from './data.model';
 import { BehaviorSubject } from 'rxjs';
-import * as jp from 'jsonpath'
+import * as jp from 'jsonpath-faster'
 import { BackendService } from './backend.service';
 import { RenderContext } from '@data/data.model';
 
@@ -26,10 +26,10 @@ export class OptionsService {
         [ "array", { renderer: "table" } ],
 
         [ "link", { renderer: "link" } ],
+        [ "progress", { renderer: "progress" } ],
         /*
         [ "form", { renderer: "table" } ],
         [ "log", { renderer: "table" } ],
-        [ "progress", { renderer: "table" } ],
         */
       ])
     }
@@ -46,15 +46,25 @@ export class OptionsService {
     this.options = JSON.parse(this.storage.getItem(this.storageKey), this.reviver) ?? this.getDefaultOptions();
 
     // TODO optimize, update options shouldn't be called so much
-    this.backend.messageHandler.subscribe(x => this.renderRoot = x);
-    this.backend.messageHandler.subscribe(() => this.updateOptions());
+    this.backend.serverOptions.subscribe(x => this.loadOptions(x));
+    this.backend.messageHandler.subscribe(x => { this.renderRoot = x; this.updateOptions() });
     this.backend.disconnected.subscribe(() => this.renderRoot = null);
+  }
+
+  serializedOptions() {
+    return JSON.stringify(this.options, this.replacer);
+  }
+
+  loadOptions(opt: string) {
+    if(!opt) return;
+
+    this.options = JSON.parse(opt, this.reviver);
   }
 
   remove(renderOption: RenderOption, type: string) {
     renderOption.typeOptions.delete(type);
 
-    this.storage.setItem(this.storageKey, JSON.stringify(this.options, this.replacer));
+    this.storage.setItem(this.storageKey, this.serializedOptions());
     this.updateOptions();
     this.backend.refresh();
     this.optionsObserveable.next(null);
@@ -86,7 +96,7 @@ export class OptionsService {
 
     update.typeOptions.set(type, options);
 
-    this.storage.setItem(this.storageKey, JSON.stringify(this.options, this.replacer));
+    this.storage.setItem(this.storageKey, this.serializedOptions());
     this.updateOptions();
     this.backend.refresh();
     this.optionsObserveable.next(null);
@@ -94,7 +104,7 @@ export class OptionsService {
 
   get(context: RenderContext, metadata: Metadata) {
 
-    if(!metadata.renderOptions) return;
+    if(!metadata?.renderOptions) return;
 
     for(let i = 0; i < metadata.renderOptions.length; i++) {
       let opt = metadata.renderOptions[metadata.renderOptions.length - i - 1].get(metadata.type);
@@ -103,30 +113,25 @@ export class OptionsService {
         return opt;
     }
 
+    return null;
+
     // TODO write a jpath reverse parser here
-    /*
     for(const option of this.options) {
-      jp.paths(this.renderRoot.targets[context.index])
-      const jpath = <jpath[]>jp.parse(option.jsonPath); // TODO cache this;
       const target = this.renderRoot.targets[context.index];
+      const jpath = <jpath[]>jp.parse(option.jsonPath); // TODO cache this;
       const path = context.currentPath.split('.');
 
+      let value = target.value;
+      let metadata = target.metadata;
+
       for(const jp of jpath) {
-        if(jp.expression.type == ExpressionType.root) continue;
+        if(jp.expression.type === ExpressionType.root) continue;
 
 
       }
-    }*/
+    }
   }
-/*
-  private getPathAfterScope(path: string[], jp: jpath) {
 
-    if(jp.scope == Scope.child)
-      return path;
-
-
-  }
-*/
   private replacer(key, value) {
     if(value instanceof Map) {
       return {
@@ -187,7 +192,7 @@ export class OptionsService {
       if(!metadata.children)
         return null;
 
-      metadata = jp.value(metadata.children, [ '$', path[i] ]);
+      metadata = jp.value(metadata.children, jp.stringify([ '$', path[i] ]));
     }
 
     return metadata;

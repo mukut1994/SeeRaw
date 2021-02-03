@@ -15,9 +15,8 @@ namespace MK94.SeeRaw
         public object[] Args { get; set; }
     }
 
-
     public enum MessageType
     {
-        Execute
+        Execute,
     }
 }

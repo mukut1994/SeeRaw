@@ -1,7 +1,7 @@
 import { Injectable, Output, EventEmitter } from '@angular/core';
 import { Observable, timer } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { Kind, Message, RenderRoot, RenderTarget } from './data.model';
+import { Kind, Message, OptionsMessage, RenderRoot, RenderTarget } from './data.model';
 
 @Injectable({
   providedIn: 'root',
@@ -17,6 +17,7 @@ export class BackendService {
   @Output() messageHandler = new EventEmitter<RenderRoot>();
   @Output() disconnected = new EventEmitter<number>();
   @Output() connected = new EventEmitter();
+  @Output() serverOptions = new EventEmitter<string>();
 
   constructor() {
     this.renderRoot = new RenderRoot();
@@ -47,6 +48,10 @@ export class BackendService {
           this.renderRoot.targets[index] = renderTarget;
         else
           this.renderRoot.targets.push(renderTarget);
+          break;
+      case Kind.Options:
+        this.serverOptions.emit((m as OptionsMessage).options);
+        return;
     }
 
     this.messageHandler.emit(this.renderRoot);

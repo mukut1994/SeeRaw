@@ -52,6 +52,9 @@ export class RenderTarget extends Message {
   public metadata: Metadata;
 }
 
+export class OptionsMessage extends Message {
+  public options: string;
+}
 export class ParsedRenderOption {
   renderer: string;
   options: { [typeName: string]: any } = {};
@@ -61,5 +64,6 @@ export enum Kind {
   Full = 0,
   RemoveTarget = 1,
   Delta = 2,
-  Download = 3
+  Download = 3,
+  Options
 }

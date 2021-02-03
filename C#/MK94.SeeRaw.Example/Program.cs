@@ -14,10 +14,12 @@ namespace MK94.SeeRaw.Example
 
         static void Main()
         {
+            var opt = @"[{""jsonPath"":""$..*"",""typeOptions"":{""dataType"":""Map"",""value"":[[""string"",{""renderer"":""value""}],[""bool"",{""renderer"":""value""}],[""number"",{""renderer"":""value""}],[""enum"",{""renderer"":""value""}],[""datetime"",{""renderer"":""value""}],[""object"",{""renderer"":""table""}],[""array"",{""renderer"":""table""}],[""link"",{""renderer"":""link""}],[""progress"",{""renderer"":""progress""}]]}},{""jsonPath"":""$"",""typeOptions"":{""dataType"":""Map"",""value"":[[""object"",{""renderer"":""navigation""}]]}}]";
+
             SeeRawSetup
                 .WithServer()
                 .WithErrorHandler(x => Console.WriteLine(x))
-                .WithGlobalRenderer(RenderClientMenu)
+                .WithGlobalRenderer(RenderClientMenu, x => x.WithOptions(opt).Serializer.WithDictionaryConverter<Guid, string>())
                 .OpenBrowserAfterWait(TimeSpan.FromSeconds(15))
                 .RunInBackground();
 
@@ -42,8 +44,10 @@ namespace MK94.SeeRaw.Example
                 },
                 Enum = Title.Mr,
                 Link = SeeRawTypes.Form("Link", (x) => Console.WriteLine("Actionable")),
-                ID = (Guid?)null,
-                Time = DateTime.Now
+                ID = Guid.NewGuid(),
+                Time = DateTime.Now,
+                Dict = new Dictionary<Guid, string> { { Guid.NewGuid(), "OK" } },
+                Prog = progress
             }.Render();
 
             return;

@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { OptionsService } from '@service/options.service';
-import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { NgbAlert, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-option-list',
@@ -9,7 +9,10 @@ import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 })
 export class OptionListComponent implements OnInit {
 
+  @ViewChild('selfClosingAlert', {static: false}) selfClosingAlert: NgbAlert;
+
   modal: NgbModalRef;
+  exportAlert = false;
 
   constructor(public optionService: OptionsService) { }
 
@@ -29,5 +32,17 @@ export class OptionListComponent implements OnInit {
     } else {
       return value;
     }
+  }
+
+  export() {
+    navigator.clipboard.writeText(this.optionService.serializedOptions());
+    this.exportAlert = true;
+    setTimeout(() => {
+      this.exportAlert = false;
+    }, 5000);
+  }
+
+  import(value: string) {
+    console.log(value);
   }
 }

@@ -19,7 +19,7 @@ namespace MK94.SeeRaw
 	
 	public class MetadataSerializer
 	{
-		internal Dictionary<Type, IMetadataConverter> converters = new Dictionary<Type, IMetadataConverter>();
+		internal List<IMetadataConverter> converters = new List<IMetadataConverter>();
 		private static MetadataConverter DefaultConverter = new MetadataConverter();
 
 		public void Serialize(Utf8JsonWriter writer, object? value, IEnumerable<string> valuePath, RendererContext context)
@@ -38,7 +38,9 @@ namespace MK94.SeeRaw
 
 		private IMetadataConverter GetConverter(Type type)
 		{
-			if (converters.TryGetValue(type, out var converter))
+			var converter = converters.FirstOrDefault(x => x.CanConvert(type));
+
+			if (converter != null)
 				return converter;
 
 			var attr = type.GetCustomAttribute<MetadataConverterAttribute>();
@@ -67,12 +69,16 @@ namespace MK94.SeeRaw
 
 	public interface IMetadataConverter
     {
+		bool CanConvert(Type type);
+
 		void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object? value, IEnumerable<string> valuePath, RendererContext context);
 
 	}
 
 	public class MetadataConverter : IMetadataConverter
 	{
+		public bool CanConvert(Type type) => true;
+
 		public virtual void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object? value, IEnumerable<string> valuePath, RendererContext context)
 		{
 			if (value == null)
@@ -163,7 +169,7 @@ namespace MK94.SeeRaw
 			return s.ToString();
 		}
 
-		protected static string GetFullName(Type t)
+		public static string GetFullName(Type t)
 		{
 			if (!t.IsGenericType)
 				return t.Name;
@@ -182,10 +188,25 @@ namespace MK94.SeeRaw
 
 	public interface ISerializerConfigure
     {
-		Serializer WithMetadataConverter<T>(IMetadataConverter converter);
+		Serializer WithConverter(IMetadataConverter converter);
 
-		Serializer WithValueConverter(JsonConverter converter);
+		Serializer WithConverter(JsonConverter converter);
+
+		Serializer WithConverter<T>(T converter) where T : JsonConverter, IMetadataConverter;
 	}
+
+	public static class SerializerConfigureExtensions
+    {
+		/// <summary>
+		/// Workaround helper for <see href="https://github.com/dotnet/runtime/issues/30524"/><br />
+		/// Serializes the key as string (via <see cref="object.ToString"/>) and the value using the regular serialization pipeline
+		/// </summary>
+		public static ISerializerConfigure WithDictionaryConverter<TKey, TValue>(this ISerializerConfigure configure)
+        {
+			configure.WithConverter(new CommonDictionaryConverter<TKey, TValue>());
+			return configure;
+        }
+    }
 
 	public class Serializer : ISerializerConfigure
 	{
@@ -210,9 +231,7 @@ namespace MK94.SeeRaw
 		public Serializer()
         {
 			valueSerializationOptions.Converters.Add(new JsonStringEnumConverter());
-
-			metadataSerializer.converters.Add(typeof(DateTime), new DateTimeSerializer());
-			metadataSerializer.converters.Add(typeof(DateTime?), new DateTimeSerializer());
+			metadataSerializer.converters.Add(new DateTimeSerializer());
 		}
 
 		// TODO serialization should be done in 1 pass
@@ -262,14 +281,22 @@ namespace MK94.SeeRaw
 			pool.Add((stream, writer));
         }
 
-		public Serializer WithMetadataConverter<T>(IMetadataConverter converter)
+		public Serializer WithConverter(IMetadataConverter converter)
 		{
-			metadataSerializer.converters.Add(typeof(T), converter);
+			metadataSerializer.converters.Add(converter);
 
 			return this;
 		}
 
-		public Serializer WithValueConverter(JsonConverter converter)
+		public Serializer WithConverter<T>(T converter) where T : JsonConverter, IMetadataConverter
+		{
+			metadataSerializer.converters.Add(converter);
+			valueSerializationOptions.Converters.Add(converter);
+
+			return this;
+		}
+
+		public Serializer WithConverter(JsonConverter converter)
 		{
 			valueSerializationOptions.Converters.Add(converter);
 
@@ -277,21 +304,52 @@ namespace MK94.SeeRaw
 		}
 	}
 
-    // TODO
-    /*
-    public class DictionaryMetadataConverter : IMetadataConverter
-    {
+    /// <summary>
+    /// Workaround helper for https://github.com/dotnet/runtime/issues/30524
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key</typeparam>
+    public class CommonDictionaryConverter<TKey, TValue> : JsonConverter<Dictionary<TKey, TValue>>, IMetadataConverter
+	{ 
+		public override Dictionary<TKey, TValue> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => throw new NotImplementedException();
+
+		public override void Write(Utf8JsonWriter writer, Dictionary<TKey, TValue> value, JsonSerializerOptions options)
+		{
+			writer.WriteStartObject();
+
+			foreach (KeyValuePair<TKey, TValue> kvp in value)
+			{
+				writer.WritePropertyName(kvp.Key.ToString());
+				JsonSerializer.Serialize(writer, kvp.Value, options);
+			}
+
+			writer.WriteEndObject();
+		}
+
         public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
         {
 			writer.WriteString("type", "object");
-			writer.WriteString("extendedType", "")
-        }
+			writer.WriteString("extendedType", MetadataConverter.GetFullName(value.GetType()));
+
+			var dict = value as Dictionary<TKey, TValue>;
+
+			writer.WriteStartObject("children");
+
+			foreach (var kv in dict)
+			{
+				writer.WriteStartObject(kv.Key.ToString());
+				serializer.Serialize(writer, kv.Value, valuePath, context);
+				writer.WriteEndObject();
+			}
+
+			writer.WriteEndObject();
+		}
     }
-	*/
 
     public class DateTimeSerializer : IMetadataConverter
-    {
-        public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
+	{
+		public bool CanConvert(Type type) => type == typeof(DateTime) || type == typeof(DateTime?);
+
+		public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
 		{ 
 			writer.WriteString("type", "datetime");
         }

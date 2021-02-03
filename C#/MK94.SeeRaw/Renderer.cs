@@ -46,8 +46,9 @@ namespace MK94.SeeRaw
 	{
 		protected JsonSerializerOptions jsonOptions;
 		protected Serializer serializer = new Serializer();
+		protected string renderOptions;
 
-		public ISerializerConfigure Serializer { get; }
+		public ISerializerConfigure Serializer => serializer;
 
 		private Context previousContext;
 
@@ -55,8 +56,6 @@ namespace MK94.SeeRaw
 		{
 			jsonOptions = new JsonSerializerOptions();
 			jsonOptions.Converters.Add(new JsonStringEnumConverter());
-
-			//serializer.serializers[typeof(DateTime)] = new DateTimeSerializer();
 		}
 
 		public abstract object OnClientConnected(Server server, WebSocket websocket);
@@ -67,6 +66,27 @@ namespace MK94.SeeRaw
 			var path = SeeRawContext.Current.Server.ServeFile(() => stream, fileName, mimeType, timeout: TimeSpan.FromSeconds(30));
 
 			SeeRawContext.Current.WebSocket.SendAsync(Encoding.ASCII.GetBytes(@$"{{ ""download"": ""{path}"" }}"), WebSocketMessageType.Text, true, default);
+		}
+
+		public RendererBase WithOptions(string jsonRenderOptions)
+        {
+			renderOptions = jsonRenderOptions;
+
+			return this;
+        }
+
+		protected void SendOptions(WebSocket socket)
+        {
+			if (renderOptions == null)
+				return;
+
+			var x = new
+			{
+				kind = 4,
+				options = renderOptions
+			};
+
+			Task.Run(() => socket.SendAsync(Encoding.ASCII.GetBytes(JsonSerializer.Serialize(x)), WebSocketMessageType.Text, true, default));
 		}
 
 		protected void ExecuteCallback(Server server, RenderRoot renderRoot, WebSocket webSocket, Dictionary<string, Delegate> callbacks, string message)
@@ -196,7 +216,7 @@ namespace MK94.SeeRaw
             }
 		}
 
-		public override object OnClientConnected(Server server, WebSocket websocket) { Refresh(); return null; }
+		public override object OnClientConnected(Server server, WebSocket websocket) { SendOptions(websocket); Refresh(); return null; }
 		public override void OnMessageReceived(object state, Server server, WebSocket websocket, string message) => ExecuteCallback(server, this.state, websocket, context.Callbacks, message);
 
 		public void Refresh()
@@ -234,6 +254,8 @@ namespace MK94.SeeRaw
 
         public override object OnClientConnected(Server server, WebSocket websocket)
 		{
+			SendOptions(websocket);
+
 			var renderRoot = new RenderRoot();
 			var serializerContext = new RendererContext();
 
