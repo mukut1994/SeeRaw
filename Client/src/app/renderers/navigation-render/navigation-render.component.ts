@@ -51,15 +51,16 @@ export class NavigationRenderComponent implements OnInit, RenderComponent {
     ret.metadata = metadata;
     ret.context = context;
 
-    if(!this.selected && Object.keys(value).length === 0) {
+    if(!value)
       return ret;
-    }
+
+    if(!this.selected && Object.keys(value).length === 0)
+      return ret;
 
     const childIsNav = this.optionsService.get(context, metadata)?.renderer == "navigation";
 
-    if(!childIsNav) {
+    if(!childIsNav)
       return ret;
-    }
 
     if(typeof(value) === 'string')
       return ret;
