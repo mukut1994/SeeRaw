@@ -47,7 +47,20 @@ namespace MK94.SeeRaw.Example
                 ID = Guid.NewGuid(),
                 Time = DateTime.Now,
                 Dict = new Dictionary<Guid, string> { { Guid.NewGuid(), "OK" } },
-                Prog = progress
+                Prog = progress,
+                NestedList = new List<object>
+                {
+                    null,
+                    new List<object>
+                    {
+                        1, 2, 3
+                    },
+                    new List<object>
+                    {
+                        1, 2, 3
+                    },
+
+                }
             }.Render();
 
             return;
@@ -65,6 +78,12 @@ namespace MK94.SeeRaw.Example
                 .WithAction("Say Hi", () => SayHi(contentTarget))
                 .WithAction("Calculator", () => Calc(contentTarget))
                 .WithAction("Show file copy progress", () => ShowProgress(contentTarget));
+        }
+
+        class X
+        {
+            public int PropA => 1;
+            public int PropB => 2;
         }
 
         enum Title
