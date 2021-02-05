@@ -21,6 +21,7 @@ import { ValueRenderComponent } from './renderers/value-render/value-render.comp
 import { OptionButtonComponent } from './option-button/option-button.component';
 import { LinkRenderComponent } from './renderers/link-render/link-render.component';
 import { OptionListComponent } from './option-list/option-list.component';
+import { OptionComponent as navOptionComponent } from './renderers/navigation-render/option/option.component'
 
 @NgModule({
   declarations: [
@@ -41,9 +42,10 @@ import { OptionListComponent } from './option-list/option-list.component';
     OptionButtonComponent,
     LinkRenderComponent,
     OptionListComponent,
+    navOptionComponent
   ],
   imports: [
-    BrowserModule,
+BrowserModule,
     AppRoutingModule,
     FormsModule,
     NgbModule,

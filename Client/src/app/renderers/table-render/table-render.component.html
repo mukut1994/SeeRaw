@@ -2,10 +2,12 @@
 
   <thead>
     <tr>
-      <th class="cursor-pointer" scope="col" colspan="2" (click)="collapse()">
-        <span *ngIf="collapsed()">▼</span>
-        <span *ngIf="!collapsed()">▲</span>
-         Object ( {{metadata.extendedType}} )
+      <th colspan="2">
+        <span class="cursor-pointer" scope="col" (click)="collapse()">
+          <span *ngIf="collapsed()">▼</span>
+          <span *ngIf="!collapsed()">▲</span>
+          Object ( {{metadata.extendedType}} )
+        </span>
 
         <app-option-button [context]="context" [metadata]="metadata" [renderer]="'table'"></app-option-button>
       </th>
