@@ -37,6 +37,7 @@ export class OptionsService {
 
   options: RenderOption[] = [];
   renderRoot: RenderRoot;
+  sessionOptions: Map<string, any> = new Map();
 
   @Output() optionsObserveable: BehaviorSubject<RenderOption[]> = new BehaviorSubject(this.options);
 
@@ -100,6 +101,18 @@ export class OptionsService {
     this.updateOptions();
     this.backend.refresh();
     this.optionsObserveable.next(null);
+  }
+
+  getSessionOptions(context: RenderContext, renderer: string) {
+    let ret = this.sessionOptions.get(context.currentPath + "|" + renderer);
+
+    if(ret)
+      return ret;
+
+    ret = {};
+    this.sessionOptions.set(context.currentPath + "|" + renderer, ret);
+
+    return ret;
   }
 
   get(context: RenderContext, metadata: Metadata) {

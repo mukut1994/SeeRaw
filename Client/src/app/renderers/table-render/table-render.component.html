@@ -2,25 +2,28 @@
 
   <thead>
     <tr>
-      <th scope="col" colspan="2">
-        Object ( {{metadata.extendedType}} )
+      <th class="cursor-pointer" scope="col" colspan="2" (click)="collapse()">
+        <span *ngIf="collapsed()">▼</span>
+        <span *ngIf="!collapsed()">▲</span>
+         Object ( {{metadata.extendedType}} )
 
         <app-option-button [context]="context" [metadata]="metadata" [renderer]="'table'"></app-option-button>
-
       </th>
     </tr>
   </thead>
 
   <tbody>
-    <ng-container *ngFor="let prop of keys">
-      <tr>
-        <th scope="row">
-          {{ prop }}
-        </th>
-        <td class="w-100 m-0 p-0" scope="row">
-          <ng-container *appRender="value[prop]; metadata: metadata.children[prop]; context: context.child(prop)"></ng-container>
-        </td>
-      </tr>
+    <ng-container *ngIf="!collapsed()">
+      <ng-container *ngFor="let prop of keys">
+        <tr>
+          <th scope="row">
+            {{ prop }}
+          </th>
+          <td class="w-100 m-0 p-0" scope="row">
+            <ng-container *appRender="value[prop]; metadata: metadata.children[prop]; context: context.child(prop)"></ng-container>
+          </td>
+        </tr>
+      </ng-container>
     </ng-container>
   </tbody>
 
