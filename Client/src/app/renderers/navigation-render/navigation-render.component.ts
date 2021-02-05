@@ -1,11 +1,11 @@
-import { Component, Input, OnInit, Output } from '@angular/core';
+import { Component, Input, OnInit, Output, Type } from '@angular/core';
 import { Metadata, RenderContext } from '@data/data.model';
 import { NavBarData, NavigationEvent } from './nav-bar/data';
 import { EventEmitter } from '@angular/core';
-import * as jp from 'jsonpath'
 import { OptionsService } from '@service/options.service';
 import { RenderService } from '@data/render.service';
 import { RenderComponent } from './../../render.service';
+import { NavigationOption, OptionComponent } from './option/option.component';
 
 @Component({
   selector: 'app-navigation-render',
@@ -13,6 +13,8 @@ import { RenderComponent } from './../../render.service';
   styleUrls: ['./navigation-render.component.css']
 })
 export class NavigationRenderComponent implements OnInit, RenderComponent {
+
+  public static option = OptionComponent;
 
   @Input() context: RenderContext;
   @Input() value: any;
@@ -57,9 +59,10 @@ export class NavigationRenderComponent implements OnInit, RenderComponent {
     if(!this.selected && Object.keys(value).length === 0)
       return ret;
 
-    const childIsNav = this.optionsService.get(context, metadata)?.renderer == "navigation";
+    const childOpt = this.optionsService.get(context, metadata);
+    const childMerge = childOpt?.renderer == "navigation" && ((childOpt as NavigationOption)?.mergeWithParent ?? true);
 
-    if(!childIsNav)
+    if(currentDepth > 0 && !childMerge)
       return ret;
 
     if(typeof(value) === 'string')

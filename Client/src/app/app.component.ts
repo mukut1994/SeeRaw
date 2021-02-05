@@ -36,8 +36,8 @@ export class AppComponent {
   }
 
   initRenderComponents() {
-    this.renderService.registerComponent('navigation', 'array', NavigationRenderComponent, NoRenderOptionsComponent);
-    this.renderService.registerComponent('navigation', 'object', NavigationRenderComponent,  NoRenderOptionsComponent);
+    this.renderService.registerComponent('navigation', 'array', NavigationRenderComponent, NavigationRenderComponent.option);
+    this.renderService.registerComponent('navigation', 'object', NavigationRenderComponent,  NavigationRenderComponent.option);
 
     this.renderService.registerComponent('table', 'array', TableRenderComponent, TableRenderComponent.option);
     this.renderService.registerComponent('table', 'object', TableRenderComponent, TableRenderComponent.option);
