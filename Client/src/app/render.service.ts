@@ -1,4 +1,4 @@
-import { ComponentFactoryResolver, Directive, Injectable, Type, ViewContainerRef, Input, AfterContentInit, OnInit, DoCheck, OnDestroy } from '@angular/core';
+import { ComponentFactoryResolver, Directive, Injectable, Type, ViewContainerRef, Input, AfterContentInit, OnInit, DoCheck, OnDestroy, Output, EventEmitter, ViewChildren, QueryList, ContentChild, AfterViewInit, ContentChildren, ViewChild } from '@angular/core';
 import { RenderContext } from './data.model';
 import { Metadata } from 'src/app/data.model';
 import { FormGroup } from '@angular/forms';
@@ -6,6 +6,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { OptionEditComponent } from './option-edit/option-edit.component';
 import { OptionsService } from '@service/options.service';
 import { Subscription } from 'rxjs';
+import { NavigationRenderComponent } from '@renderer/navigation-render/navigation-render.component';
 
 export class RendererSet {
 
@@ -22,6 +23,8 @@ export interface RenderComponent {
   value: any;
   metadata: Metadata;
   context: RenderContext;
+
+  select(childPath:string[]): void;
 }
 
 export interface RenderOptionComponent {
@@ -40,10 +43,11 @@ export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDes
   @Input() metadata: Metadata;
   @Input() context: RenderContext;
 
-  @Input() dirty = false;
+  @Output() renderer = new EventEmitter<RenderComponent>();
+
+  dirty = false;
   sub: Subscription;
   oldValue: any;
-
 
   constructor(
     private renderService: RenderService,
@@ -104,6 +108,8 @@ export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDes
       component.instance.metadata = this.metadata;
 
       component.changeDetectorRef.detectChanges();
+
+      this.renderer.emit(component.instance);
     }
 }
 

@@ -7,7 +7,11 @@
 
     </div>
     <div class="col-xl w-100 m-0 p-0">
-      <ng-template [appRender] [value]="selected.value" [metadata]="selected.metadata" [context]="selected.context"></ng-template>
+      <ng-template [appRender]
+        [value]="selected.value"
+        [metadata]="selected.metadata"
+        [context]="selected.context"
+        (renderer)="onChild($event)"></ng-template>
     </div>
   </div>
 </div>

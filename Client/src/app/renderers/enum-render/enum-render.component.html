@@ -1,9 +1,9 @@
-<ng-container class="enum" *ngIf="context.editMode; else viewOnly">
+<ng-container [@highlight]="highlight" class="enum" *ngIf="context.editMode; else viewOnly">
   <select [(ngModel)]="value">
     <option *ngFor="let enumValue of metadata.values">{{enumValue}}</option>
   </select>
 </ng-container>
 
 <ng-template #viewOnly>
-  {{value}}
+  <span [@highlight]="highlight">{{value}}</span>
 </ng-template>

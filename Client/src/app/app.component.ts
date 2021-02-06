@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter } from '@angular/core';
 import { BackendService } from './backend.service';
 import { RenderService } from './render.service';
 import { EnumRenderComponent } from '@renderer/enum-render/enum-render.component';
@@ -24,6 +24,8 @@ export class AppComponent {
   state: string;
 
   opt: OptionConfigurator[];
+
+  temp = new EventEmitter<string[]>();
 
   constructor(private backendService: BackendService,
     private ngbModal: NgbModal,
@@ -72,6 +74,11 @@ export class AppComponent {
     let x = this.ngbModal.open(OptionListComponent, { size: "lg" });
 
     (<OptionListComponent>x.componentInstance).modal = x;
+  }
+
+  goto() {
+    console.log("goto");
+    this.temp.emit([ "NestedList", "1", "1" ]);
   }
 }
 

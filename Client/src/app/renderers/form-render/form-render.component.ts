@@ -1,21 +1,26 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { Metadata, RenderContext } from '@data/data.model';
 import { BackendService } from '@service/backend.service';
+import { RenderComponent } from './../../render.service';
 
 @Component({
   selector: 'app-form-render',
   templateUrl: './form-render.component.html',
   styleUrls: ['./form-render.component.css'],
 })
-export class FormRenderComponent implements OnInit {
+export class FormRenderComponent implements RenderComponent {
 
   @Input() metadata: FormMetadata;
   @Input() value: any;
   @Input() context: RenderContext;
 
+  highlight: boolean;
+
   constructor(readonly backendService: BackendService) {}
 
-  ngOnInit() {}
+  select(childPath: string[]): void {
+    // TODO
+  }
 
   send() {
 

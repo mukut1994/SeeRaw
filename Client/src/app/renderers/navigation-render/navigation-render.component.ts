@@ -1,11 +1,14 @@
-import { Component, Input, OnInit, Output, Type } from '@angular/core';
+import { Component, Input, OnInit, Output, Type, ViewChildren, QueryList } from '@angular/core';
 import { Metadata, RenderContext } from '@data/data.model';
 import { NavBarData, NavigationEvent } from './nav-bar/data';
 import { EventEmitter } from '@angular/core';
 import { OptionsService } from '@service/options.service';
-import { RenderService } from '@data/render.service';
+import { RenderDirective, RenderService } from '@data/render.service';
 import { RenderComponent } from './../../render.service';
 import { NavigationOption, OptionComponent } from './option/option.component';
+import { Observable, pipe } from 'rxjs';
+import { first, map, tap } from 'rxjs/operators';
+
 
 @Component({
   selector: 'app-navigation-render',
@@ -23,14 +26,41 @@ export class NavigationRenderComponent implements OnInit, RenderComponent {
   selected: NavigationEvent;
   navbar: NavBarData;
   options: any;
+  selectChild: string[];
+  child: RenderComponent;
 
   constructor(private optionsService: OptionsService) { }
-
-  @Output() select: EventEmitter<string> = new EventEmitter<string>();
 
   ngOnInit() {
     this.navbar = this.convertToNavData(0, null, this.value, this.metadata, this.context);
     this.selected = this.firstSelectable(this.navbar);
+  }
+
+  select(childPath: string[]): void {
+    if(childPath.length === 0)
+      return;
+
+    let x = this.navbar.children.find(n => n.title == childPath[0]);
+
+    if(!x)
+      return;
+
+    this.selectChild = childPath.slice(1);
+
+    if(x != this.selected)
+      this.selected = x;
+    else
+      this.onChild(this.child);
+  }
+
+  onChild(child: RenderComponent) {
+    this.child = child;
+
+    if(!this.selectChild)
+      return;
+
+    child.select(this.selectChild);
+    this.selectChild = null;
   }
 
   private firstSelectable(navbar: NavBarData) {

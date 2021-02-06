@@ -1,4 +1,4 @@
-<table class="table table-bordered table-hover table-sm m-0">
+<table [@highlight]="highlight" class="table table-bordered table-hover table-sm m-0">
 
   <thead>
     <tr>
@@ -22,7 +22,11 @@
             {{ prop }}
           </th>
           <td class="w-100 m-0 p-0" scope="row">
-            <ng-container *appRender="value[prop]; metadata: metadata.children[prop]; context: context.child(prop)"></ng-container>
+            <ng-template [appRender]
+              [value]="value[prop]"
+              [metadata]="metadata.children[prop]"
+              [context]="context.child(prop)"
+              (renderer)="onChild(prop, $event)"></ng-template>
           </td>
         </tr>
       </ng-container>

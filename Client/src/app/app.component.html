@@ -9,9 +9,11 @@
           </svg>
         </button>
 
+        <button (click)="goto()"> GOTO </button>
+
     </div>
 
-  <app-root-render>
+  <app-root-render [goto]="temp">
 
   </app-root-render>
 </div>

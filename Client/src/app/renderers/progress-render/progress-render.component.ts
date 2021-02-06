@@ -1,19 +1,33 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { BackendService } from '@service/backend.service';
 import { RenderContext, Metadata } from '@data/data.model';
+import { RenderComponent } from './../../render.service';
+import { highlightAnimation } from './../../animations';
 
 @Component({
   selector: 'app-progress-render',
   templateUrl: './progress-render.component.html',
   styleUrls: ['./progress-render.component.css'],
+  animations: [ highlightAnimation ]
 })
-export class ProgressRenderComponent {
+export class ProgressRenderComponent implements RenderComponent {
 
   @Input() context: RenderContext;
   @Input() value: Progress;
   @Input() metadata: ProgressMetadata;
 
+  highlight: boolean = false;
+
   constructor(private readonly backendService: BackendService) {}
+
+  select(childPath: string[]): void {
+    if(childPath.length != 0)
+      return;
+
+    this.highlight = true;
+
+    setTimeout(() => this.highlight = false, 3.5);
+  }
 
   setSpeed() {
     const speed = prompt('Enter speed (0 for unlimited): ', '0');

@@ -2,6 +2,8 @@ import { Component, OnInit, Input, ɵɵqueryRefresh, ChangeDetectorRef, Applicat
 import { Message, RenderContext, RenderRoot } from './../data.model';
 import { BackendService } from '../backend.service';
 import { OptionsService } from './../options.service';
+import { RenderComponent } from './../render.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-root-render',
@@ -11,12 +13,15 @@ import { OptionsService } from './../options.service';
 export class RootRenderComponent implements OnInit {
 
   renderRoot: RenderRoot;
+  children: RenderComponent[] = [];
+
+  @Input() goto: Observable<string[]>;
 
   constructor(private backend: BackendService, private options: OptionsService, private changeDetector: ChangeDetectorRef, private applicationRef: ApplicationRef) { }
 
   ngOnInit() {
     this.renderRoot = this.backend.renderRoot;
-    // this.options.optionsObserveable.subscribe(() => this.ApplicationRef.tick());
+
     this.backend.messageHandler.subscribe(x => {
       this.changeDetector.markForCheck();
       this.changeDetector.detectChanges();
@@ -24,7 +29,9 @@ export class RootRenderComponent implements OnInit {
     });
     this.backend.disconnected.subscribe(x => {
       this.renderRoot = null;
-    })
+    });
+
+    this.goto.subscribe(x => this.children[0].select(x));
   }
 
   context(index: number) {
