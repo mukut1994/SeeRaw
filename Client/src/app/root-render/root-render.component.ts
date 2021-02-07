@@ -1,7 +1,9 @@
-import { Component, OnInit, Input, ɵɵqueryRefresh, ChangeDetectorRef, ApplicationRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, Input, ɵɵqueryRefresh, ChangeDetectorRef, ApplicationRef, ChangeDetectionStrategy, ViewChildren, QueryList } from '@angular/core';
 import { Message, RenderContext, RenderRoot } from './../data.model';
 import { BackendService } from '../backend.service';
 import { OptionsService } from './../options.service';
+import { RenderService, RenderDirective } from '@data/render.service';
+import { GotoService } from './../goto.service';
 
 @Component({
   selector: 'app-root-render',
@@ -12,7 +14,9 @@ export class RootRenderComponent implements OnInit {
 
   renderRoot: RenderRoot;
 
-  constructor(private backend: BackendService, private options: OptionsService, private changeDetector: ChangeDetectorRef, private applicationRef: ApplicationRef) { }
+  @ViewChildren(RenderDirective) children: QueryList<RenderDirective>;
+
+  constructor(private backend: BackendService, private gotoService: GotoService, private changeDetector: ChangeDetectorRef, private applicationRef: ApplicationRef) { }
 
   ngOnInit() {
     this.renderRoot = this.backend.renderRoot;
@@ -24,10 +28,14 @@ export class RootRenderComponent implements OnInit {
     });
     this.backend.disconnected.subscribe(x => {
       this.renderRoot = null;
-    })
+    });
   }
 
   context(index: number) {
     return new RenderContext('$', index);
+  }
+
+  goto(i: number, path: string) {
+    this.gotoService.navigateTo(path)
   }
 }

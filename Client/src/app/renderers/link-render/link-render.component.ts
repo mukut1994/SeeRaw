@@ -19,6 +19,8 @@ export class LinkRenderComponent implements RenderComponent, OnInit {
   ngOnInit(): void {
   }
 
+  expand(path) {}
+
   send() {
     const message = {
       id: this.metadata.id,

@@ -3,7 +3,6 @@ import { Metadata, RenderContext } from '@data/data.model';
 import { NavBarData, NavigationEvent } from './nav-bar/data';
 import { EventEmitter } from '@angular/core';
 import { OptionsService } from '@service/options.service';
-import { RenderService } from '@data/render.service';
 import { RenderComponent } from './../../render.service';
 import { NavigationOption, OptionComponent } from './option/option.component';
 
@@ -31,6 +30,32 @@ export class NavigationRenderComponent implements OnInit, RenderComponent {
   ngOnInit() {
     this.navbar = this.convertToNavData(0, null, this.value, this.metadata, this.context);
     this.selected = this.firstSelectable(this.navbar);
+  }
+
+  expand(path: string) {
+    if(path.length === 0)
+      return;
+
+    let x = this.findWithPath(path, this.navbar.children);
+
+    if(!x)
+      return;
+
+    if(x != this.selected)
+      this.selected = x;
+  }
+
+  private findWithPath(path:string, nav: NavBarData[]): NavBarData {
+    for(const x of nav) {
+      if(x.children.length == 0 && path.startsWith(x.context.currentPath))
+        return x;
+
+      const ret = this.findWithPath(path, x.children);
+
+      if(ret) return ret;
+    }
+
+    return null;
   }
 
   private firstSelectable(navbar: NavBarData) {

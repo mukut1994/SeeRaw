@@ -1,13 +1,14 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { Metadata, RenderContext } from '@data/data.model';
 import { BackendService } from '@service/backend.service';
+import { RenderComponent } from './../../render.service';
 
 @Component({
   selector: 'app-form-render',
   templateUrl: './form-render.component.html',
   styleUrls: ['./form-render.component.css'],
 })
-export class FormRenderComponent implements OnInit {
+export class FormRenderComponent implements RenderComponent, OnInit {
 
   @Input() metadata: FormMetadata;
   @Input() value: any;
@@ -16,6 +17,8 @@ export class FormRenderComponent implements OnInit {
   constructor(readonly backendService: BackendService) {}
 
   ngOnInit() {}
+
+  expand(path) {}
 
   send() {
 

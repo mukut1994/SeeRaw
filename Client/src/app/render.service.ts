@@ -1,4 +1,4 @@
-import { ComponentFactoryResolver, Directive, Injectable, Type, ViewContainerRef, Input, AfterContentInit, OnInit, DoCheck, OnDestroy } from '@angular/core';
+import { ComponentFactoryResolver, Directive, Injectable, Type, ViewContainerRef, Input, AfterContentInit, OnInit, DoCheck, OnDestroy, EventEmitter } from '@angular/core';
 import { RenderContext } from './data.model';
 import { Metadata } from 'src/app/data.model';
 import { FormGroup } from '@angular/forms';
@@ -6,6 +6,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { OptionEditComponent } from './option-edit/option-edit.component';
 import { OptionsService } from '@service/options.service';
 import { Subscription } from 'rxjs';
+import { GotoService } from './goto.service';
 
 export class RendererSet {
 
@@ -22,6 +23,8 @@ export interface RenderComponent {
   value: any;
   metadata: Metadata;
   context: RenderContext;
+
+  expand(path: string);
 }
 
 export interface RenderOptionComponent {
@@ -44,12 +47,12 @@ export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDes
   sub: Subscription;
   oldValue: any;
 
-
   constructor(
     private renderService: RenderService,
     private viewContainer: ViewContainerRef,
     private componentFactoryResolver: ComponentFactoryResolver,
-    private optionsService: OptionsService) { }
+    private optionsService: OptionsService,
+    private gotoService: GotoService) { }
 
     ngOnInit() {
       this.sub = this.optionsService.optionsObserveable.subscribe(() => this.dirty = true);
@@ -57,6 +60,7 @@ export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDes
 
     ngOnDestroy() {
       this.sub?.unsubscribe();
+      this.gotoService.unregister(this.context.currentPath);
     }
 
     ngDoCheck(): void {
@@ -104,6 +108,8 @@ export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDes
       component.instance.metadata = this.metadata;
 
       component.changeDetectorRef.detectChanges();
+
+      this.gotoService.registerComponent(this.context.currentPath, component.instance);
     }
 }
 

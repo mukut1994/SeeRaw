@@ -1,8 +1,10 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, ViewChildren, QueryList } from '@angular/core';
 import { OptionComponent } from './option/option.component';
 import { RenderContext } from '@data/data.model';
 import { Metadata } from 'src/app/data.model';
 import { RenderComponent } from './../../render.service';
+import { HighlightDirective } from './../../directives/highlight.directive';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-value-render',
@@ -19,4 +21,5 @@ export class ValueRenderComponent implements RenderComponent {
 
   style: string;
 
+  expand(path) { }
 }

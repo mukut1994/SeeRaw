@@ -10,6 +10,8 @@ export class LogRenderComponent {
   @Input() context: RenderContext;
   @Input() value: Log;
   @Input() metadata: Metadata;
+
+  expand(path) {}
 }
 
 class Log {
