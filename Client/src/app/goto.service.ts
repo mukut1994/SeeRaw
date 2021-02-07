@@ -3,6 +3,7 @@ import { RenderComponent } from './render.service';
 import { Observable } from 'rxjs';
 import { first, map } from 'rxjs/operators';
 import { HighlightDirective } from './directives/highlight.directive';
+import { RenderDirective } from '@data/render.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,9 +14,11 @@ export class GotoService {
   path: string;
 
   registerComponent(path: string, component: RenderComponent) {
+    if(this.components.has(path)) throw `Duplicate registration ${path}`;
+
     this.components.set(path, component);
 
-    if(this.path && this.path.startsWith(path))
+    if(RenderDirective.inProg === 0 && this.path && this.path.startsWith(path))
       this.navigateTo(this.path);
   }
 
@@ -28,8 +31,8 @@ export class GotoService {
     let parts = path.split(".");
     let highlight: Observable<HighlightDirective>;
 
-    for(let i = 1; i < parts.length; i++) {
-      const subpath = parts.slice(0, i).join('.');
+    for(let i = 0; i < parts.length; i++) {
+      const subpath = parts.slice(0, i + 1).join('.');
 
       if(!this.components.has(subpath)) continue;
 

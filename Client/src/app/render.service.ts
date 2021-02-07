@@ -5,8 +5,9 @@ import { FormGroup } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { OptionEditComponent } from './option-edit/option-edit.component';
 import { OptionsService } from '@service/options.service';
-import { Subscription } from 'rxjs';
+import { Subscription, Observable } from 'rxjs';
 import { GotoService } from './goto.service';
+import { HighlightDirective } from './directives/highlight.directive';
 
 export class RendererSet {
 
@@ -24,7 +25,7 @@ export interface RenderComponent {
   metadata: Metadata;
   context: RenderContext;
 
-  expand(path: string);
+  expand(path: string): Observable<HighlightDirective> | null;
 }
 
 export interface RenderOptionComponent {
@@ -46,6 +47,9 @@ export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDes
   @Input() dirty = false;
   sub: Subscription;
   oldValue: any;
+  prevContext: RenderContext;
+
+  static inProg = 0;
 
   constructor(
     private renderService: RenderService,
@@ -92,6 +96,11 @@ export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDes
     render() {
       this.viewContainer.clear();
 
+      if(this.prevContext)
+        this.gotoService.unregister(this.prevContext.currentPath);
+
+      this.prevContext = this.context;
+
       const options = this.optionsService.get(this.context, this.metadata);
 
       if(!options) return;
@@ -107,7 +116,9 @@ export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDes
       component.instance.context = this.context;
       component.instance.metadata = this.metadata;
 
+      RenderDirective.inProg++;
       component.changeDetectorRef.detectChanges();
+      RenderDirective.inProg--;
 
       this.gotoService.registerComponent(this.context.currentPath, component.instance);
     }

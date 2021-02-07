@@ -33,9 +33,9 @@ export class TableRenderComponent implements RenderComponent, OnInit {
   expand(path: string) {
     if(this.collapsed()) this.collapse();
 
-    var props = path.split(".");
+    var props = path.substr(this.context.currentPath.length + 1).split('.');
 
-    return HighlightDirective.findWithKey(this.rows, props[props.length - 1]);
+    return HighlightDirective.findWithKey(this.rows, props[0]);
   }
 
   collapsed() {
