@@ -34,12 +34,12 @@ export class NavigationRenderComponent implements OnInit, RenderComponent {
 
   expand(path: string) {
     if(path.length === 0)
-      return;
+      return null;
 
     let x = this.findWithPath(path, this.navbar.children);
 
     if(!x)
-      return;
+      return null;
 
     if(x != this.selected)
       this.selected = x;
