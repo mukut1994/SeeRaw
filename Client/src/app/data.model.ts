@@ -2,15 +2,24 @@ export class RenderContext {
   editMode: boolean;
   currentPath: string;
   index: number;
+  visibleDepth: number;
 
   constructor(currentPath: string = null, index: number = null) {
     this.currentPath = currentPath;
     this.index = index;
+    this.visibleDepth = 0;
+    this.editMode = false;
   }
 
-  public child(name: string) {
+  public child(name: string, incrementVisible: boolean = true) {
     const ret = new RenderContext();
+    ret.editMode = this.editMode;
     ret.currentPath = this.currentPath + '.' + name;
+    ret.index = this.index;
+    ret.visibleDepth = this.visibleDepth;
+
+    if(incrementVisible)
+      ret.visibleDepth++;
 
     return ret;
   }

@@ -13,7 +13,6 @@ import { LogRenderComponent } from './renderers/log-render/log-render.component'
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NavBarComponent } from './renderers/navigation-render/nav-bar/nav-bar.component';
 import { CommonModule } from '@angular/common';
-import { RenderDirective } from './render.service';
 import { OptionDirective, OptionEditComponent } from './option-edit/option-edit.component';
 import { TableRenderComponent } from './renderers/table-render/table-render.component';
 import { OptionComponent } from './renderers/table-render/option/option.component';
@@ -22,6 +21,7 @@ import { OptionButtonComponent } from './option-button/option-button.component';
 import { LinkRenderComponent } from './renderers/link-render/link-render.component';
 import { OptionListComponent } from './option-list/option-list.component';
 import { OptionComponent as navOptionComponent } from './renderers/navigation-render/option/option.component'
+import { RenderDirective } from './directives/render.directive';
 import { HighlightDirective } from './directives/highlight.directive';
 
 @NgModule({
@@ -47,7 +47,7 @@ import { HighlightDirective } from './directives/highlight.directive';
     HighlightDirective
   ],
   imports: [
-  BrowserModule,
+    BrowserModule,
     AppRoutingModule,
     FormsModule,
     NgbModule,

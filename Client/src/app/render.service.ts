@@ -4,9 +4,7 @@ import { Metadata } from 'src/app/data.model';
 import { FormGroup } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { OptionEditComponent } from './option-edit/option-edit.component';
-import { OptionsService } from '@service/options.service';
 import { Subscription, Observable } from 'rxjs';
-import { GotoService } from './goto.service';
 import { HighlightDirective } from './directives/highlight.directive';
 
 export class RendererSet {
@@ -35,93 +33,6 @@ export interface RenderOptionComponent {
 
 export class RenderComponentOption {
   jpath: string;
-}
-
-@Directive({ selector: '[appRender]' })
-export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDestroy {
-
-  @Input() value: any;
-  @Input() metadata: Metadata;
-  @Input() context: RenderContext;
-
-  @Input() dirty = false;
-  sub: Subscription;
-  oldValue: any;
-  prevContext: RenderContext;
-
-  static inProg = 0;
-
-  constructor(
-    private renderService: RenderService,
-    private viewContainer: ViewContainerRef,
-    private componentFactoryResolver: ComponentFactoryResolver,
-    private optionsService: OptionsService,
-    private gotoService: GotoService) { }
-
-    ngOnInit() {
-      this.sub = this.optionsService.optionsObserveable.subscribe(() => this.dirty = true);
-    }
-
-    ngOnDestroy() {
-      this.sub?.unsubscribe();
-      this.gotoService.unregister(this.context.currentPath);
-    }
-
-    ngDoCheck(): void {
-      if(!this.dirty && this.oldValue === this.value)
-        return;
-
-      this.oldValue = this.value;
-      this.dirty = false;
-
-      this.render();
-    }
-
-    @Input() set appRender(value: any) {
-      this.value = value;
-    }
-
-    @Input() set appRenderContext(context: RenderContext) {
-      this.context = context;
-    }
-
-    @Input() set appRenderMetadata(metadata: Metadata) {
-      this.metadata = metadata;
-    }
-
-    ngAfterContentInit() {
-      this.render();
-    }
-
-    render() {
-      this.viewContainer.clear();
-
-      if(this.prevContext)
-        this.gotoService.unregister(this.prevContext.currentPath);
-
-      this.prevContext = this.context;
-
-      const options = this.optionsService.get(this.context, this.metadata);
-
-      if(!options) return;
-
-      const type = this.renderService.getComponentFor(this.metadata.type, options.renderer);
-
-      if(!type) return;
-
-      const factory = this.componentFactoryResolver.resolveComponentFactory(type);
-      const component = this.viewContainer.createComponent(factory);
-
-      component.instance.value = this.value;
-      component.instance.context = this.context;
-      component.instance.metadata = this.metadata;
-
-      RenderDirective.inProg++;
-      component.changeDetectorRef.detectChanges();
-      RenderDirective.inProg--;
-
-      this.gotoService.registerComponent(this.context.currentPath, component.instance);
-    }
 }
 
 @Injectable({
