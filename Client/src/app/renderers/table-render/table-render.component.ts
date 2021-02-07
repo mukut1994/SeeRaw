@@ -1,8 +1,9 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ViewChildren, QueryList, ElementRef, Directive, ViewRef, ViewContainerRef, OnDestroy } from '@angular/core';
 import { OptionComponent } from './option/option.component';
 import { RenderComponent } from './../../render.service';
 import { Metadata, RenderContext } from '@data/data.model';
 import { OptionsService } from '@service/options.service';
+import { HighlightDirective } from './../../directives/highlight.directive';
 
 @Component({
   selector: 'app-table-render',
@@ -17,6 +18,8 @@ export class TableRenderComponent implements RenderComponent, OnInit {
   @Input() value: any;
   @Input() metadata: Metadata;
 
+  @ViewChildren(HighlightDirective) rows: QueryList<HighlightDirective>;
+
   sessionOptions: SessionOptions;
   keys: any;
 
@@ -25,6 +28,14 @@ export class TableRenderComponent implements RenderComponent, OnInit {
   ngOnInit() {
     this.keys = Object.keys(this.value);
     this.sessionOptions = this.optionService.getSessionOptions(this.context, "table");
+  }
+
+  expand(path: string) {
+    if(this.collapsed()) this.collapse();
+
+    var props = path.substr(this.context.currentPath.length + 1).split('.');
+
+    return HighlightDirective.findWithKey(this.rows, props[0]);
   }
 
   collapsed() {

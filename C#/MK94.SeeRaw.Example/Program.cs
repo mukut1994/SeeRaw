@@ -14,7 +14,7 @@ namespace MK94.SeeRaw.Example
 
         static void Main()
         {
-            var opt = @"[{""jsonPath"":""$..*"",""typeOptions"":{""dataType"":""Map"",""value"":[[""string"",{""renderer"":""value""}],[""bool"",{""renderer"":""value""}],[""number"",{""renderer"":""value""}],[""enum"",{""renderer"":""value""}],[""datetime"",{""renderer"":""value""}],[""object"",{""renderer"":""table""}],[""array"",{""renderer"":""table""}],[""link"",{""renderer"":""link""}],[""progress"",{""renderer"":""progress""}]]}},{""jsonPath"":""$"",""typeOptions"":{""dataType"":""Map"",""value"":[[""object"",{""renderer"":""navigation""}]]}}]";
+            var opt = @"[{""jsonPath"":""$..*"",""typeOptions"":{""dataType"":""Map"",""value"":[[""string"",{""renderer"":""value""}],[""bool"",{""renderer"":""value""}],[""number"",{""renderer"":""value""}],[""enum"",{""renderer"":""value""}],[""datetime"",{""renderer"":""value""}],[""object"",{""renderer"":""table""}],[""array"",{""renderer"":""table""}],[""link"",{""renderer"":""link""}],[""progress"",{""renderer"":""progress""}]]}},{""jsonPath"":""$"",""typeOptions"":{""dataType"":""Map"",""value"":[[""object"",{""renderer"":""navigation""}]]}},{""jsonPath"":""$.NestedList"",""typeOptions"":{""dataType"":""Map"",""value"":[[""array"",{""renderer"":""navigation"",""mergeWithParent"":true}]]}}]";
 
             SeeRawSetup
                 .WithServer()

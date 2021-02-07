@@ -1,15 +1,22 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, ViewChild } from '@angular/core';
 import { Metadata, RenderContext } from '@data/data.model';
+import { HighlightDirective } from './../../directives/highlight.directive';
+import { of } from 'rxjs';
+import { RenderComponent } from './../../render.service';
 
 @Component({
   selector: 'app-log-render',
   templateUrl: './log-render.component.html',
   styleUrls: ['./log-render.component.css']
 })
-export class LogRenderComponent {
+export class LogRenderComponent implements RenderComponent {
   @Input() context: RenderContext;
   @Input() value: Log;
   @Input() metadata: Metadata;
+
+  @ViewChild(HighlightDirective) view;
+
+  expand(path) { return of(this.view) }
 }
 
 class Log {

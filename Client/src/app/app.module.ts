@@ -22,6 +22,7 @@ import { OptionButtonComponent } from './option-button/option-button.component';
 import { LinkRenderComponent } from './renderers/link-render/link-render.component';
 import { OptionListComponent } from './option-list/option-list.component';
 import { OptionComponent as navOptionComponent } from './renderers/navigation-render/option/option.component'
+import { HighlightDirective } from './directives/highlight.directive';
 
 @NgModule({
   declarations: [
@@ -42,10 +43,11 @@ import { OptionComponent as navOptionComponent } from './renderers/navigation-re
     OptionButtonComponent,
     LinkRenderComponent,
     OptionListComponent,
-    navOptionComponent
+    navOptionComponent,
+    HighlightDirective
   ],
   imports: [
-BrowserModule,
+  BrowserModule,
     AppRoutingModule,
     FormsModule,
     NgbModule,

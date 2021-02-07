@@ -17,7 +17,7 @@
   <tbody>
     <ng-container *ngIf="!collapsed()">
       <ng-container *ngFor="let prop of keys">
-        <tr>
+        <tr [appHighlight]="prop">
           <th scope="row">
             {{ prop }}
           </th>
