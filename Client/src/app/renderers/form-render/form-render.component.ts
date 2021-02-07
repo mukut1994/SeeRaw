@@ -18,7 +18,7 @@ export class FormRenderComponent implements RenderComponent, OnInit {
 
   ngOnInit() {}
 
-  expand(path) {}
+  expand(path) { return null; }
 
   send() {
 

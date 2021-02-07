@@ -13,7 +13,7 @@ export class EnumRenderComponent implements RenderComponent {
   @Input() value: any;
   @Input() context: RenderContext;
 
-  expand(path) {}
+  expand(path) { return null; }
 }
 
 class EnumMetadata extends Metadata {
