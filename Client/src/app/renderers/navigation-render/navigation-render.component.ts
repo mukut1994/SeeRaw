@@ -94,7 +94,7 @@ export class NavigationRenderComponent implements OnInit, RenderComponent {
       return ret;
 
     for(const key in value) {
-      ret.children.push(this.convertToNavData(currentDepth + 1, key, value[key], metadata.children[key], context.child(key)));
+      ret.children.push(this.convertToNavData(currentDepth + 1, key, value[key], metadata.children[key], context.child(key, false)));
     }
 
     return ret;

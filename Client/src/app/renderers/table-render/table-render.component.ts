@@ -39,7 +39,7 @@ export class TableRenderComponent implements RenderComponent, OnInit {
   }
 
   collapsed() {
-    return this.sessionOptions.collapsed ?? this.context.currentPath.split(".").length > 2;
+    return this.sessionOptions.collapsed ?? this.context.visibleDepth > 2;
   }
 
   collapse() {

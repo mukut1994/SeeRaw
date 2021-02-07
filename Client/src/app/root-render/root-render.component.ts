@@ -2,8 +2,8 @@ import { Component, OnInit, Input, ɵɵqueryRefresh, ChangeDetectorRef, Applicat
 import { Message, RenderContext, RenderRoot } from './../data.model';
 import { BackendService } from '../backend.service';
 import { OptionsService } from './../options.service';
-import { RenderService, RenderDirective } from '@data/render.service';
 import { GotoService } from './../goto.service';
+import { RenderDirective } from './../directives/render.directive';
 
 @Component({
   selector: 'app-root-render',
