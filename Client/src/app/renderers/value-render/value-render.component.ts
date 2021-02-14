@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, ViewChild, ViewChildren, QueryList, OnDestroy } from '@angular/core';
 import { OptionComponent } from './option/option.component';
-import { RenderContext } from '@data/data.model';
+import { RenderContext, Option } from '@data/data.model';
 import { Metadata } from 'src/app/data.model';
 import { RenderComponent } from './../../render.service';
 import { HighlightDirective } from './../../directives/highlight.directive';
@@ -19,6 +19,7 @@ export class ValueRenderComponent implements RenderComponent, OnInit, OnDestroy 
   @Input() context: RenderContext;
   @Input() value: any;
   @Input() metadata: Metadata;
+  @Input() options: Option;
 
   style: string;
 

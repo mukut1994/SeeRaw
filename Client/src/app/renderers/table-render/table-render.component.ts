@@ -1,9 +1,10 @@
 import { Component, Input, OnInit, ViewChildren, QueryList, ElementRef, Directive, ViewRef, ViewContainerRef, OnDestroy } from '@angular/core';
-import { OptionComponent } from './option/option.component';
+import { OptionComponent, TableOption } from './option/option.component';
 import { RenderComponent } from './../../render.service';
-import { Metadata, RenderContext } from '@data/data.model';
+import { Metadata, RenderContext, Option } from '@data/data.model';
 import { OptionsService } from '@service/options.service';
 import { HighlightDirective } from './../../directives/highlight.directive';
+import * as jp from 'jsonpath-faster'
 
 @Component({
   selector: 'app-table-render',
@@ -17,17 +18,27 @@ export class TableRenderComponent implements RenderComponent, OnInit {
   @Input() context: RenderContext;
   @Input() value: any;
   @Input() metadata: Metadata;
+  @Input() options: TableOption;
 
   @ViewChildren(HighlightDirective) rows: QueryList<HighlightDirective>;
 
   sessionOptions: SessionOptions;
   keys: any;
 
-  constructor(private optionService: OptionsService) { }
+  header: any;
+
+  constructor(private optionsService: OptionsService) { }
 
   ngOnInit() {
     this.keys = Object.keys(this.value);
-    this.sessionOptions = this.optionService.getSessionOptions(this.context, "table");
+    this.sessionOptions = this.optionsService.getSessionOptions(this.context, "table");
+
+    if(this.options.headerPath)
+      this.header = jp.value(this.value, this.options.headerPath);
+
+    if(this.context.visibleDepth === 0)
+      this.sessionOptions.collapsed = false;
+
   }
 
   expand(path: string) {
@@ -43,6 +54,9 @@ export class TableRenderComponent implements RenderComponent, OnInit {
   }
 
   collapse() {
+    if(this.context.visibleDepth === 0)
+      return;
+
     this.sessionOptions.collapsed = !this.collapsed();
   }
 }

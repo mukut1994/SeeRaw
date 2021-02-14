@@ -1,10 +1,11 @@
 import { Component, Input, OnInit, Output, Type } from '@angular/core';
-import { Metadata, RenderContext } from '@data/data.model';
+import { Metadata, RenderContext, VisibleIncrement } from '@data/data.model';
 import { NavBarData, NavigationEvent } from './nav-bar/data';
 import { EventEmitter } from '@angular/core';
 import { OptionsService } from '@service/options.service';
 import { RenderComponent } from './../../render.service';
 import { NavigationOption, OptionComponent } from './option/option.component';
+import * as jp from 'jsonpath-faster'
 
 @Component({
   selector: 'app-navigation-render',
@@ -84,8 +85,8 @@ export class NavigationRenderComponent implements OnInit, RenderComponent {
     if(!this.selected && Object.keys(value).length === 0)
       return ret;
 
-    const childOpt = this.optionsService.get(context, metadata);
-    const childMerge = childOpt?.renderer == "navigation" && ((childOpt as NavigationOption)?.mergeWithParent ?? true);
+    const childOpt = this.optionsService.get(context, metadata) as NavigationOption;
+    const childMerge = childOpt?.renderer == "navigation" && (childOpt?.mergeWithParent ?? true);
 
     if(currentDepth > 0 && !childMerge)
       return ret;
@@ -94,10 +95,17 @@ export class NavigationRenderComponent implements OnInit, RenderComponent {
       return ret;
 
     for(const key in value) {
-      ret.children.push(this.convertToNavData(currentDepth + 1, key, value[key], metadata.children[key], context.child(key, false)));
+      let childKey = key;
+      if(childOpt.keyPath) childKey = this.key(value[key], childOpt.keyPath) ?? "null";
+
+      ret.children.push(this.convertToNavData(currentDepth + 1, childKey, value[key], metadata.children[key], context.child(key, VisibleIncrement.Reset)));
     }
 
     return ret;
+  }
+
+  key(value: any, path: string) {
+    return jp.value(value, path);
   }
 
   click(event: NavigationEvent) {

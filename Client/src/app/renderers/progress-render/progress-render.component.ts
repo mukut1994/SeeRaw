@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, ViewChild } from '@angular/core';
 import { BackendService } from '@service/backend.service';
-import { RenderContext, Metadata } from '@data/data.model';
+import { RenderContext, Metadata, Option } from '@data/data.model';
 import { RenderComponent } from './../../render.service';
 import { HighlightDirective } from './../../directives/highlight.directive';
 import { of } from 'rxjs';
@@ -15,6 +15,7 @@ export class ProgressRenderComponent implements RenderComponent {
   @Input() context: RenderContext;
   @Input() value: Progress;
   @Input() metadata: ProgressMetadata;
+  @Input() options: Option;
 
   @ViewChild(HighlightDirective) view;
 

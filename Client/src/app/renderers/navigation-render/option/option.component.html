@@ -1,6 +1,11 @@
-<form [formGroup]="form">
-  <label for="mergeWithParent">
-    <input type="checkbox" formControlName="mergeWithParent" id="mergeWithParent">
-    Merge with parent navigation
-  </label>
-</form>
+<ng-form [formGroup]="form">
+  <div class="grid mb-3">
+
+    <label class="form-label" for="mergeWithParent">
+      Merge with parent navigation
+    </label>
+    <input class="control" type="checkbox" formControlName="mergeWithParent" id="mergeWithParent">
+    <app-jpath-input [formGroup]="form" controlName="keyPath" label="Key path" placeholder="$.key"></app-jpath-input>
+
+  </div>
+</ng-form>

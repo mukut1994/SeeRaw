@@ -1,6 +1,8 @@
 import { Component, Input, OnInit, Output } from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { RenderOptionComponent } from '@data/render.service';
+import { JPathValidator } from '@data/util/jpath-input/jpath-input.component';
+import { Option } from '@data/data.model';
 
 @Component({
   selector: 'app-option',
@@ -9,16 +11,19 @@ import { RenderOptionComponent } from '@data/render.service';
 })
 export class OptionComponent implements RenderOptionComponent, OnInit {
 
-  @Input() options: any;
+  options: TableOption;
+  form: FormGroup;
 
-  @Output() form: FormGroup;
-
-  constructor(private formBuilder: FormBuilder) { }
+  constructor(private fb: FormBuilder) { }
 
   ngOnInit(): void {
-    this.form = this.formBuilder.group({
-
+    this.form = this.fb.group({
+      headerPath: [ this.options?.headerPath, JPathValidator ]
     });
   }
 
+}
+
+export class TableOption extends Option {
+  headerPath: string | null;
 }

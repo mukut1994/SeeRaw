@@ -59,7 +59,11 @@ namespace MK94.SeeRaw.Example
                     {
                         1, 2, 3
                     },
-
+                },
+                ByKey = new List<X>
+                {
+                    new X { Name = "Key 1" },
+                    new X { Name = "Key 2" }
                 }
             }.Render();
 
@@ -82,6 +86,8 @@ namespace MK94.SeeRaw.Example
 
         class X
         {
+            public string Name { get; set; }
+
             public int PropA => 1;
             public int PropB => 2;
         }

@@ -11,15 +11,17 @@ export class RenderContext {
     this.editMode = false;
   }
 
-  public child(name: string, incrementVisible: boolean = true) {
+  public child(name: string, incrementVisible: VisibleIncrement | Number = 1) {
     const ret = new RenderContext();
     ret.editMode = this.editMode;
     ret.currentPath = this.currentPath + '.' + name;
     ret.index = this.index;
     ret.visibleDepth = this.visibleDepth;
 
-    if(incrementVisible)
-      ret.visibleDepth++;
+    if(typeof(incrementVisible) == "number")
+      ret.visibleDepth != incrementVisible;
+    else if(incrementVisible === VisibleIncrement.Reset)
+      ret.visibleDepth = 0;
 
     return ret;
   }
@@ -28,6 +30,11 @@ export class RenderContext {
     this.editMode = true;
     return this;
   }
+}
+
+export enum VisibleIncrement {
+  None,
+  Reset
 }
 
 export class Metadata {
