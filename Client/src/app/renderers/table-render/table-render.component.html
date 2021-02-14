@@ -3,13 +3,23 @@
   <thead>
     <tr>
       <th colspan="2">
-        <span class="cursor-pointer" scope="col" (click)="collapse()">
-          <span *ngIf="collapsed()">▼</span>
-          <span *ngIf="!collapsed()">▲</span>
-          Object ( {{metadata.extendedType}} )
+        <span [ngClass]="{ 'cursor-pointer': context.visibleDepth > 0 }" scope="col" (click)="collapse()">
+
+          <ng-container *ngIf="context.visibleDepth > 0">
+            <span *ngIf="collapsed()">▼</span>
+            <span *ngIf="!collapsed()">▲</span>
+          </ng-container>
+
+          <ng-container ngels *ngIf="header; else genericHeader">
+            {{ header }}
+          </ng-container>
+          <ng-template #genericHeader>
+            Object ( {{metadata.extendedType}} )
+          </ng-template>
+
         </span>
 
-        <app-option-button [context]="context" [metadata]="metadata" [renderer]="'table'"></app-option-button>
+        <app-option-button [context]="context" [metadata]="metadata" [renderer]="'table'" [options]="options"></app-option-button>
       </th>
     </tr>
   </thead>

@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { Metadata, RenderContext } from '@data/data.model';
+import { Metadata, RenderContext, Option } from '@data/data.model';
 import { RenderComponent } from './../../render.service';
 
 @Component({
@@ -12,6 +12,7 @@ export class EnumRenderComponent implements RenderComponent {
   @Input() metadata: EnumMetadata;
   @Input() value: any;
   @Input() context: RenderContext;
+  @Input() options: Option;
 
   expand(path) { return null; }
 }

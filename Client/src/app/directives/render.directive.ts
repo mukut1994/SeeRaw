@@ -81,6 +81,7 @@ export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDes
       component.instance.value = this.value;
       component.instance.context = this.context;
       component.instance.metadata = this.metadata;
+      component.instance.options = options;
 
       GotoService.InProg++;
       component.changeDetectorRef.detectChanges();

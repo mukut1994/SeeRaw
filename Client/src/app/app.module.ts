@@ -23,6 +23,7 @@ import { OptionListComponent } from './option-list/option-list.component';
 import { OptionComponent as navOptionComponent } from './renderers/navigation-render/option/option.component'
 import { RenderDirective } from './directives/render.directive';
 import { HighlightDirective } from './directives/highlight.directive';
+import { JpathInputComponent } from './util/jpath-input/jpath-input.component';
 
 @NgModule({
   declarations: [
@@ -44,7 +45,8 @@ import { HighlightDirective } from './directives/highlight.directive';
     LinkRenderComponent,
     OptionListComponent,
     navOptionComponent,
-    HighlightDirective
+    HighlightDirective,
+    JpathInputComponent
   ],
   imports: [
     BrowserModule,

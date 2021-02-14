@@ -1,5 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Metadata, RenderContext } from '@data/data.model';
+import { Metadata, RenderContext, Option } from '@data/data.model';
 import { BackendService } from '@service/backend.service';
 import { RenderComponent } from './../../render.service';
 
@@ -13,6 +13,7 @@ export class FormRenderComponent implements RenderComponent, OnInit {
   @Input() metadata: FormMetadata;
   @Input() value: any;
   @Input() context: RenderContext;
+  @Input() options: Option;
 
   constructor(readonly backendService: BackendService) {}
 

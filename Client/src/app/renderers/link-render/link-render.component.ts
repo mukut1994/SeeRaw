@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, ViewChild } from '@angular/core';
-import { Metadata, RenderContext } from '@data/data.model';
+import { Metadata, RenderContext, Option } from '@data/data.model';
 import { RenderComponent } from './../../render.service';
 import { BackendService } from '@service/backend.service';
 import { HighlightDirective } from './../../directives/highlight.directive';
@@ -15,6 +15,7 @@ export class LinkRenderComponent implements RenderComponent, OnInit {
   @Input() value: any;
   @Input() metadata: LinkMetadata;
   @Input() context: RenderContext;
+  @Input() options: Option;
 
   @ViewChild(HighlightDirective) btn;
 

@@ -6,6 +6,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { OptionEditComponent } from './option-edit/option-edit.component';
 import { Subscription, Observable } from 'rxjs';
 import { HighlightDirective } from './directives/highlight.directive';
+import { Option } from '@data/data.model';
 
 export class RendererSet {
 
@@ -22,6 +23,7 @@ export interface RenderComponent {
   value: any;
   metadata: Metadata;
   context: RenderContext;
+  options: Option;
 
   expand(path: string): Observable<HighlightDirective> | null;
 }

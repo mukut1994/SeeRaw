@@ -5,13 +5,14 @@ import { RenderOptionComponent, RenderService } from '@data/render.service';
 import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { RendererSet } from './../render.service';
 import { OptionsService } from '@service/options.service';
+import { JPathValidator } from '@data/util/jpath-input/jpath-input.component';
 
 @Component({
   selector: 'app-option-edit',
   templateUrl: './option-edit.component.html',
   styleUrls: ['./option-edit.component.css']
 })
-export class OptionEditComponent implements OnInit, DoCheck {
+export class OptionEditComponent implements OnInit, DoCheck, AfterContentInit {
 
   @Input() typeName: string;
   @Input() rendererName: string;
@@ -31,6 +32,10 @@ export class OptionEditComponent implements OnInit, DoCheck {
     private renderService: RenderService,
     private optionsService: OptionsService) { }
 
+  ngAfterContentInit(): void {
+    this.getChildType();
+  }
+
   ngDoCheck(): void {
     if(this.oldTypeName === this.typeName) {
       this.getChildType();
@@ -46,10 +51,8 @@ export class OptionEditComponent implements OnInit, DoCheck {
     this.oldTypeName = this.typeName;
 
     this.formGroup = this.formBuilder.group({
-      path: [ this.path, Validators.required ]
+      path: [ this.path, [ Validators.required, JPathValidator ] ]
     });
-
-    this.getChildType();
   }
 
   types() {
@@ -68,6 +71,10 @@ export class OptionEditComponent implements OnInit, DoCheck {
     this.optionsService.set(this.typeName, this.formGroup.value.path, { renderer: this.rendererName, ...this.childForm.form.value });
 
     this.modal.close();
+  }
+
+  valid() {
+    return this.formGroup.valid && (!this.childForm?.form || this.childForm.form?.valid);
   }
 }
 
@@ -94,6 +101,8 @@ export class OptionDirective implements AfterContentInit, OnChanges {
     const component = this.viewContainerRef.createComponent(factory, 0);
 
     component.instance.options = this.options;
+
+    component.changeDetectorRef.detectChanges();
 
     this.onComponent.emit(component.instance);
   }
