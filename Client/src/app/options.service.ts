@@ -47,13 +47,19 @@ export class OptionsService {
     this.options = JSON.parse(this.storage.getItem(this.storageKey), this.reviver) ?? this.getDefaultOptions();
 
     // TODO optimize, update options shouldn't be called so much
-    this.backend.serverOptions.subscribe(x => this.loadOptions(x));
+    this.backend.serverOptions.subscribe(x => this.loadServerOptions(x));
     this.backend.messageHandler.subscribe(x => { this.renderRoot = x; this.updateOptions() });
     this.backend.disconnected.subscribe(() => this.renderRoot = null);
   }
 
   serializedOptions() {
     return JSON.stringify(this.options, this.replacer);
+  }
+
+  loadServerOptions(opt: string) {
+    if(!opt) return;
+
+    this.defaultOptions = JSON.parse(opt, this.reviver);
   }
 
   loadOptions(opt: string) {
