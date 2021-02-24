@@ -19,7 +19,7 @@ export class RenderContext {
     ret.visibleDepth = this.visibleDepth;
 
     if(typeof(incrementVisible) == "number")
-      ret.visibleDepth != incrementVisible;
+      ret.visibleDepth += incrementVisible;
     else if(incrementVisible === VisibleIncrement.Reset)
       ret.visibleDepth = 0;
 
@@ -33,8 +33,8 @@ export class RenderContext {
 }
 
 export enum VisibleIncrement {
-  None,
-  Reset
+  None = "None",
+  Reset = "Reset"
 }
 
 export class Metadata {

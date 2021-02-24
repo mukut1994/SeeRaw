@@ -38,7 +38,6 @@ export class TableRenderComponent implements RenderComponent, OnInit {
 
     if(this.context.visibleDepth === 0)
       this.sessionOptions.collapsed = false;
-
   }
 
   expand(path: string) {
