@@ -1,27 +1,25 @@
 {
-  "kind": 0,
-  "id": "target1",
   "value": [
     1,
     2,
     3
   ],
-  "metadata": {
-    "type": "array",
-    "extendedType": "List\u003CInt32\u003E",
-    "children": [
-      {
-        "type": "number",
-        "extendedType": "Int32"
-      },
-      {
-        "type": "number",
-        "extendedType": "Int32"
-      },
-      {
-        "type": "number",
-        "extendedType": "Int32"
-      }
-    ]
+  "meta": {
+    "List`1": {
+      "type": "array",
+      "extendedType": "List`1",
+      "children": {}
+    },
+    "Int32": {
+      "type": "number",
+      "extendedType": "Int32",
+      "children": {}
+    }
+  },
+  "links": {
+    "value": "List`1",
+    "value[0]": "Int32",
+    "value[1]": "Int32",
+    "value[2]": "Int32"
   }
 }

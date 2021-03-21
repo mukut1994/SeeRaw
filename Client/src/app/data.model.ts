@@ -41,8 +41,6 @@ export class Metadata {
   type: string;
   extendedType: string | undefined;
   children: Metadata | Metadata[] | undefined;
-
-  renderOptions: Map<string, Option>[] | undefined;
 }
 
 export class Option {
@@ -65,9 +63,9 @@ export class Message {
 export class RenderTarget extends Message {
   public id: string;
   public value: any;
-  public metadata: Metadata;
+  public meta: { key: string, value: Metadata };
+  public links: { path: string, type: string };
 }
-
 export class OptionsMessage extends Message {
   public options: string;
 }

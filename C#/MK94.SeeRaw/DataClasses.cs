@@ -82,10 +82,9 @@ namespace MK94.SeeRaw
     }
 
 	[JsonConverter(typeof(Form.Serializer))]
-	[MetadataConverter(typeof(Form.Serializer))]
 	public class Form
 	{
-        private class Serializer : JsonConverter<Form>, IMetadataConverter
+        private class Serializer : JsonConverter<Form>
         {
             public override Form Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {
@@ -109,7 +108,7 @@ namespace MK94.SeeRaw
 				writer.WriteEndArray();
 				writer.WriteEndObject();
 			}
-
+			/*
             public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
 			{
 				var form = value as Form;
@@ -141,7 +140,7 @@ namespace MK94.SeeRaw
 				writer.WriteEndArray();
 
 			}
-
+			*/
 			private static Dictionary<Type, string> typeNameLookup = new Dictionary<Type, string>
 			{
 				{ typeof(sbyte), "number" },
@@ -199,7 +198,7 @@ namespace MK94.SeeRaw
 
 	public class Actionable
 	{
-        private class Serializer : JsonConverter<Actionable>, IMetadataConverter
+        private class Serializer : JsonConverter<Actionable>
         {
             public override Actionable Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {
@@ -216,11 +215,6 @@ namespace MK94.SeeRaw
 					writer.WriteString
 				*/
 				writer.WriteEndObject();
-            }
-
-            public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
-            {
-                throw new NotImplementedException();
             }
         }
 
@@ -278,13 +272,12 @@ namespace MK94.SeeRaw
     }
 
 	[JsonConverter(typeof(Progress.Serializer))]
-	[MetadataConverter(typeof(Progress.Serializer))]
 	public class Progress : INotifyPropertyChanged
     {
-        private class Serializer : JsonConverter<Progress>, IMetadataConverter
+        private class Serializer : JsonConverter<Progress>
         {
             public override Progress Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => throw new NotImplementedException();
-
+			/*
             public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
             {
 				var prog = value as Progress;
@@ -321,7 +314,7 @@ namespace MK94.SeeRaw
 				else
 					writer.WriteNull("cancel");
 			}
-
+			*/
             public override void Write(Utf8JsonWriter writer, Progress value, JsonSerializerOptions options)
             {
 				writer.WriteStartObject();
@@ -426,17 +419,16 @@ namespace MK94.SeeRaw
 	}
 
 	[JsonConverter(typeof(Logger.Serializer))]
-	[MetadataConverter(typeof(Logger.Serializer))]
 	public class Logger : ILogger, INotifyPropertyChanged
 	{
-        public class Serializer : JsonConverter<Logger>, IMetadataConverter
+        public class Serializer : JsonConverter<Logger>
         {
 			public override Logger Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => throw new NotImplementedException();
-
+			/*
             public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
             {
 				writer.WriteString("type", "log");
-            }
+            }*/
 
             public override void Write(Utf8JsonWriter writer, Logger value, JsonSerializerOptions options)
             {

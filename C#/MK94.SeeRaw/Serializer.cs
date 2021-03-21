@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -6,352 +8,310 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Runtime.CompilerServices;
 
 namespace MK94.SeeRaw
 {
-	public class SerializerContext
-    {
-		public Utf8JsonWriter Main;
-    }
-	
-	public class MetadataSerializer
-	{
-		internal List<IMetadataConverter> converters = new List<IMetadataConverter>();
-		private static MetadataConverter DefaultConverter = new MetadataConverter();
-
-		public void Serialize(Utf8JsonWriter writer, object? value, IEnumerable<string> valuePath, RendererContext context)
-		{
-			try
-			{
-				var converter = GetConverter(value?.GetType() ?? typeof(object));
-
-				converter.Write(this, writer, value, valuePath, context);
-			}
-			catch (Exception e)
-			{
-				throw new Exception($"Failed to serialize at path {MetadataConverter.GetFullPath(valuePath)}", e);
-			}
-		}
-
-		private IMetadataConverter GetConverter(Type type)
-		{
-			var converter = converters.FirstOrDefault(x => x.CanConvert(type));
-
-			if (converter != null)
-				return converter;
-
-			var attr = type.GetCustomAttribute<MetadataConverterAttribute>();
-
-			if (attr != null)
-				return (IMetadataConverter) Activator.CreateInstance(attr.ConverterType);
-
-			return DefaultConverter;
-		}
-	}
-
-	// TODO add property suppport
-	[AttributeUsage(AttributeTargets.Class)]
-	public class MetadataConverterAttribute : Attribute
-	{
-		public Type ConverterType { get; }
-
-		public MetadataConverterAttribute(Type converterType)
-		{
-			if (!typeof(IMetadataConverter).IsAssignableFrom(converterType))
-				throw new InvalidProgramException($"Argument {nameof(converterType)} must inherit from {nameof(IMetadataConverter)}");
-
-			ConverterType = converterType;
-		}
-	}
-
-	public interface IMetadataConverter
-    {
-		bool CanConvert(Type type);
-
-		void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object? value, IEnumerable<string> valuePath, RendererContext context);
-
-	}
-
-	public class MetadataConverter : IMetadataConverter
-	{
-		public bool CanConvert(Type type) => true;
-
-		public virtual void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object? value, IEnumerable<string> valuePath, RendererContext context)
-		{
-			if (value == null)
-			{
-				writer.WriteString("type", "null");
-				return;
-			}
-
-			switch (value)
-			{
-				case sbyte:
-				case byte:
-				case short:
-				case ushort:
-				case int:
-				case uint:
-				case long:
-				case ulong:
-				case float:
-				case double:
-				case decimal:
-					writer.WriteString("type", "number");
-					writer.WriteString("extendedType", GetFullName(value.GetType()));
-					return;
-
-				case string:
-					writer.WriteString("type", "string");
-					return;
-
-				case bool:
-					writer.WriteString("type", "bool");
-					return;
-
-				case IEnumerable ie:
-					writer.WriteString("type", "array");
-					writer.WriteString("extendedType", GetFullName(value.GetType()));
-
-					writer.WriteStartArray("children");
-
-					foreach (var elem in ie)
-					{
-						writer.WriteStartObject();
-						serializer.Serialize(writer, elem, valuePath, context);
-						writer.WriteEndObject();
-					}
-
-					writer.WriteEndArray();
-					return;
-
-			}
-
-			var type = value.GetType();
-
-			if (type.IsEnum)
-			{
-				var enumNames = type.GetEnumNames();
-
-				writer.WriteString("type", $"enum");
-				writer.WriteStartArray("values");
-
-				foreach (var enumName in enumNames)
-					writer.WriteStringValue(enumName);
-
-				writer.WriteEndArray();
-				return;
-			}
-
-			writer.WriteString("type", "object");
-			writer.WriteString("extendedType", GetFullName(value.GetType()));
-
-			writer.WriteStartObject("children");
-			foreach (var prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
-			{
-				writer.WriteStartObject(prop.Name);
-				serializer.Serialize(writer, prop.GetValue(value), valuePath, context);
-				writer.WriteEndObject();
-			}
-			writer.WriteEndObject();
-		}
-
-		protected internal static string GetFullPath(IEnumerable<string> path)
-		{
-			StringBuilder s = new StringBuilder();
-
-			foreach (var p in path)
-				s.Append(p);
-
-			return s.ToString();
-		}
-
-		public static string GetFullName(Type t)
-		{
-			if (!t.IsGenericType)
-				return t.Name;
-
-			StringBuilder sb = new StringBuilder();
-
-			sb.Append(t.Name.Substring(0, t.Name.LastIndexOf("`")));
-			sb.Append(t.GetGenericArguments().Aggregate("<",
-				(string aggregate, Type type) => aggregate + (aggregate == "<" ? "" : ",") + GetFullName(type)
-				));
-			sb.Append(">");
-
-			return sb.ToString();
-		}
-	}
-
 	public interface ISerializerConfigure
-    {
-		Serializer WithConverter(IMetadataConverter converter);
-
-		Serializer WithConverter(JsonConverter converter);
-
-		Serializer WithConverter<T>(T converter) where T : JsonConverter, IMetadataConverter;
+	{
+		ISerializerConfigure WithConverter(JsonConverter converter);
 	}
 
-	public static class SerializerConfigureExtensions
-    {
-		/// <summary>
-		/// Workaround helper for <see href="https://github.com/dotnet/runtime/issues/30524"/><br />
-		/// Serializes the key as string (via <see cref="object.ToString"/>) and the value using the regular serialization pipeline
-		/// </summary>
-		public static ISerializerConfigure WithDictionaryConverter<TKey, TValue>(this ISerializerConfigure configure)
-        {
-			configure.WithConverter(new CommonDictionaryConverter<TKey, TValue>());
-			return configure;
-        }
-    }
+	public class SerializerContext
+	{
+		public HashSet<Type> SeenTypes = new HashSet<Type>();
+	}
 
 	public class Serializer : ISerializerConfigure
 	{
-		enum Kind
-		{
-			Full = 0,
-			RemoveTarget = 1,
-			Delta = 2,
-			Download = 3
-		}
-
-		private ConcurrentBag<(MemoryStream stream, Utf8JsonWriter writer)> pool = new ConcurrentBag<(MemoryStream stream, Utf8JsonWriter writer)>();
-
-		private JsonSerializerOptions valueSerializationOptions = new JsonSerializerOptions
-		{
-#if DEBUG
-			WriteIndented = true
-#endif
-		};
-		private static MetadataSerializer metadataSerializer = new MetadataSerializer();
-
-		public Serializer()
+		private static string SanitizePath(string path)
         {
-			valueSerializationOptions.Converters.Add(new JsonStringEnumConverter());
-			metadataSerializer.converters.Add(new DateTimeSerializer());
+			return path.Split(new[] { '.', '[', ']' }, StringSplitOptions.RemoveEmptyEntries).Skip(1).Aggregate("$", (a, b) => $"{a}.{b}");
 		}
 
-		// TODO serialization should be done in 1 pass
-		// Using multiple passes gives a different thread time to modify the data midway
-		// Because of that the Value, Metadata and callbacks could be out of sync
-		public ArraySegment<byte> Serialize(string targetId, object instance, RendererContext rendererContext)
+		#region helper classes
+		private class ContractResolver : DefaultContractResolver
 		{
-			var (stream, writer) = RequestFromPool();
-
-			writer.Reset();
-
-			writer.WriteStartObject();
-
-			writer.WriteNumber("kind", (int)Kind.Full);
-			writer.WriteString("id", targetId);
-
-			writer.WritePropertyName("value");
-			JsonSerializer.Serialize(writer, instance, valueSerializationOptions);
-			writer.WriteStartObject("metadata");
-			metadataSerializer.Serialize(writer, instance, new[] { "$" }, rendererContext);
-			writer.WriteEndObject();
-
-			writer.WriteEndObject();
-
-			writer.Flush();
-			// TODO return to pool
-			return new ArraySegment<byte>(stream.GetBuffer(), 0, (int)writer.BytesCommitted);
-		}
-
-		private (MemoryStream stream, Utf8JsonWriter writer) RequestFromPool()
-        {
-			if (pool.TryTake(out var instance))
-				return instance;
-
-			var stream = new MemoryStream();
-			var writer = new Utf8JsonWriter(stream
-#if DEBUG
-		, new JsonWriterOptions { Indented = true }
-#endif
-		);
-
-			return (stream, writer);
-        }
-
-		private void ReturnToPool(MemoryStream stream, Utf8JsonWriter writer)
-        {
-			pool.Add((stream, writer));
-        }
-
-		public Serializer WithConverter(IMetadataConverter converter)
-		{
-			metadataSerializer.converters.Add(converter);
-
-			return this;
-		}
-
-		public Serializer WithConverter<T>(T converter) where T : JsonConverter, IMetadataConverter
-		{
-			metadataSerializer.converters.Add(converter);
-			valueSerializationOptions.Converters.Add(converter);
-
-			return this;
-		}
-
-		public Serializer WithConverter(JsonConverter converter)
-		{
-			valueSerializationOptions.Converters.Add(converter);
-
-			return this;
-		}
-	}
-
-    /// <summary>
-    /// Workaround helper for https://github.com/dotnet/runtime/issues/30524
-    /// </summary>
-    /// <typeparam name="TKey">The type of the key</typeparam>
-    public class CommonDictionaryConverter<TKey, TValue> : JsonConverter<Dictionary<TKey, TValue>>, IMetadataConverter
-	{ 
-		public override Dictionary<TKey, TValue> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => throw new NotImplementedException();
-
-		public override void Write(Utf8JsonWriter writer, Dictionary<TKey, TValue> value, JsonSerializerOptions options)
-		{
-			writer.WriteStartObject();
-
-			foreach (KeyValuePair<TKey, TValue> kvp in value)
+			private class PathHookConverter : JsonConverter
 			{
-				writer.WritePropertyName(kvp.Key.ToString());
-				JsonSerializer.Serialize(writer, kvp.Value, options);
+				JsonConverter? actualConverter;
+				ContractResolver cr;
+				Type t;
+
+				public PathHookConverter(Type t, JsonConverter? b, ContractResolver cr)
+				{
+					this.actualConverter = b;
+					this.t = t;
+					this.cr = cr;
+				}
+
+				public override bool CanConvert(Type objectType) => throw new NotImplementedException();
+				public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) => throw new NotImplementedException();
+
+				public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+				{
+					if (actualConverter != null)
+						actualConverter.WriteJson(writer, value, serializer);
+					else
+						writer.WriteValue(value);
+
+					cr.tables.Add(SanitizePath(writer.Path), new ReferenceTable { Path = writer.Path, Type = t });
+				}
 			}
 
-			writer.WriteEndObject();
-		}
+			public Dictionary<string, ReferenceTable> tables;
+			public JsonWriter wr;
 
-        public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
-        {
-			writer.WriteString("type", "object");
-			writer.WriteString("extendedType", MetadataConverter.GetFullName(value.GetType()));
+			Stack<string> path;
+			public HashSet<Type> knownTypes = new HashSet<Type>();
 
-			var dict = value as Dictionary<TKey, TValue>;
-
-			writer.WriteStartObject("children");
-
-			foreach (var kv in dict)
+			protected override JsonContract CreateContract(Type objectType)
 			{
-				writer.WriteStartObject(kv.Key.ToString());
-				serializer.Serialize(writer, kv.Value, valuePath, context);
-				writer.WriteEndObject();
+				var x = base.CreateContract(objectType);
+
+				knownTypes.Add(objectType);
+
+				if (x is JsonPrimitiveContract)
+				{
+					x.Converter = new PathHookConverter(objectType, x.Converter ?? x.InternalConverter, this);
+				}
+
+				x.OnSerializedCallbacks.Add((o, context) => { addRef(objectType); });
+
+				return x;
 			}
 
-			writer.WriteEndObject();
-		}
-    }
+			void addRef(Type t)
+			{
+				var index = wr.Path.LastIndexOf('.');
 
-    public class DateTimeSerializer : IMetadataConverter
+				if (index > -1)
+				{
+					var a = wr.Path.Substring(0, index);
+					if (tables.TryGetValue(a, out var x))
+						x.Children.Add(wr.Path);
+				}
+
+				var path = SanitizePath(wr.Path);
+
+				if (tables.TryGetValue(path, out var r))
+					r.Type = t;
+				else
+					tables.Add(path, new ReferenceTable { Path = path, Type = t });
+			}
+		}
+
+		private class Ref : IReferenceResolver
+		{
+			public JsonWriter wr;
+			public ConditionalWeakTable<object, string> x = new ConditionalWeakTable<object, string>();
+			int counter = 0;
+
+			public Dictionary<string, ReferenceTable> tables;
+
+			public void AddReference(object context, string reference, object value)
+			{
+				throw new NotImplementedException();
+			}
+
+			public string GetReference(object context, object value)
+			{
+				if (x.TryGetValue(value, out var v))
+					return v;
+
+				counter++;
+				var r = new ReferenceTable { ID = counter.ToString(), Path = wr.Path };
+				tables.Add(SanitizePath(wr.Path), r);
+				x.Add(value, counter.ToString());
+				return counter.ToString();
+			}
+
+			public bool IsReferenced(object context, object value)
+			{
+				return x.TryGetValue(value, out _);
+			}
+
+			public object ResolveReference(object context, string reference)
+			{
+				return null;
+			}
+		}
+
+		private class ReferenceTable
+		{
+			public string Path;
+			public string ID;
+			public Type Type;
+
+			public List<string> Children = new List<string>();
+		}
+        #endregion
+
+        private static ContractResolver cr = new ContractResolver();
+
+		public ISerializerConfigure WithConverter(JsonConverter converter)
+		{
+			// TODO
+			return this;
+		}
+
+		public ISerializerConfigure WithMetadata(Type type, object x)
+        {
+
+			return this;
+        }
+
+		public void Serialize(object obj, Stream stream, RendererContext renderContext, SerializerContext context)
+		{
+			lock (cr)
+			{
+				var re = new Ref();
+				var wr = new JsonTextWriter(new StreamWriter(stream));
+				var t = new Dictionary<string, ReferenceTable>();
+
+				var s = new JsonSerializerSettings
+				{
+					ContractResolver = cr,
+					ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
+					PreserveReferencesHandling = PreserveReferencesHandling.Objects,
+					Formatting = Formatting.Indented,
+					ReferenceResolverProvider = () => re,
+				};
+
+				cr.wr = wr;
+				re.wr = wr;
+				cr.tables = t;
+				re.tables = t;
+
+				wr.Formatting = Formatting.Indented;
+
+				wr.WriteStartObject();
+
+				wr.WritePropertyName("kind");
+				wr.WriteValue(0);
+				wr.WritePropertyName("id");
+				wr.WriteValue("1");
+
+				WriteValue(wr, s, obj);
+				WriteMeta(wr, t, context);
+				WriteLinks(wr, t);
+
+				wr.WriteEndObject();
+				wr.Flush();
+			}
+		}
+
+		private void WriteValue(JsonWriter wr, JsonSerializerSettings s, object obj)
+		{
+			wr.WritePropertyName("value");
+
+			JsonSerializer.Create(s).Serialize(wr, obj);
+		}
+
+		private void WriteMeta(JsonWriter wr, Dictionary<string, ReferenceTable> t, SerializerContext context)
+		{
+			wr.WritePropertyName("meta");
+
+			wr.WriteStartObject();
+			foreach (var path in t)
+			{
+				if (path.Value.Type == typeof(Guid)) 
+					continue;
+				if (path.Value.Type == typeof(DateTime))
+					continue;
+
+
+				if (context.SeenTypes.Contains(path.Value.Type))
+					continue;
+
+				context.SeenTypes.Add(path.Value.Type);
+
+				wr.WritePropertyName(path.Value.Type.Name);
+
+				wr.WriteStartObject();
+
+				wr.WritePropertyName("type");
+				wr.WriteValue(SimpleType(path.Value.Type));
+				wr.WritePropertyName("extendedType");
+				wr.WriteValue(path.Value.Type.Name);
+
+				if (path.Value.Children.Any())
+				{
+					wr.WritePropertyName("children");
+					wr.WriteStartObject();
+					foreach (var c in path.Value.Children)
+					{
+						wr.WritePropertyName(c);
+						wr.WriteValue(t[c].Type.Name);
+					}
+					wr.WriteEndObject();
+				}
+				else if(path.Value.Type.IsEnum)
+                {
+					wr.WritePropertyName("values");
+					wr.WriteStartArray();
+					foreach (var e in path.Value.Type.GetEnumNames())
+					{
+						wr.WriteValue(e);
+					}
+					wr.WriteEndArray();
+				}
+
+				wr.WriteEndObject();
+			}
+			wr.WriteEndObject();
+		}
+
+		private static Dictionary<Type, string> simpleTypesLookup = new Dictionary<Type, string>()
 	{
-		public bool CanConvert(Type type) => type == typeof(DateTime) || type == typeof(DateTime?);
+		{ typeof(sbyte), "number" },
+		{ typeof(byte), "number" },
+		{ typeof(short), "number" },
+		{ typeof(ushort), "number" },
+		{ typeof(int), "number" },
+		{ typeof(uint), "number" },
+		{ typeof(long), "number" },
+		{ typeof(ulong), "number" },
+		{ typeof(float), "number" },
+		{ typeof(double), "number" },
+		{ typeof(decimal), "number" },
 
-		public void Write(MetadataSerializer serializer, Utf8JsonWriter writer, object value, IEnumerable<string> valuePath, RendererContext context)
-		{ 
-			writer.WriteString("type", "datetime");
-        }
+		{ typeof(string), "string" },
+		{ typeof(bool), "bool" }
+	};
+
+		private string SimpleType(Type type)
+		{
+			if (simpleTypesLookup.TryGetValue(type, out var ret))
+				return ret;
+
+			if (type.IsEnum)
+				return "enum";
+
+			if (typeof(IEnumerable).IsAssignableFrom(type))
+				return "array";
+
+			return "object";
+		}
+
+		private void WriteLinks(JsonWriter wr, Dictionary<string, ReferenceTable> t)
+		{
+			wr.WritePropertyName("links");
+
+			wr.WriteStartObject();
+			// TODO potential optimization here
+			// not every path needs to be linked, most props can be derived from the metadata (the only exception is when classes get extended)
+			foreach (var path in t)
+			{
+				if (path.Value.ID != null)
+					wr.WritePropertyName($"${path.Value.ID}");
+				else
+					wr.WritePropertyName(path.Key);
+
+				wr.WriteValue(path.Value.Type.Name);
+			}
+			wr.WriteEndObject();
+		}
+
     }
 }

@@ -17,7 +17,7 @@ namespace MK94.SeeRaw.Interfaces
         ILogger WithMessage(string messaage);
 
         IEnumerable<T> EnumerateWithProgress<T>(List<T> collection);
-
+        /*
         void Serialize(Serializer serializer, Utf8JsonWriter writer, RendererContext context, bool serializeNulls)
         {
             void writeILogger(ILogger log)
@@ -46,6 +46,6 @@ namespace MK94.SeeRaw.Interfaces
             };
 
             writeILogger(this);
-        }
+        }*/
     }
 }

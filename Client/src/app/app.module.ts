@@ -24,6 +24,7 @@ import { OptionComponent as navOptionComponent } from './renderers/navigation-re
 import { RenderDirective } from './directives/render.directive';
 import { HighlightDirective } from './directives/highlight.directive';
 import { JpathInputComponent } from './util/jpath-input/jpath-input.component';
+import { ReferenceRenderComponent } from './renderers/reference-render/reference-render.component';
 
 @NgModule({
   declarations: [
@@ -46,7 +47,8 @@ import { JpathInputComponent } from './util/jpath-input/jpath-input.component';
     OptionListComponent,
     navOptionComponent,
     HighlightDirective,
-    JpathInputComponent
+    JpathInputComponent,
+    ReferenceRenderComponent
   ],
   imports: [
     BrowserModule,

@@ -1,24 +1,32 @@
 {
-  "kind": 0,
-  "id": "target1",
   "value": {
+    "$id": "1",
     "Objects": [
       "Horizontal Test"
     ]
   },
-  "metadata": {
-    "type": "object",
-    "extendedType": "HorizontalRun",
-    "children": {
-      "Objects": {
-        "type": "array",
-        "extendedType": "List\u003CObject\u003E",
-        "children": [
-          {
-            "type": "string"
-          }
-        ]
+  "meta": {
+    "HorizontalRun": {
+      "type": "object",
+      "extendedType": "HorizontalRun",
+      "children": {
+        "value.Objects": "List`1"
       }
+    },
+    "List`1": {
+      "type": "array",
+      "extendedType": "List`1",
+      "children": {}
+    },
+    "String": {
+      "type": "string",
+      "extendedType": "String",
+      "children": {}
     }
+  },
+  "links": {
+    "$1": "HorizontalRun",
+    "value.Objects": "List`1",
+    "value.Objects[0]": "String"
   }
 }

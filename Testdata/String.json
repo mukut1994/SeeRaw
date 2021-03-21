@@ -1,8 +1,13 @@
 {
-  "kind": 0,
-  "id": "target1",
   "value": "string test",
-  "metadata": {
-    "type": "string"
+  "meta": {
+    "String": {
+      "type": "string",
+      "extendedType": "String",
+      "children": {}
+    }
+  },
+  "links": {
+    "value": "String"
   }
 }

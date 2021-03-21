@@ -1,13 +1,13 @@
 <div class="container border w-100 mw-100">
   <div class="row">
     <div class="col-sm-auto p-3 pr-4 border-right d-flex flex-column p-2">
-        <app-nav-bar (select)="click($event)" [selected]="selected" [navbar]="navbar.children"></app-nav-bar>
+      <app-nav-bar (select)="click($event)" [selected]="selected" [navbar]="navbar.children"></app-nav-bar>
 
-        <app-option-button class="position-absolute" style="right: 0.5rem;" [context]="context" [metadata]="metadata" [renderer]="'navigation'" [options]="options"></app-option-button>
+      <app-option-button class="position-absolute" style="right: 0.5rem;" [context]="context" [metadata]="metadata" [renderer]="'navigation'" [options]="options"></app-option-button>
 
     </div>
     <div class="col-xl w-100 m-0 p-0">
-      <ng-template [appRender] [value]="selected.value" [metadata]="selected.metadata" [context]="selected.context"></ng-template>
+      <ng-template [appRender] [value]="selected.value" [context]="selected.context"></ng-template>
     </div>
   </div>
 </div>

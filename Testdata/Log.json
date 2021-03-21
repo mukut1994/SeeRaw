@@ -1,11 +1,31 @@
 {
-  "kind": 0,
-  "id": "target1",
   "value": {
-    "message": "Child 1",
-    "children": []
+    "$id": "1",
+    "Message": "Child 1",
+    "Children": []
   },
-  "metadata": {
-    "type": "log"
+  "meta": {
+    "Logger": {
+      "type": "object",
+      "extendedType": "Logger",
+      "children": {
+        "value.Children": "List`1"
+      }
+    },
+    "String": {
+      "type": "string",
+      "extendedType": "String",
+      "children": {}
+    },
+    "List`1": {
+      "type": "array",
+      "extendedType": "List`1",
+      "children": {}
+    }
+  },
+  "links": {
+    "$1": "Logger",
+    "value.Message": "String",
+    "value.Children": "List`1"
   }
 }

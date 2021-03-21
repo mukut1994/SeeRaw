@@ -45,6 +45,8 @@ export class TableRenderComponent implements RenderComponent, OnInit {
 
     var props = path.substr(this.context.currentPath.length + 1).split('.');
 
+    if(!props[0]) return;
+
     return HighlightDirective.findWithKey(this.rows, props[0]);
   }
 

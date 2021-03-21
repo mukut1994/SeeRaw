@@ -4,6 +4,8 @@ import { Subscription } from 'rxjs';
 import { RenderService } from '@data/render.service';
 import { OptionsService } from '@service/options.service';
 import { GotoService } from './../goto.service';
+import { BackendService } from './../backend.service';
+import { MetadataService } from '@data/metadata.service';
 
 @Directive({ selector: '[appRender]' })
 export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDestroy {
@@ -18,6 +20,7 @@ export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDes
   prevContext: RenderContext;
 
   constructor(
+    private metadataService: MetadataService,
     private renderService: RenderService,
     private viewContainer: ViewContainerRef,
     private componentFactoryResolver: ComponentFactoryResolver,
@@ -51,10 +54,6 @@ export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDes
       this.context = context;
     }
 
-    @Input() set appRenderMetadata(metadata: Metadata) {
-      this.metadata = metadata;
-    }
-
     ngAfterContentInit() {
       this.render();
     }
@@ -67,11 +66,15 @@ export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDes
 
       this.prevContext = this.context;
 
-      const options = this.optionsService.get(this.context, this.metadata);
+      if(!this.value)
+        return;
+
+      const metadata = this.metadataService.getMetadataFor(this.context) ?? this.defaultMetadata();
+      const options = this.optionsService.get(this.context, metadata);
 
       if(!options) return;
 
-      const type = this.renderService.getComponentFor(this.metadata.type, options.renderer);
+      const type = this.renderService.getComponentFor(metadata.type, options.renderer);
 
       if(!type) return;
 
@@ -80,7 +83,7 @@ export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDes
 
       component.instance.value = this.value;
       component.instance.context = this.context;
-      component.instance.metadata = this.metadata;
+      component.instance.metadata = metadata;
       component.instance.options = options;
 
       GotoService.InProg++;
@@ -88,5 +91,9 @@ export class RenderDirective implements AfterContentInit, DoCheck, OnInit, OnDes
       GotoService.InProg--;
 
       this.gotoService.registerComponent(this.context.currentPath, component.instance);
+    }
+
+    defaultMetadata() : Metadata {
+      return { type: typeof(this.value), extendedType: null, children: null };
     }
 }

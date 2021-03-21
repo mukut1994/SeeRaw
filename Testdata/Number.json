@@ -1,9 +1,13 @@
 {
-  "kind": 0,
-  "id": "target1",
   "value": 1,
-  "metadata": {
-    "type": "number",
-    "extendedType": "Int32"
+  "meta": {
+    "Int32": {
+      "type": "number",
+      "extendedType": "Int32",
+      "children": {}
+    }
+  },
+  "links": {
+    "value": "Int32"
   }
 }

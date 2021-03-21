@@ -19,7 +19,7 @@ namespace MK94.SeeRaw.Example
             SeeRawSetup
                 .WithServer()
                 .WithErrorHandler(x => Console.WriteLine(x))
-                .WithGlobalRenderer(RenderClientMenu, x => x.WithOptions(opt).Serializer.WithDictionaryConverter<Guid, string>())
+                .WithGlobalRenderer(RenderClientMenu)
                 .OpenBrowserAfterWait(TimeSpan.FromSeconds(15))
                 .RunInBackground();
 
@@ -30,13 +30,15 @@ namespace MK94.SeeRaw.Example
 
         static void RenderClientMenu()
         {
+            var x = new
+            {
+                Child1_1 = 11,
+                Child1_2 = 12
+            };
+
             new
             {
-                Child1 = new
-                {
-                    Child1_1 = 11,
-                    Child1_2 = 12
-                },
+                Child1 = x,
                 Child2 = new
                 {
                     Child2_1 = 21,
@@ -64,7 +66,8 @@ namespace MK94.SeeRaw.Example
                 {
                     new X { Name = "Key 1" },
                     new X { Name = "Key 2" }
-                }
+                },
+                Ref = x
             }.Render();
 
             return;

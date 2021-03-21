@@ -1,18 +1,26 @@
 {
-  "kind": 0,
-  "id": "target1",
   "value": {
-    "percent": 0,
-    "value": null,
-    "max": null,
-    "min": null,
-    "speed": null,
-    "paused": null
+    "$id": "1",
+    "Percent": 0,
+    "Value": null,
+    "Speed": null,
+    "Min": null,
+    "Max": null
   },
-  "metadata": {
-    "type": "progress",
-    "pause": null,
-    "setSpeed": null,
-    "cancel": null
+  "meta": {
+    "Progress": {
+      "type": "object",
+      "extendedType": "Progress",
+      "children": {}
+    },
+    "Int32": {
+      "type": "number",
+      "extendedType": "Int32",
+      "children": {}
+    }
+  },
+  "links": {
+    "$1": "Progress",
+    "value.Percent": "Int32"
   }
 }

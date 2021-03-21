@@ -6,6 +6,7 @@ import { OptionsService } from '@service/options.service';
 import { RenderComponent } from './../../render.service';
 import { NavigationOption, OptionComponent } from './option/option.component';
 import * as jp from 'jsonpath-faster'
+import { MetadataService } from '@data/metadata.service';
 
 @Component({
   selector: 'app-navigation-render',
@@ -24,7 +25,7 @@ export class NavigationRenderComponent implements OnInit, RenderComponent {
   navbar: NavBarData;
   options: any;
 
-  constructor(private optionsService: OptionsService) { }
+  constructor(private optionsService: OptionsService, private metadataService: MetadataService) { }
 
   @Output() select: EventEmitter<string> = new EventEmitter<string>();
 
@@ -98,7 +99,8 @@ export class NavigationRenderComponent implements OnInit, RenderComponent {
       let childKey = key;
       if(childOpt.keyPath) childKey = this.key(value[key], childOpt.keyPath) ?? "null";
 
-      ret.children.push(this.convertToNavData(currentDepth + 1, childKey, value[key], metadata.children[key], context.child(key, VisibleIncrement.Reset)));
+      const childContext = context.child(key, VisibleIncrement.Reset);
+      ret.children.push(this.convertToNavData(currentDepth + 1, childKey, value[key], this.metadataService.getMetadataFor(childContext), childContext));
     }
 
     return ret;

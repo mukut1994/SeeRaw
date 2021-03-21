@@ -13,6 +13,8 @@ import { NoRenderOptionsComponent } from './no-render-options/no-render-options.
 import { LinkRenderComponent } from './renderers/link-render/link-render.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { OptionListComponent } from './option-list/option-list.component';
+import { referenceTypeName } from './metadata.service'
+import { ReferenceRenderComponent } from './renderers/reference-render/reference-render.component';
 
 @Component({
   selector: 'app-root',
@@ -55,6 +57,8 @@ export class AppComponent {
 
     this.renderService.registerComponent('log', 'log', LogRenderComponent, NoRenderOptionsComponent);
     this.renderService.registerComponent('progress', 'progress', ProgressRenderComponent, NoRenderOptionsComponent);
+
+    this.renderService.registerComponent(referenceTypeName, referenceTypeName, ReferenceRenderComponent, NoRenderOptionsComponent);
   }
 
   updateState(reconnectingIn: number) {

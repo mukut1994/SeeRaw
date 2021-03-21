@@ -1,34 +1,42 @@
 {
-  "kind": 0,
-  "id": "target1",
   "value": {
+    "$id": "1",
     "PropString": "A",
     "PropInt": 1,
     "PropObj": {
+      "$id": "2",
       "PropInt2": 2
     }
   },
-  "metadata": {
-    "type": "object",
-    "extendedType": "\u003C\u003Ef__AnonymousType0\u003CString,Int32,\u003C\u003Ef__AnonymousType1\u003CInt32\u003E\u003E",
-    "children": {
-      "PropString": {
-        "type": "string"
-      },
-      "PropInt": {
-        "type": "number",
-        "extendedType": "Int32"
-      },
-      "PropObj": {
-        "type": "object",
-        "extendedType": "\u003C\u003Ef__AnonymousType1\u003CInt32\u003E",
-        "children": {
-          "PropInt2": {
-            "type": "number",
-            "extendedType": "Int32"
-          }
-        }
+  "meta": {
+    "<>f__AnonymousType0`3": {
+      "type": "object",
+      "extendedType": "<>f__AnonymousType0`3",
+      "children": {
+        "value.PropObj": "<>f__AnonymousType1`1"
       }
+    },
+    "String": {
+      "type": "string",
+      "extendedType": "String",
+      "children": {}
+    },
+    "Int32": {
+      "type": "number",
+      "extendedType": "Int32",
+      "children": {}
+    },
+    "<>f__AnonymousType1`1": {
+      "type": "object",
+      "extendedType": "<>f__AnonymousType1`1",
+      "children": {}
     }
+  },
+  "links": {
+    "$1": "<>f__AnonymousType0`3",
+    "value.PropString": "String",
+    "value.PropInt": "Int32",
+    "$2": "<>f__AnonymousType1`1",
+    "value.PropObj.PropInt2": "Int32"
   }
 }

@@ -20,7 +20,10 @@ namespace MK94.SeeRaw.UT
 
         void AssertMatches([CallerMemberName]string caller = "")
         {
-            var actual = Encoding.UTF8.GetString(serializer.Serialize("target1", root.Targets[0].Value, context));
+            var stream = new MemoryStream();
+            serializer.Serialize(root.Targets[0].Value, stream, context, new SerializerContext());
+
+            var actual = Encoding.UTF8.GetString(stream.ToArray());
 
             actual = Regex.Replace(actual, "[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}", Guid.Empty.ToString());
 
@@ -31,7 +34,7 @@ namespace MK94.SeeRaw.UT
                 .Aggregate(Path.Combine);
            
             // uncomment to update Testdata files; do not check in uncommented!!!
-            // File.WriteAllText(Path.Combine(testDataPath, $"{caller}.json"), actual);
+             File.WriteAllText(Path.Combine(testDataPath, $"{caller}.json"), actual);
 
             var expected = File.ReadAllText(Path.GetFullPath(Path.Combine("/", testDataPath, $"{caller}.json")));
 

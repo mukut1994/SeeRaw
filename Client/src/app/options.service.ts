@@ -1,9 +1,10 @@
 import { Injectable, Output } from '@angular/core';
-import { Metadata, RenderOption, RenderRoot } from './data.model';
+import { Metadata, Option, RenderOption, RenderRoot } from './data.model';
 import { BehaviorSubject } from 'rxjs';
 import * as jp from 'jsonpath-faster'
 import { BackendService } from './backend.service';
 import { RenderContext } from '@data/data.model';
+import { referenceTypeName } from './metadata.service';
 
 @Injectable({
   providedIn: 'root'
@@ -27,6 +28,8 @@ export class OptionsService {
 
         [ "link", { renderer: "link" } ],
         [ "progress", { renderer: "progress" } ],
+
+        [ referenceTypeName, { renderer: referenceTypeName } ]
         /*
         [ "form", { renderer: "table" } ],
         [ "log", { renderer: "table" } ],
@@ -38,6 +41,7 @@ export class OptionsService {
   options: RenderOption[] = [];
   renderRoot: RenderRoot;
   sessionOptions: Map<string, any> = new Map();
+  parsedRenderOptions: Map<string, Map<string, Option>> = new Map();
 
   @Output() optionsObserveable: BehaviorSubject<RenderOption[]> = new BehaviorSubject(this.options);
 
@@ -122,33 +126,12 @@ export class OptionsService {
   }
 
   get(context: RenderContext, metadata: Metadata) {
+    if(!metadata)
+      return null;
 
-    if(!metadata?.renderOptions) return;
+    const renderOptions = this.parsedRenderOptions.get(context.currentPath);
 
-    for(let i = 0; i < metadata.renderOptions.length; i++) {
-      let opt = metadata.renderOptions[metadata.renderOptions.length - i - 1].get(metadata.type);
-
-      if(opt)
-        return opt;
-    }
-
-    return null;
-
-    // TODO write a jpath reverse parser here
-    for(const option of this.options) {
-      const target = this.renderRoot.targets[context.index];
-      const jpath = <jpath[]>jp.parse(option.jsonPath); // TODO cache this;
-      const path = context.currentPath.split('.');
-
-      let value = target.value;
-      let metadata = target.metadata;
-
-      for(const jp of jpath) {
-        if(jp.expression.type === ExpressionType.root) continue;
-
-
-      }
-    }
+    return renderOptions.get(metadata.type);
   }
 
   private replacer(key, value) {
@@ -172,9 +155,10 @@ export class OptionsService {
   }
 
   private updateOptions() {
-    this.renderRoot.targets[0].metadata.renderOptions = [];
-
     this.options.forEach(element => {
+      if(!this.renderRoot.targets[0])
+        return;
+
       let value = this.renderRoot.targets[0].value;
 
       let matches;
@@ -183,14 +167,17 @@ export class OptionsService {
         matches = [ [ "$" ] ];
       }
       else {
-        matches = jp.paths(value, element.jsonPath);
+        matches = jp.nodes(value, element.jsonPath);
 
         if(element.jsonPath === "$..*")
-          matches = (<[]>jp.paths(this.renderRoot.targets[0].value, "$")).concat(matches);
+          matches = (<[]>jp.nodes(this.renderRoot.targets[0].value, "$")).concat(matches);
       }
 
       matches.forEach(x => {
-        const m = this.GetMetadataOfPath(this.renderRoot.targets[0].metadata, x);
+        this.parsedRenderOptions.set(x.path.join('.'), element.typeOptions);
+
+        return;
+        const m = this.GetMetadataOfPath(x.path, x.value);
 
         if(!m)
           return;
@@ -205,8 +192,22 @@ export class OptionsService {
     this.optionsObserveable.next(this.options);
   }
 
-  private GetMetadataOfPath(metadata: Metadata, path: (string | number)[]) {
+  private GetMetadataOfPath(path: (string | number)[], value: any) {
 
+    let metaId;
+
+    if(!value)
+      return;
+
+    if(value.$id)
+      metaId = this.renderRoot.targets[0].links[`$${value.$id}`];
+    else
+      metaId = this.renderRoot.targets[0].links[path.slice(1).join('.')];
+
+    const meta = this.renderRoot.targets[0].meta[metaId];
+
+    return meta;
+/*
     for(let i = 1; i < path.length; i++) {
       if(!metadata.children)
         return null;
@@ -214,7 +215,7 @@ export class OptionsService {
       metadata = jp.value(metadata.children, jp.stringify([ '$', path[i] ]));
     }
 
-    return metadata;
+    return metadata;*/
   }
 
   private GetMetadataPath(path: (string | number)[]) {

@@ -13,7 +13,7 @@
         {{ item.name }}
       </td>
       <td>
-        <ng-content [appRender] [value]="value[item.name]" [context]="context.child(item.name).WithEditMode()" [metadata]="item"></ng-content>
+        <ng-content [appRender] [value]="value[item.name]" [context]="context.child(item.name).WithEditMode()"></ng-content>
       </td>
     </tr>
   </ng-container>

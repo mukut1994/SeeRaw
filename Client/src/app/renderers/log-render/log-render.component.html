@@ -2,7 +2,7 @@
   {{ value.message }}
   <ng-container *ngFor="let item of value.children; let i = index">
     <div style="margin-left: 5px;">
-      ∟<app-log-render [value]="item" [context]="context.child(i)" [metadata]="metadata"></app-log-render>
+      ∟<app-log-render [value]="item" [context]="context.child(i)"></app-log-render>
     </div>
   </ng-container>
 </span>

@@ -223,9 +223,15 @@ namespace MK94.SeeRaw
 		{
 			context.Callbacks.Clear();
 			context.ClearPropertyChangedHandlers();
+
 			foreach (var target in state.Targets)
 			{
-				server.Broadcast(serializer.Serialize(target.Name, target.Value, context));
+				var stream = new MemoryStream();
+				serializer.Serialize(target.Value, stream, context, new SerializerContext());
+
+				stream.TryGetBuffer(out var buffer);
+
+				server.Broadcast(buffer);
 			}
 		}
     }
@@ -261,15 +267,19 @@ namespace MK94.SeeRaw
 
 			var state = new ClientState(renderRoot, serializerContext);
 
-			void Refresh(object o, System.ComponentModel.PropertyChangedEventArgs args)
+			void Refresh(object o, PropertyChangedEventArgs args)
 			{
 				serializerContext.Callbacks.Clear();
 				serializerContext.ClearPropertyChangedHandlers();
 
 				foreach (var target in renderRoot.Targets)
 				{
-					var message = serializer.Serialize(target.Name, target.Value, state.serializerContext);
-					Task.Run(() => websocket.SendAsync(message, WebSocketMessageType.Text, true, default));
+					var stream = new MemoryStream();
+					serializer.Serialize(target.Value, stream, state.serializerContext, new SerializerContext());
+
+					stream.TryGetBuffer(out var buffer);
+
+					Task.Run(() => websocket.SendAsync(buffer, WebSocketMessageType.Text, true, default));
 				}
 			};
 

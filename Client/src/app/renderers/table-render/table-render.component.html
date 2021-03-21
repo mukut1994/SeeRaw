@@ -32,7 +32,7 @@
             {{ prop }}
           </th>
           <td class="w-100 m-0 p-0" scope="row">
-            <ng-container *appRender="value[prop]; metadata: metadata.children[prop]; context: context.child(prop)"></ng-container>
+            <ng-container *appRender="value[prop]; context: context.child(prop)"></ng-container>
           </td>
         </tr>
       </ng-container>

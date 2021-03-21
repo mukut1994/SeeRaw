@@ -1,22 +1,22 @@
 {
-  "kind": 0,
-  "id": "target1",
   "value": {
-    "text": "Form test",
-    "inputs": [
-      {
-        "Text input": "default text"
-      }
-    ]
+    "$id": "1",
+    "Text": "Form test"
   },
-  "metadata": {
-    "id": "00000000-0000-0000-0000-000000000000",
-    "type": "form",
-    "inputs": [
-      {
-        "type": "string",
-        "name": "Text input"
-      }
-    ]
+  "meta": {
+    "Form": {
+      "type": "object",
+      "extendedType": "Form",
+      "children": {}
+    },
+    "String": {
+      "type": "string",
+      "extendedType": "String",
+      "children": {}
+    }
+  },
+  "links": {
+    "$1": "Form",
+    "value.Text": "String"
   }
 }

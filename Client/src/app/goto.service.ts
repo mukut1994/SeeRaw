@@ -54,7 +54,8 @@ export class GotoService {
   }
 
   animate(d: HighlightDirective) {
-    d.view?.element?.nativeElement.animate(
+    d?.view?.element?.nativeElement.scrollIntoView();
+    d?.view?.element?.nativeElement.animate(
       [
         { background: "" },
         { background: "var(--info)" },
