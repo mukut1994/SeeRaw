@@ -1,8 +1,0 @@
-
-<p *ngIf="renderRoot?.targets">
-  <ng-container *ngFor="let r of renderRoot.targets; let i = index">
-
-    <ng-container *appRender="r.value; metadata: r.metadata; context: context(i)"></ng-container>
-
-  </ng-container>
-</p>

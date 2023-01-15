@@ -1,9 +1,0 @@
-<ng-container class="enum" *ngIf="context.editMode; else viewOnly">
-  <select [(ngModel)]="value">
-    <option *ngFor="let enumValue of metadata.values">{{enumValue}}</option>
-  </select>
-</ng-container>
-
-<ng-template #viewOnly>
-  {{value}}
-</ng-template>
